@@ -34,12 +34,9 @@ jobs:
         run: |
           python -m py_compile desktop/yomceph_desktop_v130_preview.py
           @'
-          import importlib.util
-          from pathlib import Path
-          path = Path('desktop/yomceph_desktop_v130_preview.py')
-          spec = importlib.util.spec_from_file_location('yomceph_preview', path)
-          m = importlib.util.module_from_spec(spec)
-          spec.loader.exec_module(m)
+          import sys
+          sys.path.insert(0, 'desktop')
+          import yomceph_desktop_v130_preview as m
           assert len(m.ANALYSES) == 14, len(m.ANALYSES)
           assert len(m.MEAS) >= 65, len(m.MEAS)
           steiner = m.required_points({'Steiner'})
