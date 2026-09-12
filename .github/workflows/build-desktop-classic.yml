@@ -29,9 +29,10 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pillow pymupdf reportlab pyinstaller
 
-      - name: Verify YomCeph visual identity
+      - name: Generate and verify YomCeph visual identity
         shell: pwsh
         run: |
+          python desktop/generate_yomceph_logo.py
           @'
           from pathlib import Path
           from PIL import Image
@@ -48,7 +49,7 @@ jobs:
       - name: Syntax, research workflow and cephalometric geometry tests
         shell: pwsh
         run: |
-          python -m py_compile desktop/classic_engine.py desktop/yomceph_desktop_v130_classic.py desktop/research_workflow.py desktop/_classic_ui_part00.py desktop/_classic_ui_part01.py desktop/_classic_ui_part02.py desktop/_classic_ui_part03.py desktop/_classic_ui_part04.py desktop/_research_part00.py desktop/_research_part01.py desktop/_research_part02.py desktop/_research_part03.py desktop/_research_part04.py
+          python -m py_compile desktop/generate_yomceph_logo.py desktop/classic_engine.py desktop/yomceph_desktop_v130_classic.py desktop/research_workflow.py desktop/_classic_ui_part00.py desktop/_classic_ui_part01.py desktop/_classic_ui_part02.py desktop/_classic_ui_part03.py desktop/_classic_ui_part04.py desktop/_research_part00.py desktop/_research_part01.py desktop/_research_part02.py desktop/_research_part03.py desktop/_research_part04.py
           @'
           import sys
           sys.path.insert(0,'desktop')
