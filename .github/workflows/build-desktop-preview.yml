@@ -48,10 +48,9 @@ jobs:
           wits = next(x for x in m.MEAS if x.analysis == 'Wits')
           v1 = m.calc_measure(wits, pts, 1.0)
           mirrored = {k:(-x,y) for k,(x,y) in pts.items()}
-          mirrored['OcP'], mirrored['OcA'] = (-10.0,0.0),(0.0,0.0)
           v2 = m.calc_measure(wits, mirrored, 1.0)
           assert abs(v1-v2) < 1e-9, (v1,v2)
-          print('Desktop preview smoke tests OK:', len(m.MEAS), 'measurements')
+          print('Desktop preview smoke tests OK:', len(m.MEAS), 'measurements; Wits mirror=', v1, v2)
           '@ | python -
 
       - name: Build Windows x64 EXE
