@@ -29,22 +29,20 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pillow pymupdf reportlab pyinstaller
 
-      - name: Rebuild original YomCeph visual assets
+      - name: Verify original YomCeph visual identity
         shell: pwsh
         run: |
           @'
-          import base64, hashlib
+          import hashlib
           from pathlib import Path
-          ns0={}; ns1={}
-          exec(Path('desktop/assets/_logo_part00.py').read_text(encoding='utf-8'),ns0)
-          exec(Path('desktop/assets/_logo_part01.py').read_text(encoding='utf-8'),ns1)
-          raw=base64.b64decode(ns0['PART']+ns1['PART'])
-          assert hashlib.sha256(raw).hexdigest() == 'be024e025d7b58e0c801101b2b4dead72a416dff806eae18aea40667cbdd71ba'
-          Path('desktop/assets/yomceph_logo.png').write_bytes(raw)
           from PIL import Image
-          im=Image.open('desktop/assets/yomceph_logo.png').convert('RGBA')
+          p=Path('desktop/assets/yomceph_logo.png')
+          raw=p.read_bytes()
+          assert hashlib.sha256(raw).hexdigest() == 'be024e025d7b58e0c801101b2b4dead72a416dff806eae18aea40667cbdd71ba'
+          im=Image.open(p).convert('RGBA')
+          assert im.size == (512,512), im.size
           im.save('desktop/assets/yomceph.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
-          print('Visual assets OK', im.size)
+          print('Original YomCeph logo OK', im.size)
           '@ | python -
 
       - name: Syntax, payload and cephalometric geometry tests
@@ -52,7 +50,7 @@ jobs:
         run: |
           python -m py_compile desktop/classic_engine.py desktop/yomceph_desktop_v130_classic.py desktop/_classic_ui_part00.py desktop/_classic_ui_part01.py desktop/_classic_ui_part02.py desktop/_classic_ui_part03.py desktop/_classic_ui_part04.py
           @'
-          import sys, hashlib, math
+          import sys, hashlib
           sys.path.insert(0,'desktop')
           import classic_engine as e
           import yomceph_desktop_v130_classic as ui
