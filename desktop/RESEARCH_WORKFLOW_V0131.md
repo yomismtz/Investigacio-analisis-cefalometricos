@@ -13,15 +13,21 @@ Esta versión mantiene la interfaz Classic de YomCeph 0.12.x y añade un flujo s
 7. Incorporación de radiografías: carga masiva, por lotes o registro manual. Límite de 1000 casos por estudio.
 8. Cada registro conserva número/ID, edad, sexo, radiografía, estado y observaciones.
 9. Al abrir un registro desde la base, se restauran sus metadatos, imagen, puntos y resultados guardados.
-10. El caso se marca Completo (verde) únicamente cuando están registrados todos los resultados seleccionados para el protocolo.
+10. El caso se marca Completo únicamente cuando están registrados todos los resultados seleccionados para el protocolo.
 11. Si no puede analizarse, puede marcarse Excluido con motivo documentado (calidad radiográfica, landmarks no identificables, criterios del protocolo u otro). El excluido deja de formar parte de la muestra válida pero permanece en la auditoría.
 12. Exportación separada de muestra válida y auditoría completa.
 
-## Estados
+## Identidad visual
 
-- ● verde: Completo / incluido.
-- ● naranja: Incompleto.
-- ● gris: Pendiente.
-- ● rojo: Excluido.
+La interfaz se mantiene exclusivamente dentro de la familia YomCeph: morado, violeta, púrpura, ciruela, lila y lavanda, con verde menta y verde turquesa como acentos. No se usarán azul genérico, rojo dominante ni paneles grises como identidad principal.
+
+## Estados de la base de investigación
+
+- ● verde menta / turquesa: **Completo** e incluido en la muestra válida.
+- ● lila / lavanda: **Pendiente** o todavía sin iniciar.
+- ● violeta: **En análisis / Incompleto**.
+- ● ciruela / púrpura oscuro: **Excluido** o requiere revisión. No se utilizará rojo como color dominante.
 
 El protocolo puede bloquearse cuando comienzan a registrarse casos válidos para evitar cambiar accidentalmente las variables del estudio a mitad de la recolección.
+
+Los colores canónicos y sus códigos se centralizan en `yomceph_theme.py` para que botones, tablas, estados, puntos y trazados usen la misma identidad visual.
