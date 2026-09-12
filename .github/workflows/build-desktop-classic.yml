@@ -29,20 +29,35 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pillow pymupdf reportlab pyinstaller
 
-      - name: Verify original YomCeph visual identity
+      - name: Restore and verify original YomCeph visual identity
         shell: pwsh
         run: |
           @'
-          import hashlib
+          import base64, hashlib
           from pathlib import Path
           from PIL import Image
+          expected_chunks=[
+            'd334a3a5ced9c905f5d5beef7ca6cf4ff8dda715c72eeafb346aa77821797d86',
+            'e8a115e9f580a27eb4a12fef8f9be7e455c4d887cd61c777990bd041a5878257',
+            '9868b4b5f78b39ab73b8509750b89f0a509d4dff2096080bbe99fccba6899e07',
+            '09f61477eb1df39e55470b0b1a9bac20b01f9ec0dcb4df533bfd537ab08f5327',
+          ]
+          chunks=[]
+          for i,expected in enumerate(expected_chunks):
+              p=Path(f'desktop/assets/logo_b64_{i:02d}.txt')
+              s=p.read_text(encoding='utf-8').strip()
+              got=hashlib.sha256(s.encode()).hexdigest()
+              assert got == expected, (i,got,expected,len(s))
+              chunks.append(s)
+          raw=base64.b64decode(''.join(chunks), validate=True)
+          got=hashlib.sha256(raw).hexdigest()
+          assert got == 'be024e025d7b58e0c801101b2b4dead72a416dff806eae18aea40667cbdd71ba', got
           p=Path('desktop/assets/yomceph_logo.png')
-          raw=p.read_bytes()
-          assert hashlib.sha256(raw).hexdigest() == 'be024e025d7b58e0c801101b2b4dead72a416dff806eae18aea40667cbdd71ba'
+          p.write_bytes(raw)
           im=Image.open(p).convert('RGBA')
           assert im.size == (512,512), im.size
           im.save('desktop/assets/yomceph.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
-          print('Original YomCeph logo OK', im.size)
+          print('Original YomCeph logo OK', im.size, got)
           '@ | python -
 
       - name: Syntax, payload and cephalometric geometry tests
