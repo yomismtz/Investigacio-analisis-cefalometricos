@@ -1,0 +1,149 @@
+name: Build YomCeph Desktop Classic
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/build-desktop-classic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  windows-classic:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pillow pymupdf reportlab pyinstaller
+
+      - name: Rebuild original YomCeph visual assets
+        shell: pwsh
+        run: |
+          @'
+          import base64, hashlib
+          from pathlib import Path
+          ns0={}; ns1={}
+          exec(Path('desktop/assets/_logo_part00.py').read_text(encoding='utf-8'),ns0)
+          exec(Path('desktop/assets/_logo_part01.py').read_text(encoding='utf-8'),ns1)
+          raw=base64.b64decode(ns0['PART']+ns1['PART'])
+          assert hashlib.sha256(raw).hexdigest() == 'be024e025d7b58e0c801101b2b4dead72a416dff806eae18aea40667cbdd71ba'
+          Path('desktop/assets/yomceph_logo.png').write_bytes(raw)
+          from PIL import Image
+          im=Image.open('desktop/assets/yomceph_logo.png').convert('RGBA')
+          im.save('desktop/assets/yomceph.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
+          print('Visual assets OK', im.size)
+          '@ | python -
+
+      - name: Syntax, payload and cephalometric geometry tests
+        shell: pwsh
+        run: |
+          python -m py_compile desktop/classic_engine.py desktop/yomceph_desktop_v130_classic.py desktop/_classic_ui_part00.py desktop/_classic_ui_part01.py desktop/_classic_ui_part02.py desktop/_classic_ui_part03.py desktop/_classic_ui_part04.py
+          @'
+          import sys, hashlib, math
+          sys.path.insert(0,'desktop')
+          import classic_engine as e
+          import yomceph_desktop_v130_classic as ui
+          assert len(e.ANALYSES) == 15, len(e.ANALYSES)
+          assert len(e.MEASUREMENTS) >= 98, len(e.MEASUREMENTS)
+          assert hashlib.sha256(ui._source).hexdigest() == '3ce6fb034f3c76acf3fd62128de1c557f3ee600e74bd1aa8eb4ed93a99f28bf4'
+          assert ui.APP_NAME == 'YomCeph Desktop'
+          assert 'YomCeph violeta' in ui.PALETTES
+          assert 'Powell · tejidos blandos' in ui.GUIDED
+          pts={'A':(4.0,1.0),'B':(2.0,-1.0),'OcP':(0.0,0.0),'OcA':(10.0,0.0)}
+          w=next(m for m in e.MEASUREMENTS if m.analysis=='Wits')
+          v1=e.compute(w,pts,1.0,'right')
+          mirrored={k:(-x,y) for k,(x,y) in pts.items()}
+          v2=e.compute(w,mirrored,1.0,'left')
+          assert abs(v1-v2) < 1e-9, (v1,v2)
+          print('Classic tests OK:', len(e.ANALYSES), 'analyses,', len(e.MEASUREMENTS), 'measurements, Wits',v1,v2)
+          '@ | python -
+
+      - name: GUI construction smoke test
+        shell: pwsh
+        run: |
+          @'
+          import sys
+          sys.path.insert(0,'desktop')
+          import yomceph_desktop_v130_classic as m
+          app=m.YomCephClassic()
+          app.withdraw(); app.update_idletasks()
+          assert app.logo_img is not None
+          assert app.logo_small is not None
+          assert app.title().startswith('YomCeph Desktop')
+          app.destroy()
+          print('Classic GUI smoke test OK')
+          '@ | python -
+
+      - name: Build full Windows application
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean --onedir --windowed `
+            --name YomCeph_Desktop `
+            --icon desktop/assets/yomceph.ico `
+            --paths desktop `
+            --hidden-import classic_engine `
+            --hidden-import tkinter --hidden-import tkinter.ttk --hidden-import tkinter.filedialog --hidden-import tkinter.messagebox --hidden-import tkinter.simpledialog --hidden-import tkinter.colorchooser `
+            --hidden-import PIL --collect-all PIL `
+            --hidden-import fitz --collect-all pymupdf `
+            --hidden-import reportlab --hidden-import reportlab.platypus --hidden-import reportlab.lib.pagesizes --hidden-import reportlab.lib.styles --hidden-import reportlab.lib.enums --hidden-import reportlab.lib.units --collect-all reportlab `
+            --add-data "desktop/assets/yomceph_logo.png;." `
+            --add-data "desktop/assets/yomceph.ico;." `
+            desktop/yomceph_desktop_v130_classic.py
+
+      - name: Cold-start the packaged EXE
+        shell: pwsh
+        run: |
+          $exe = Resolve-Path 'dist/YomCeph_Desktop/YomCeph_Desktop.exe'
+          $p = Start-Process -FilePath $exe -PassThru
+          Start-Sleep -Seconds 8
+          if ($p.HasExited) {
+            if ($p.ExitCode -ne 0) { throw "YomCeph exited early with code $($p.ExitCode)" }
+            throw 'YomCeph exited unexpectedly during cold-start test'
+          }
+          Stop-Process -Id $p.Id -Force
+          $bytes=[IO.File]::ReadAllBytes($exe)
+          if ($bytes[0] -ne 0x4D -or $bytes[1] -ne 0x5A) { throw 'Missing MZ signature' }
+          Get-FileHash $exe -Algorithm SHA256
+          Get-Item $exe | Format-List Name,Length,FullName
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Build Windows installer
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist-installer | Out-Null
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' desktop\YomCeph_Desktop_v013_classic.iss
+          $setup='dist-installer/YomCeph_Desktop_Setup_v0.13.0_Classic.exe'
+          if (!(Test-Path $setup)) { throw 'Installer was not generated' }
+          $bytes=[IO.File]::ReadAllBytes($setup)
+          if ($bytes[0] -ne 0x4D -or $bytes[1] -ne 0x5A) { throw 'Installer missing MZ signature' }
+          Get-FileHash $setup -Algorithm SHA256
+          Get-Item $setup | Format-List Name,Length,FullName
+
+      - name: Package portable folder
+        shell: pwsh
+        run: Compress-Archive -Path dist\YomCeph_Desktop\* -DestinationPath dist-installer\YomCeph_Desktop_v0.13.0_Classic_Portable.zip -Force
+
+      - name: Upload Classic installer and portable build
+        uses: actions/upload-artifact@v4
+        with:
+          name: YomCeph-Desktop-v0.13.0-Classic-Windows-x64
+          path: |
+            dist-installer/YomCeph_Desktop_Setup_v0.13.0_Classic.exe
+            dist-installer/YomCeph_Desktop_v0.13.0_Classic_Portable.zip
+          if-no-files-found: error
