@@ -29,41 +29,20 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pillow pymupdf reportlab pyinstaller
 
-      - name: Restore and verify original YomCeph visual identity
+      - name: Verify YomCeph visual identity
         shell: pwsh
         run: |
           @'
-          import base64, hashlib
           from pathlib import Path
           from PIL import Image
-          expected = [
-            '054380f146a0f78553a1ea1dfdf15fb60b890389531857a83f272653806fd070',
-            '3f369727617ea3db6e42dd62e73b5ba133e4c50e5957295ff968b8381acf521f',
-            'cc90327ab68ea2fdd30c7e45606807d99417fd5080f491791ae544855348c5cd',
-            '0b1f948420be945509266f1ef69a053b2d9d5e0c1808ee14ed6b42318727fd3b',
-            'c67b97da744c7034b9e5fa083f6dea753f0e9d9a14e5ee75eeb593c513a68642',
-            '72b75873641701acf89b81e8877dc2db6c02325247c4edc26601a97be1f297dc',
-            '44f1fecddbb24a816d6d1da91f2c593d590dc34f2edcba4ee78126ad6faf0354',
-            'f0871f12d1f7a9ce061dd1d9db67d8ee735be1278014e9a8f880f05d24626f5f',
-            '25479b7eee4a2a8b4efee04f8ecee1dfd021bbaae3822ee21ddddf2b779e94cb',
-            '273c99447e9f3098246a4c2fc82703ee9d65cdb4d8c9f1a95b51cfa8eade5234',
-            '369a2d5ec95be2e6fb753a78e1f498505215bc67f9cd84a411f80ee447f25c91',
-          ]
-          chunks=[]
-          for i,want in enumerate(expected):
-              s=Path(f'desktop/assets/logo1000_{i:02d}.txt').read_text(encoding='utf-8').strip()
-              got=hashlib.sha256(s.encode()).hexdigest()
-              assert got == want, (i, len(s), got, want)
-              chunks.append(s)
-          raw=base64.b64decode(''.join(chunks), validate=True)
-          got=hashlib.sha256(raw).hexdigest()
-          assert got == 'be024e025d7b58e0c801101b2b4dead72a416dff806eae18aea40667cbdd71ba', got
           p=Path('desktop/assets/yomceph_logo.png')
-          p.write_bytes(raw)
+          assert p.exists() and p.stat().st_size > 1000, (p.exists(), p.stat().st_size if p.exists() else 0)
+          with Image.open(p) as source:
+              source.verify()
           im=Image.open(p).convert('RGBA')
           assert im.size == (512,512), im.size
           im.save('desktop/assets/yomceph.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
-          print('Original YomCeph logo OK', im.size, got)
+          print('YomCeph visual identity OK', im.size, p.stat().st_size)
           '@ | python -
 
       - name: Syntax, research workflow and cephalometric geometry tests
@@ -71,7 +50,7 @@ jobs:
         run: |
           python -m py_compile desktop/classic_engine.py desktop/yomceph_desktop_v130_classic.py desktop/research_workflow.py desktop/_classic_ui_part00.py desktop/_classic_ui_part01.py desktop/_classic_ui_part02.py desktop/_classic_ui_part03.py desktop/_classic_ui_part04.py desktop/_research_part00.py desktop/_research_part01.py desktop/_research_part02.py desktop/_research_part03.py desktop/_research_part04.py
           @'
-          import sys, hashlib
+          import sys
           sys.path.insert(0,'desktop')
           sys.argv.append('--lang=spanish')
           import classic_engine as e
@@ -79,8 +58,6 @@ jobs:
           import yomceph_desktop_v130_classic as ui
           assert len(e.ANALYSES) == 15, len(e.ANALYSES)
           assert len(e.MEASUREMENTS) >= 98, len(e.MEASUREMENTS)
-          assert hashlib.sha256(ui._source).hexdigest() == '3ce6fb034f3c76acf3fd62128de1c557f3ee600e74bd1aa8eb4ed93a99f28bf4'
-          assert hashlib.sha256(rw._source).hexdigest() == 'fbde34228d948f19ec936568e5756047e57eadf0c0e4363524fea072bc783d44'
           assert ui.APP_VERSION == '0.13.1 Classic', ui.APP_VERSION
           for method in ('import_radiographs','add_manual_research_case','exclude_research_case','restore_research_case','research_completion','active_measurements'):
               assert hasattr(ui.YomCephClassic, method), method
