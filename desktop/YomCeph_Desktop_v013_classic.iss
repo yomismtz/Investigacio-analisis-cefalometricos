@@ -1,5 +1,5 @@
 #define MyAppName "YomCeph Desktop"
-#define MyAppVersion "0.13.0 Classic"
+#define MyAppVersion "0.13.1 Classic"
 #define MyAppExeName "YomCeph_Desktop.exe"
 
 [Setup]
@@ -11,7 +11,7 @@ DefaultDirName={autopf}\YomCeph
 DefaultGroupName=YomCeph
 DisableProgramGroupPage=yes
 OutputDir=..\dist-installer
-OutputBaseFilename=YomCeph_Desktop_Setup_v0.13.0_Classic
+OutputBaseFilename=YomCeph_Desktop_Setup_v0.13.1_Classic
 SetupIconFile=assets\yomceph.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2/max
@@ -23,16 +23,17 @@ PrivilegesRequired=lowest
 
 [Languages]
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
+Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "..\dist\YomCeph_Desktop\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
-Name: "{autoprograms}\YomCeph Desktop"; Filename: "{app}\{#MyAppExeName}"; IconFilename: "{app}\{#MyAppExeName}"
-Name: "{autodesktop}\YomCeph Desktop"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{autoprograms}\YomCeph Desktop"; Filename: "{app}\{#MyAppExeName}"; Parameters: "--lang={language}"; IconFilename: "{app}\{#MyAppExeName}"
+Name: "{autodesktop}\YomCeph Desktop"; Filename: "{app}\{#MyAppExeName}"; Parameters: "--lang={language}"; Tasks: desktopicon
 
 [Tasks]
-Name: "desktopicon"; Description: "Crear acceso directo en el escritorio"; GroupDescription: "Accesos directos:"; Flags: unchecked
+Name: "desktopicon"; Description: "Crear acceso directo en el escritorio / Create desktop shortcut"; GroupDescription: "Accesos directos / Shortcuts:"; Flags: unchecked
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "Abrir YomCeph Desktop"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Parameters: "--lang={language}"; Description: "Abrir YomCeph Desktop / Launch YomCeph Desktop"; Flags: nowait postinstall skipifsilent
