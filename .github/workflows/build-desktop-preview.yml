@@ -1,0 +1,85 @@
+name: Build YomCeph Desktop Preview EXE
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/build-desktop-preview.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  windows-build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install desktop build dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pillow pymupdf pyinstaller
+
+      - name: Syntax and geometry smoke tests
+        shell: pwsh
+        run: |
+          python -m py_compile desktop/yomceph_desktop_v130_preview.py
+          @'
+          import importlib.util
+          from pathlib import Path
+          path = Path('desktop/yomceph_desktop_v130_preview.py')
+          spec = importlib.util.spec_from_file_location('yomceph_preview', path)
+          m = importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(m)
+          assert len(m.ANALYSES) == 14, len(m.ANALYSES)
+          assert len(m.MEAS) >= 65, len(m.MEAS)
+          steiner = m.required_points({'Steiner'})
+          assert {'S','N','A','B'}.issubset(steiner)
+          assert 'Sella inf.' not in steiner
+          sass = m.required_points({'Sassouni'})
+          assert 'Sella inf.' in sass and 'Sass Oc post.' in sass
+          pts = {'A':(4.0,1.0),'B':(2.0,-1.0),'OcP':(0.0,0.0),'OcA':(10.0,0.0)}
+          wits = next(x for x in m.MEAS if x.analysis == 'Wits')
+          v1 = m.calc_measure(wits, pts, 1.0)
+          mirrored = {k:(-x,y) for k,(x,y) in pts.items()}
+          mirrored['OcP'], mirrored['OcA'] = (-10.0,0.0),(0.0,0.0)
+          v2 = m.calc_measure(wits, mirrored, 1.0)
+          assert abs(v1-v2) < 1e-9, (v1,v2)
+          print('Desktop preview smoke tests OK:', len(m.MEAS), 'measurements')
+          '@ | python -
+
+      - name: Build Windows x64 EXE
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean --onefile --windowed `
+            --name YomCeph_Desktop_v0.13.0_Preview `
+            --collect-all pymupdf `
+            --hidden-import fitz `
+            desktop/yomceph_desktop_v130_preview.py
+
+      - name: Verify PE executable
+        shell: pwsh
+        run: |
+          $exe = 'dist/YomCeph_Desktop_v0.13.0_Preview.exe'
+          if (!(Test-Path $exe)) { throw 'EXE was not generated' }
+          $bytes = [System.IO.File]::ReadAllBytes($exe)
+          if ($bytes.Length -lt 1024) { throw 'EXE is unexpectedly small' }
+          if ($bytes[0] -ne 0x4D -or $bytes[1] -ne 0x5A) { throw 'Missing MZ PE signature' }
+          Get-FileHash $exe -Algorithm SHA256
+          Get-Item $exe | Format-List Name,Length,FullName
+
+      - name: Upload Windows EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: YomCeph-Desktop-v0.13.0-Preview-Windows-x64
+          path: dist/YomCeph_Desktop_v0.13.0_Preview.exe
+          if-no-files-found: error
