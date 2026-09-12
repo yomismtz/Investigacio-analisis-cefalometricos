@@ -38,12 +38,13 @@ jobs:
           from PIL import Image
           p=Path('desktop/assets/yomceph_logo.png')
           raw=p.read_bytes()
-          got=hashlib.sha256(raw).hexdigest()
-          assert got == 'be024e025d7b58e0c801101b2b4dead72a416dff806eae18aea40667cbdd71ba', got
+          file_sha=hashlib.sha256(raw).hexdigest()
           im=Image.open(p).convert('RGBA')
           assert im.size == (512,512), im.size
+          pixel_sha=hashlib.sha256(im.tobytes()).hexdigest()
+          assert pixel_sha == 'ab5d02d5e1508320d5eec5a06d6f2796b59392292b726413c226456c18e96300', pixel_sha
           im.save('desktop/assets/yomceph.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
-          print('Original YomCeph logo OK', im.size, got)
+          print('Original YomCeph visual identity OK', im.size, 'pixel_sha=',pixel_sha,'file_sha=',file_sha)
           '@ | python -
 
       - name: Syntax check
