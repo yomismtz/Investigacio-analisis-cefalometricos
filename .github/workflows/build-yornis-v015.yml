@@ -1,0 +1,50 @@
+name: Build Yornis v0.15
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+    paths: ['desktop/**','.github/workflows/build-yornis-v015.yml']
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Dependencies
+        shell: pwsh
+        run: python -m pip install pillow pymupdf reportlab openpyxl pyinstaller
+      - name: Restore Yornis logo
+        shell: pwsh
+        run: |
+          @'
+          import base64,hashlib
+          from pathlib import Path
+          from PIL import Image
+          raw=base64.b64decode(Path('desktop/assets/yornis_logo_192.b64').read_text().strip(),validate=True)
+          assert hashlib.sha256(raw).hexdigest()=='076f10e95b384ef8da2caf98006d8c84ea43a3108275553516e0a2657bba68b9'
+          Path('desktop/assets/yornis_logo.png').write_bytes(raw);Path('desktop/assets/yomceph_logo.png').write_bytes(raw)
+          Image.open('desktop/assets/yornis_logo.png').convert('RGBA').save('desktop/assets/yornis.ico',sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(192,192)])
+          '@ | python -
+      - name: Syntax
+        shell: pwsh
+        run: python -m py_compile desktop/yornis_*.py
+      - name: Build application
+        shell: pwsh
+        run: pyinstaller --noconfirm --clean --onedir --windowed --name Yornis --icon desktop/assets/yornis.ico --paths desktop --hidden-import classic_engine --hidden-import yomceph_desktop_v130_classic --hidden-import research_ui --hidden-import research_ui_compat --hidden-import research_enhancements --hidden-import research_stability_db_v0141 --hidden-import research_stability_ui_core_v0141 --hidden-import research_stability_ui_perf_v0141 --hidden-import research_stability_export_ui_v0141 --hidden-import yornis_theme --hidden-import yornis_storage_v015 --hidden-import yornis_import_v015 --hidden-import yornis_background_import_v015 --hidden-import yornis_research_controls_v015 --hidden-import yornis_ui_theme_v015 --hidden-import yornis_spss_v015 --hidden-import yornis_visual_report_v015 --hidden-import yornis_export_ui_v015 --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;." desktop/yornis_desktop_v015.py
+      - name: Cold start
+        shell: pwsh
+        run: $p=Start-Process -FilePath (Resolve-Path 'dist/Yornis/Yornis.exe') -PassThru; Start-Sleep 8; if($p.HasExited){throw 'Yornis exited during cold start'}; Stop-Process -Id $p.Id -Force
+      - name: Installer
+        shell: pwsh
+        run: choco install innosetup --no-progress -y; New-Item -ItemType Directory -Force -Path dist-installer-yornis | Out-Null; & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' desktop\Yornis_v015.iss; Compress-Archive -Path dist\Yornis\* -DestinationPath dist-installer-yornis\Yornis_v0.15.0_Portable.zip -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Yornis-v0.15.0-Windows-x64
+          path: |
+            dist-installer-yornis/Yornis_Setup_v0.15.0.exe
+            dist-installer-yornis/Yornis_v0.15.0_Portable.zip
+          if-no-files-found: error
