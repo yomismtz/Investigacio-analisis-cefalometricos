@@ -29,22 +29,36 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install pillow pymupdf reportlab openpyxl pyinstaller
 
-      - name: Verify original YomCeph logo
+      - name: Restore and verify original YomCeph logo
         shell: pwsh
         run: |
           @'
-          import hashlib
+          import base64, hashlib
           from pathlib import Path
           from PIL import Image
-          p=Path('desktop/assets/yomceph_logo.png')
-          raw=p.read_bytes()
+          expected_chunks = [
+              '88bf8b9cf9310c3a7a599ddb109b73859002d7c5c7f5e29b345c506999c2f4d1',
+              '2e245334c261e09a67ef49279a5ce3add9e405f078c1698317f7d95957dd02a8',
+              '9c306c7f9a1f07216d17a01e1a5990e10ff82fcc5bf8c25e57a7d6f13ef68989',
+              '835bbe268c81056351f2c4b65d8288bc1da7967716fa4bd0354565f64803f73f',
+          ]
+          chunks=[]
+          for i, expected in enumerate(expected_chunks):
+              s=Path(f'desktop/assets/logo_exact_{i:02d}.b64').read_text(encoding='utf-8').strip()
+              got=hashlib.sha256(s.encode('ascii')).hexdigest()
+              assert got == expected, (i, got, expected, len(s))
+              chunks.append(s)
+          raw=base64.b64decode(''.join(chunks), validate=True)
           file_sha=hashlib.sha256(raw).hexdigest()
+          assert file_sha == 'be024e025d7b58e0c801101b2b4dead72a416dff806eae18aea40667cbdd71ba', file_sha
+          p=Path('desktop/assets/yomceph_logo.png')
+          p.write_bytes(raw)
           im=Image.open(p).convert('RGBA')
           assert im.size == (512,512), im.size
           pixel_sha=hashlib.sha256(im.tobytes()).hexdigest()
           assert pixel_sha == 'ab5d02d5e1508320d5eec5a06d6f2796b59392292b726413c226456c18e96300', pixel_sha
           im.save('desktop/assets/yomceph.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
-          print('Original YomCeph visual identity OK', im.size, 'pixel_sha=',pixel_sha,'file_sha=',file_sha)
+          print('Original YomCeph identity restored:', im.size, file_sha, pixel_sha)
           '@ | python -
 
       - name: Syntax check
@@ -56,6 +70,7 @@ jobs:
             desktop/research_db.py `
             desktop/research_protocol.py `
             desktop/research_export.py `
+            desktop/research_enhancements.py `
             desktop/research_ui.py `
             desktop/yomceph_desktop_v014.py `
             desktop/yomceph_desktop_v130_classic.py
@@ -64,15 +79,17 @@ jobs:
         shell: pwsh
         run: python -m unittest discover -s desktop/tests -p 'test_*.py' -v
 
-      - name: Catalog and 30-feature smoke checks
+      - name: Catalog and 30-feature integrity checks
         shell: pwsh
         run: |
           @'
-          import sys, tempfile
+          import sys, tempfile, zipfile
           from pathlib import Path
           sys.path.insert(0,'desktop')
           import research_protocol as p
+          import research_enhancements as enhancements
           from research_db import ResearchDB, MAX_CASES
+          enhancements.install()
           assert MAX_CASES == 1000
           cat=p.analysis_catalog(); assert len(cat)>=10, len(cat)
           keys=[v.key for vs in cat.values() for v in vs][:8]
@@ -87,10 +104,18 @@ jobs:
               db.lock_protocol(sid)
               assert db.save_protocol(sid,cfg)==2
               cid=db.add_case(sid,'0001',sex='F',age=12)
+              # Exact analysis::measurement completion: a same-name measurement from another analysis cannot complete the case.
+              v=p.selected_variables(keys)[0]
+              db.save_trace(cid,2,{q:(10.0+i,20.0+i) for i,q in enumerate(v.points)},[{'analysis':'Wrong analysis','measurement':v.name,'value':1.0,'unit':v.unit}],[],0.1)
+              assert db.case(cid)['status'] != 'complete'
+              values=db.case_criteria_values(cid); assert values == {}
+              criteria=db.criteria(sid); db.set_case_criteria(cid,{int(criteria[0]['id']):True}); assert db.case_criteria_values(cid)[int(criteria[0]['id'])]
+              backup=Path(td)/'backup.zip'; db.backup_study(sid,backup); assert backup.exists()
+              with zipfile.ZipFile(backup) as z: assert 'database/yomceph_research.sqlite3' in z.namelist()
               db.exclude_case(cid,'Calidad radiográfica insuficiente')
               assert db.case(cid)['status']=='excluded'
-              assert len(db.audit_rows(sid))>=4
-          print('Research suite smoke checks OK:', len(cat), 'analyses,', summary)
+              assert len(db.audit_rows(sid))>=6
+          print('Research integrity checks OK:', len(cat), 'analyses,', summary)
           '@ | python -
 
       - name: GUI construction smoke test
@@ -100,9 +125,10 @@ jobs:
           import sys
           sys.path.insert(0,'desktop')
           from yomceph_desktop_v014 import Launcher
-          from research_ui import ResearchWorkspace
+          import research_ui, research_enhancements
+          research_enhancements.install(research_ui.ResearchWorkspace)
           a=Launcher(); a.withdraw(); a.update_idletasks(); assert a.logo_photo is not None; a.destroy()
-          r=ResearchWorkspace('es'); r.withdraw(); r.update_idletasks(); assert r.title().startswith('YomCeph Desktop'); r.destroy()
+          r=research_ui.ResearchWorkspace('es'); r.withdraw(); r.update_idletasks(); assert r.title().startswith('YomCeph Desktop'); assert hasattr(r,'case_checklist_dialog'); r.destroy()
           print('Launcher and research GUI smoke test OK')
           '@ | python -
 
@@ -118,6 +144,7 @@ jobs:
             --hidden-import research_db `
             --hidden-import research_protocol `
             --hidden-import research_export `
+            --hidden-import research_enhancements `
             --hidden-import research_ui `
             --hidden-import yomceph_theme `
             --hidden-import tkinter --hidden-import tkinter.ttk --hidden-import tkinter.filedialog --hidden-import tkinter.messagebox --hidden-import tkinter.simpledialog `
