@@ -1,5 +1,5 @@
 #define MyAppName "Yornis"
-#define MyAppVersion "0.15.1"
+#define MyAppVersion "0.15.2"
 #define MyAppExeName "Yornis.exe"
 [Setup]
 AppId={{9EBE24F2-1F99-49D3-9D08-1DAB4A5E0150}
@@ -10,7 +10,7 @@ DefaultDirName={autopf}\Yornis
 DefaultGroupName=Yornis
 DisableProgramGroupPage=yes
 OutputDir=..\dist-installer-yornis
-OutputBaseFilename=Yornis_Setup_v0.15.1_Audited
+OutputBaseFilename=Yornis_Setup_v0.15.2_Cervical_HiDPI
 SetupIconFile=assets\yornis.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2/max
