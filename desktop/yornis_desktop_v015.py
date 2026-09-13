@@ -8,7 +8,7 @@ APP_VERSION='0.15.0 Research Suite'
 
 class Launcher(base.Launcher):
     def __init__(self):
-        yornis_theme.apply_theme(yornis_theme.current_theme_name(),persist=False);super().__init__();self.title('Yornis · Yom Dental Análisis');self.title_lbl.config(text='Yornis');self.ver_lbl.config(text=f'Yom Dental Análisis · v{APP_VERSION}');self._add_yornis_panel()
+        yornis_theme.apply_theme(yornis_theme.current_theme_name(),persist=False);super().__init__();self.geometry('920x720');self.minsize(840,680);self.title('Yornis · Yom Dental Análisis');self.title_lbl.config(text='Yornis');self.ver_lbl.config(text=f'Yom Dental Análisis · v{APP_VERSION}');self._add_yornis_panel()
     def refresh_text(self):
         base.Launcher.refresh_text(self)
         if hasattr(self,'title_lbl'):self.title_lbl.config(text='Yornis')
@@ -17,9 +17,9 @@ class Launcher(base.Launcher):
         row=ttk.Frame(self.main);row.pack(fill='x',pady=(2,6));ttk.Label(row,text=self.tr('Tema inspirado en aves:','Bird-inspired theme:')).pack(side='left',padx=4);cb=ttk.Combobox(row,state='readonly',values=yornis_theme.theme_names(),width=20);cb.set(yornis_theme.current_theme_name());cb.pack(side='left');cb.bind('<<ComboboxSelected>>',lambda e:self._theme(cb.get()))
         why=ttk.LabelFrame(self.main,text=self.tr('¿Por qué Yornis?','Why Yornis?'),padding=6);why.pack(fill='x',padx=20,pady=4)
         for head,text in [('Y','Yom'),('ORNIS',self.tr('Ave · raíz clásica','Bird · classical root')),('VUELO',self.tr('Precisión y visión','Precision and vision')),('CIENCIA',self.tr('Tecnología que inspira','Technology that inspires'))]:
-            f=ttk.Frame(why,padding=5);f.pack(side='left',fill='both',expand=True,padx=3);ttk.Label(f,text=head,font=('Segoe UI',10,'bold')).pack();ttk.Label(f,text=text,wraplength=145).pack()
+            f=ttk.Frame(why,padding=5);f.pack(side='left',fill='both',expand=True,padx=3);ttk.Label(f,text=head,font=('Segoe UI',10,'bold')).pack();ttk.Label(f,text=text,wraplength=160).pack()
     def _theme(self,name):
-        yornis_theme.apply_theme(name);self.note.config(text=self.tr(f'Tema {name} seleccionado. Se aplicará a Yornis. ',f'{name} theme selected. It will apply to Yornis.'))
+        yornis_theme.apply_theme(name);self.note.config(text=self.tr(f'Tema {name} seleccionado. Se aplicará a Yornis.',f'{name} theme selected. It will apply to Yornis.'))
 
 def research_app(lang):
     import research_ui,research_ui_compat,research_enhancements
