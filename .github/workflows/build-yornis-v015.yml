@@ -1,4 +1,4 @@
-name: Build Yornis v0.15
+name: Build Yornis v0.15.1 Audited
 on:
   workflow_dispatch:
   pull_request:
@@ -35,7 +35,58 @@ jobs:
           '@ | python -
       - name: Syntax
         shell: pwsh
-        run: Get-ChildItem desktop\yornis_*.py | ForEach-Object { python -m py_compile $_.FullName; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } }
+        run: |
+          Get-ChildItem desktop\yornis_*.py | ForEach-Object { python -m py_compile $_.FullName; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } }
+          python -m py_compile desktop/classic_engine.py desktop/research_protocol.py desktop/research_ui.py desktop/yomceph_desktop_v130_classic.py
+      - name: Clinical geometry, landmarks and results audit gate
+        shell: pwsh
+        run: |
+          @'
+          import math,sys,tempfile
+          from pathlib import Path
+          sys.path.insert(0,'desktop')
+          import classic_engine as e
+          import research_protocol as rp
+          import yornis_clinical_audit_v0151 as audit
+          from research_db import ResearchDB
+          assert e.APP_VERSION=='0.13.2 Classic · Clinical Audit',e.APP_VERSION
+          assert len(e.ANALYSES)==15,len(e.ANALYSES)
+          assert len(e.MEASUREMENTS)==98,len(e.MEASUREMENTS)
+          assert len(e.POINT_HELP)>=61,len(e.POINT_HELP)
+          undocumented=[(m.analysis,m.name,p) for m in e.MEASUREMENTS for p in m.pts if p not in e.POINT_HELP]
+          assert not undocumented,undocumented
+          assert not [(m.analysis,m.name,m.hi) for m in e.MEASUREMENTS if m.kind=='acute' and m.hi is not None and m.hi>90]
+          assert all(m.unit=='ratio' for m in e.MEASUREMENTS if m.kind=='ratio_decimal')
+          assert tuple(e.SASSOUNI_POINTS)==('Sella inf.','ACB post.','ACB ant.','PNS','ANS','Sass Oc post.','Sass Oc ant.','Mand base post.','Mand base ant.')
+          by={(m.analysis,m.name):m for m in e.MEASUREMENTS}
+          assert by[('Burstone COGS','Convexidad N-A-Pg')].kind=='straight_dev'
+          assert by[('Legan–Burstone',"Convexidad facial G'-Sn-Pg'")].kind=='straight_dev'
+          assert by[('Cráneo-cervical','McGregor/odontoides')].kind=='obtuse'
+          assert by[('Cráneo-cervical','C0–C1')].pts==('C1sup','Occ','PNS')
+          assert by[('Cráneo-cervical','C1–C2')].pts==('C1pi','C2pspin')
+          assert by[('Cráneo-cervical','Altura triángulo hioideo H⊥C3–RGn')].kind=='signed_toward'
+          assert by[('Steiner','Labio superior a línea S')].pts==('Ls','SLineN','PgS')
+          assert by[('Steiner','Labio inferior a línea S')].pts==('Li','SLineN','PgS')
+          pts={'A':(4.0,1.0),'B':(2.0,-1.0),'OcP':(0.0,0.0),'OcA':(10.0,0.0)}
+          w=next(m for m in e.MEASUREMENTS if m.analysis=='Wits')
+          v1=e.compute(w,pts,1.0,'right');mir={k:(-x,y) for k,(x,y) in pts.items()};v2=e.compute(w,mir,1.0,'left')
+          assert abs(v1-v2)<1e-9,(v1,v2)
+          v=e.directed_lines((0,0),(1,0),(0,0),(math.cos(math.radians(100)),math.sin(math.radians(100))))
+          assert abs(v-100.0)<1e-9,v
+          c1=e.signed_straight_deviation((0,0),(5,1),(10,0),(1,0));c2=e.signed_straight_deviation((0,0),(-5,1),(-10,0),(-1,0))
+          assert c1>0 and abs(c1-c2)<1e-9
+          assert abs(e.signed_straight_deviation((0,0),(5,0),(10,0),(1,0)))<1e-9
+          assert abs(e.compute(by[('Cráneo-cervical','C0–C1')],{'C1sup':(3,5),'Occ':(0,0),'PNS':(10,0)},1.0,'right')-5.0)<1e-9
+          # Research wrapper must preserve the same engine result when orientation is explicit.
+          key='Wits::AO-BO';rr=rp.compute_selected([key],pts,1.0,side='right');assert len(rr)==1 and abs(rr[0]['value']-v1)<1e-9,rr
+          # Linear results without calibration must be explicit rather than silently using pixels as mm.
+          lin=next(m for m in e.MEASUREMENTS if m.unit=='mm');lk=f'{lin.analysis}::{lin.name}'
+          dummy={p:(float(i*10),float(i*3)) for i,p in enumerate(lin.pts)}
+          lr=rp.compute_selected([lk],dummy,None,side='right');assert lr and lr[0]['value'] is None and 'calibr' in lr[0]['interpretation'].lower(),lr
+          with tempfile.TemporaryDirectory() as td:
+              db=ResearchDB(Path(td)/'audit.sqlite3');audit._ensure_profile_side_column(db);sid=db.create_study('Audit');cid=db.add_case(sid,'A001');assert audit._profile_side(db,cid)=='';audit._set_profile_side(db,cid,'left');assert audit._profile_side(db,cid)=='left'
+          print('CLINICAL AUDIT GATE OK',len(e.ANALYSES),len(e.MEASUREMENTS),len(e.POINT_HELP))
+          '@ | python -
       - name: Yornis regression and 1000-case capacity
         shell: pwsh
         run: |
@@ -63,23 +114,34 @@ jobs:
           @'
           import sys
           sys.path.insert(0,'desktop')
-          from yornis_desktop_v015 import Launcher,research_app
+          from yornis_desktop_v015 import Launcher,research_app,APP_VERSION
+          assert APP_VERSION.startswith('0.15.1')
           a=Launcher();a.withdraw();a.update_idletasks();assert a.logo_photo is not None and 'Yornis' in a.title();a.destroy()
-          r=research_app('es');r.withdraw();r.update_idletasks();assert hasattr(r,'yornis_status_buttons') and len(r.yornis_status_buttons)==5;r.destroy();print('Yornis GUI OK')
+          r=research_app('es');r.withdraw();r.update_idletasks();assert hasattr(r,'yornis_status_buttons') and len(r.yornis_status_buttons)==5;assert hasattr(r,'profile_side_var');r.destroy()
+          import yomceph_desktop_v130_classic as classic
+          c=classic.YomCephClassic();c.withdraw();c.update_idletasks();assert c.face_direction=='';c.destroy()
+          print('Yornis audited GUI OK')
           '@ | python -
       - name: Build application
         shell: pwsh
-        run: pyinstaller --noconfirm --clean --onedir --windowed --name Yornis --icon desktop/assets/yornis.ico --paths desktop --hidden-import classic_engine --hidden-import yomceph_desktop_v130_classic --hidden-import research_db --hidden-import research_protocol --hidden-import research_ui --hidden-import research_ui_compat --hidden-import research_enhancements --hidden-import research_stability_db_v0141 --hidden-import research_stability_ui_core_v0141 --hidden-import research_stability_ui_perf_v0141 --hidden-import research_stability_export_ui_v0141 --hidden-import yornis_theme --hidden-import yornis_storage_v015 --hidden-import yornis_import_v015 --hidden-import yornis_background_import_v015 --hidden-import yornis_research_controls_v015 --hidden-import yornis_ui_theme_v015 --hidden-import yornis_spss_v015 --hidden-import yornis_visual_report_v015 --hidden-import yornis_export_ui_v015 --hidden-import yornis_backup_v015 --hidden-import yornis_backup_ui_v015 --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --collect-all pyzipper --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;." desktop/yornis_desktop_v015.py
+        run: pyinstaller --noconfirm --clean --onedir --windowed --name Yornis --icon desktop/assets/yornis.ico --paths desktop --hidden-import classic_engine --hidden-import yomceph_desktop_v130_classic --hidden-import research_db --hidden-import research_protocol --hidden-import research_ui --hidden-import research_ui_compat --hidden-import research_enhancements --hidden-import research_stability_db_v0141 --hidden-import research_stability_ui_core_v0141 --hidden-import research_stability_ui_perf_v0141 --hidden-import research_stability_export_ui_v0141 --hidden-import yornis_theme --hidden-import yornis_storage_v015 --hidden-import yornis_import_v015 --hidden-import yornis_background_import_v015 --hidden-import yornis_research_controls_v015 --hidden-import yornis_ui_theme_v015 --hidden-import yornis_spss_v015 --hidden-import yornis_visual_report_v015 --hidden-import yornis_export_ui_v015 --hidden-import yornis_backup_v015 --hidden-import yornis_backup_ui_v015 --hidden-import yornis_clinical_audit_v0151 --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --collect-all pyzipper --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;." desktop/yornis_desktop_v015.py
       - name: Cold start
         shell: pwsh
-        run: $p=Start-Process -FilePath (Resolve-Path 'dist/Yornis/Yornis.exe') -PassThru; Start-Sleep 8; if($p.HasExited){throw 'Yornis exited during cold start'}; Stop-Process -Id $p.Id -Force
+        run: |
+          $p=Start-Process -FilePath (Resolve-Path 'dist/Yornis/Yornis.exe') -PassThru; Start-Sleep 8; if($p.HasExited){throw 'Yornis exited during cold start'}; Stop-Process -Id $p.Id -Force
+          $exe=Resolve-Path 'dist/Yornis/Yornis.exe';$bytes=[IO.File]::ReadAllBytes($exe);if($bytes[0]-ne 0x4D -or $bytes[1]-ne 0x5A){throw 'Missing MZ signature'};Get-FileHash $exe -Algorithm SHA256
       - name: Installer
         shell: pwsh
-        run: choco install innosetup --no-progress -y; New-Item -ItemType Directory -Force -Path dist-installer-yornis | Out-Null; & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' desktop\Yornis_v015.iss; Compress-Archive -Path dist\Yornis\* -DestinationPath dist-installer-yornis\Yornis_v0.15.0_Portable.zip -Force
+        run: |
+          choco install innosetup --no-progress -y
+          New-Item -ItemType Directory -Force -Path dist-installer-yornis | Out-Null
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' desktop\Yornis_v015.iss
+          $setup='dist-installer-yornis/Yornis_Setup_v0.15.1_Audited.exe';if(!(Test-Path $setup)){throw 'Installer missing'};$bytes=[IO.File]::ReadAllBytes($setup);if($bytes[0]-ne 0x4D -or $bytes[1]-ne 0x5A){throw 'Installer missing MZ signature'};Get-FileHash $setup -Algorithm SHA256
+          Compress-Archive -Path dist\Yornis\* -DestinationPath dist-installer-yornis\Yornis_v0.15.1_Audited_Portable.zip -Force
       - uses: actions/upload-artifact@v4
         with:
-          name: Yornis-v0.15.0-Windows-x64
+          name: Yornis-v0.15.1-Audited-Windows-x64
           path: |
-            dist-installer-yornis/Yornis_Setup_v0.15.0.exe
-            dist-installer-yornis/Yornis_v0.15.0_Portable.zip
+            dist-installer-yornis/Yornis_Setup_v0.15.1_Audited.exe
+            dist-installer-yornis/Yornis_v0.15.1_Audited_Portable.zip
           if-no-files-found: error
