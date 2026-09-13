@@ -16,7 +16,7 @@ jobs:
           python-version: '3.12'
       - name: Dependencies
         shell: pwsh
-        run: python -m pip install pillow pymupdf reportlab openpyxl pyinstaller
+        run: python -m pip install pillow pymupdf reportlab openpyxl pyinstaller pyzipper
       - name: Restore and verify Yornis logo
         shell: pwsh
         run: |
@@ -27,15 +27,15 @@ jobs:
           hashes=['08e2c18c1229ae0db0cdb7162bf1866686da2a5302a32dabd5bea078defce43d','1c67f7b94c7cc957398b37d5d82aea88e848f44fc51bc07c326dc0c825a0a77d','1adcf93696d7732204c8c7f17fb9ba66c7f66fa7306dcf0bcdd3bcda6d9591e5','072cdae528a073d41065027dd6149311e30ab56ee1525c3188edd5ada4debd46','4ed235b0bc89c66d1e2d2d087432c8e01531276d01a143ef09fe8044038fff74','640864304af438d08e8894ab08e4d15496ce1bea09234d59702bad24ee14a05a','044111ef3f14609e29fce0ce13172414083e5dd1533074953ef38e1bbc18e036','50363e5da8e2ad83109563fb3213ba85f61d8e647fdc800a2e34759691952190','81351072f4506e5ef3aafe6b0831f8b77debe5b67cd94718dbf7ee7715234136','d8027243deb52973c3083ceb62e8fc21ad35c996e5e2e907f90d4536cb71b5c4','3353a967f7d02a37990d853206a985a151c391219c9966cb78e0aa0d018dda29','4e6283855be363989458f80e46515a3169aad708107222037821df5539831275']
           chunks=[]
           for i,h in enumerate(hashes):
-              s=Path(f'desktop/assets/yornis_logo_chunk_{i:02d}.b64').read_text(encoding='utf-8').strip(); assert hashlib.sha256(s.encode('ascii')).hexdigest()==h,(i,len(s)); chunks.append(s)
-          raw=base64.b64decode(''.join(chunks),validate=True); assert hashlib.sha256(raw).hexdigest()=='076f10e95b384ef8da2caf98006d8c84ea43a3108275553516e0a2657bba68b9'
+              s=Path(f'desktop/assets/yornis_logo_chunk_{i:02d}.b64').read_text(encoding='utf-8').strip();assert hashlib.sha256(s.encode('ascii')).hexdigest()==h,(i,len(s));chunks.append(s)
+          raw=base64.b64decode(''.join(chunks),validate=True);assert hashlib.sha256(raw).hexdigest()=='076f10e95b384ef8da2caf98006d8c84ea43a3108275553516e0a2657bba68b9'
           Path('desktop/assets/yornis_logo.png').write_bytes(raw);Path('desktop/assets/yomceph_logo.png').write_bytes(raw)
           im=Image.open('desktop/assets/yornis_logo.png').convert('RGBA');assert im.size==(192,192);im.save('desktop/assets/yornis.ico',sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(192,192)])
           print('Yornis logo OK',len(raw))
           '@ | python -
       - name: Syntax
         shell: pwsh
-        run: python -m py_compile desktop/yornis_*.py
+        run: Get-ChildItem desktop\yornis_*.py | ForEach-Object { python -m py_compile $_.FullName; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } }
       - name: Yornis regression and 1000-case capacity
         shell: pwsh
         run: |
@@ -69,7 +69,7 @@ jobs:
           '@ | python -
       - name: Build application
         shell: pwsh
-        run: pyinstaller --noconfirm --clean --onedir --windowed --name Yornis --icon desktop/assets/yornis.ico --paths desktop --hidden-import classic_engine --hidden-import yomceph_desktop_v130_classic --hidden-import research_ui --hidden-import research_ui_compat --hidden-import research_enhancements --hidden-import research_stability_db_v0141 --hidden-import research_stability_ui_core_v0141 --hidden-import research_stability_ui_perf_v0141 --hidden-import research_stability_export_ui_v0141 --hidden-import yornis_theme --hidden-import yornis_storage_v015 --hidden-import yornis_import_v015 --hidden-import yornis_background_import_v015 --hidden-import yornis_research_controls_v015 --hidden-import yornis_ui_theme_v015 --hidden-import yornis_spss_v015 --hidden-import yornis_visual_report_v015 --hidden-import yornis_export_ui_v015 --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;." desktop/yornis_desktop_v015.py
+        run: pyinstaller --noconfirm --clean --onedir --windowed --name Yornis --icon desktop/assets/yornis.ico --paths desktop --hidden-import classic_engine --hidden-import yomceph_desktop_v130_classic --hidden-import research_db --hidden-import research_protocol --hidden-import research_ui --hidden-import research_ui_compat --hidden-import research_enhancements --hidden-import research_stability_db_v0141 --hidden-import research_stability_ui_core_v0141 --hidden-import research_stability_ui_perf_v0141 --hidden-import research_stability_export_ui_v0141 --hidden-import yornis_theme --hidden-import yornis_storage_v015 --hidden-import yornis_import_v015 --hidden-import yornis_background_import_v015 --hidden-import yornis_research_controls_v015 --hidden-import yornis_ui_theme_v015 --hidden-import yornis_spss_v015 --hidden-import yornis_visual_report_v015 --hidden-import yornis_export_ui_v015 --hidden-import yornis_backup_v015 --hidden-import yornis_backup_ui_v015 --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --collect-all pyzipper --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;." desktop/yornis_desktop_v015.py
       - name: Cold start
         shell: pwsh
         run: $p=Start-Process -FilePath (Resolve-Path 'dist/Yornis/Yornis.exe') -PassThru; Start-Sleep 8; if($p.HasExited){throw 'Yornis exited during cold start'}; Stop-Process -Id $p.Id -Force
