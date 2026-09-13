@@ -1,5 +1,5 @@
 #define MyAppName "YomCeph Desktop"
-#define MyAppVersion "0.13.1 Classic"
+#define MyAppVersion "0.13.2 Classic · Clinical Audit"
 #define MyAppExeName "YomCeph_Desktop.exe"
 
 [Setup]
@@ -11,7 +11,7 @@ DefaultDirName={autopf}\YomCeph
 DefaultGroupName=YomCeph
 DisableProgramGroupPage=yes
 OutputDir=..\dist-installer
-OutputBaseFilename=YomCeph_Desktop_Setup_v0.13.1_Classic
+OutputBaseFilename=YomCeph_Desktop_Setup_v0.13.2_Classic
 SetupIconFile=assets\yomceph.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2/max
