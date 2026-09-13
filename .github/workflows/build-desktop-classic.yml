@@ -1,0 +1,192 @@
+name: Build YomCeph Desktop Classic
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/build-desktop-classic.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  windows-classic:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        shell: pwsh
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pillow pymupdf reportlab pyinstaller
+
+      - name: Generate and verify YomCeph visual identity
+        shell: pwsh
+        run: |
+          python desktop/generate_yomceph_logo.py
+          @'
+          from pathlib import Path
+          from PIL import Image
+          p=Path('desktop/assets/yomceph_logo.png')
+          assert p.exists() and p.stat().st_size > 1000, (p.exists(), p.stat().st_size if p.exists() else 0)
+          with Image.open(p) as source:
+              source.verify()
+          im=Image.open(p).convert('RGBA')
+          assert im.size == (512,512), im.size
+          im.save('desktop/assets/yomceph.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
+          print('YomCeph visual identity OK', im.size, p.stat().st_size)
+          '@ | python -
+
+      - name: Syntax, research workflow and audited cephalometric regression tests
+        shell: pwsh
+        run: |
+          python -m py_compile desktop/generate_yomceph_logo.py desktop/classic_engine.py desktop/yomceph_desktop_v130_classic.py desktop/research_workflow.py desktop/_classic_ui_part00.py desktop/_classic_ui_part01.py desktop/_classic_ui_part02.py desktop/_classic_ui_part03.py desktop/_classic_ui_part04.py desktop/_research_part00.py desktop/_research_part01.py desktop/_research_part02.py desktop/_research_part03.py desktop/_research_part04.py
+          @'
+          import math, sys
+          sys.path.insert(0,'desktop')
+          sys.argv.append('--lang=spanish')
+          import classic_engine as e
+          import research_workflow as rw
+          import yomceph_desktop_v130_classic as ui
+
+          assert e.APP_VERSION == '0.13.2 Classic · Clinical Audit', e.APP_VERSION
+          assert len(e.ANALYSES) == 15, len(e.ANALYSES)
+          assert len(e.MEASUREMENTS) == 98, len(e.MEASUREMENTS)
+          assert len(e.POINT_HELP) >= 61, len(e.POINT_HELP)
+
+          undocumented=[(m.analysis,m.name,p) for m in e.MEASUREMENTS for p in m.pts if p not in e.POINT_HELP]
+          assert not undocumented, undocumented
+          assert not [(m.analysis,m.name,m.hi) for m in e.MEASUREMENTS if m.kind=='acute' and m.hi is not None and m.hi>90]
+          assert all(m.unit=='ratio' for m in e.MEASUREMENTS if m.kind=='ratio_decimal')
+          assert tuple(e.SASSOUNI_POINTS)==('Sella inf.','ACB post.','ACB ant.','PNS','ANS','Sass Oc post.','Sass Oc ant.','Mand base post.','Mand base ant.')
+
+          by_name={(m.analysis,m.name):m for m in e.MEASUREMENTS}
+          assert by_name[('Burstone COGS','Convexidad N-A-Pg')].kind=='straight_dev'
+          assert by_name[('Legan–Burstone',"Convexidad facial G'-Sn-Pg'")].kind=='straight_dev'
+          assert by_name[('Cráneo-cervical','McGregor/odontoides')].kind=='obtuse'
+          assert by_name[('Cráneo-cervical','C0–C1')].pts==('C1sup','Occ','PNS')
+          assert by_name[('Cráneo-cervical','C1–C2')].pts==('C1pi','C2pspin')
+          assert by_name[('Cráneo-cervical','Altura triángulo hioideo H⊥C3–RGn')].kind=='signed_toward'
+          assert by_name[('Steiner','Labio superior a línea S')].pts==('Ls','SLineN','PgS')
+          assert by_name[('Steiner','Labio inferior a línea S')].pts==('Li','SLineN','PgS')
+
+          # Wits must be invariant when the radiograph is mirrored and profile direction is flipped.
+          pts={'A':(4.0,1.0),'B':(2.0,-1.0),'OcP':(0.0,0.0),'OcA':(10.0,0.0)}
+          w=next(m for m in e.MEASUREMENTS if m.analysis=='Wits')
+          v1=e.compute(w,pts,1.0,'right')
+          mirrored={k:(-x,y) for k,(x,y) in pts.items()}
+          v2=e.compute(w,mirrored,1.0,'left')
+          assert abs(v1-v2) < 1e-9, (v1,v2)
+
+          # Directed-angle regression: angles >90° must not be folded to their acute supplement.
+          v=e.directed_lines((0,0),(1,0),(0,0),(math.cos(math.radians(100)),math.sin(math.radians(100))))
+          assert abs(v-100.0)<1e-9, v
+
+          # Signed straight-line convexity: collinear=0; mirror + profile flip preserves sign/magnitude.
+          c1=e.signed_straight_deviation((0,0),(5,1),(10,0),(1,0))
+          c2=e.signed_straight_deviation((0,0),(-5,1),(-10,0),(-1,0))
+          assert c1>0 and abs(c1-c2)<1e-9, (c1,c2)
+          assert abs(e.signed_straight_deviation((0,0),(5,0),(10,0),(1,0)))<1e-9
+
+          # Rocabado C0-C1 uses perpendicular distance to McGregor plane.
+          c01=by_name[('Cráneo-cervical','C0–C1')]
+          assert abs(e.compute(c01,{'C1sup':(3,5),'Occ':(0,0),'PNS':(10,0)},1.0,'right')-5.0)<1e-9
+
+          # Research features from v0.13.1 must remain installed.
+          for method in ('import_radiographs','add_manual_research_case','exclude_research_case','restore_research_case','research_completion','active_measurements'):
+              assert hasattr(ui.YomCephClassic, method), method
+
+          print('AUDITED REGRESSION TESTS OK:', len(e.ANALYSES), 'analyses,', len(e.MEASUREMENTS), 'measurements,', len(e.POINT_HELP), 'landmarks documented')
+          '@ | python -
+
+      - name: GUI construction and safety-default smoke test
+        shell: pwsh
+        run: |
+          @'
+          import sys
+          sys.path.insert(0,'desktop')
+          sys.argv.append('--lang=spanish')
+          import yomceph_desktop_v130_classic as m
+          app=m.YomCephClassic()
+          app.withdraw(); app.update_idletasks()
+          assert app.logo_img is not None
+          assert app.logo_small is not None
+          assert app.title().startswith('YomCeph Desktop')
+          assert app.lang == 'es'
+          assert app.face_direction == '', 'Profile direction must not silently default to right'
+          assert hasattr(app, 'import_radiographs')
+          app.destroy()
+          print('Classic audited GUI + research smoke test OK')
+          '@ | python -
+
+      - name: Build full Windows application
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean --onedir --windowed `
+            --name YomCeph_Desktop `
+            --icon desktop/assets/yomceph.ico `
+            --paths desktop `
+            --hidden-import classic_engine `
+            --hidden-import research_workflow `
+            --hidden-import _research_part00 --hidden-import _research_part01 --hidden-import _research_part02 --hidden-import _research_part03 --hidden-import _research_part04 `
+            --hidden-import tkinter --hidden-import tkinter.ttk --hidden-import tkinter.filedialog --hidden-import tkinter.messagebox --hidden-import tkinter.simpledialog --hidden-import tkinter.colorchooser `
+            --hidden-import PIL --collect-all PIL `
+            --hidden-import fitz --collect-all pymupdf `
+            --hidden-import reportlab --hidden-import reportlab.platypus --hidden-import reportlab.lib.pagesizes --hidden-import reportlab.lib.styles --hidden-import reportlab.lib.enums --hidden-import reportlab.lib.units --collect-all reportlab `
+            --add-data "desktop/assets/yomceph_logo.png;." `
+            --add-data "desktop/assets/yomceph.ico;." `
+            desktop/yomceph_desktop_v130_classic.py
+
+      - name: Cold-start the packaged EXE in Spanish
+        shell: pwsh
+        run: |
+          $exe = Resolve-Path 'dist/YomCeph_Desktop/YomCeph_Desktop.exe'
+          $p = Start-Process -FilePath $exe -ArgumentList '--lang=spanish' -PassThru
+          Start-Sleep -Seconds 8
+          if ($p.HasExited) {
+            if ($p.ExitCode -ne 0) { throw "YomCeph exited early with code $($p.ExitCode)" }
+            throw 'YomCeph exited unexpectedly during cold-start test'
+          }
+          Stop-Process -Id $p.Id -Force
+          $bytes=[IO.File]::ReadAllBytes($exe)
+          if ($bytes[0] -ne 0x4D -or $bytes[1] -ne 0x5A) { throw 'Missing MZ signature' }
+          Get-FileHash $exe -Algorithm SHA256
+          Get-Item $exe | Format-List Name,Length,FullName
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+
+      - name: Build bilingual Windows installer
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist-installer | Out-Null
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' desktop\YomCeph_Desktop_v013_classic.iss
+          $setup='dist-installer/YomCeph_Desktop_Setup_v0.13.2_Classic.exe'
+          if (!(Test-Path $setup)) { throw 'Installer was not generated' }
+          $bytes=[IO.File]::ReadAllBytes($setup)
+          if ($bytes[0] -ne 0x4D -or $bytes[1] -ne 0x5A) { throw 'Installer missing MZ signature' }
+          Get-FileHash $setup -Algorithm SHA256
+          Get-Item $setup | Format-List Name,Length,FullName
+
+      - name: Package portable folder
+        shell: pwsh
+        run: Compress-Archive -Path dist\YomCeph_Desktop\* -DestinationPath dist-installer\YomCeph_Desktop_v0.13.2_Classic_Portable.zip -Force
+
+      - name: Upload audited Classic installer and portable build
+        uses: actions/upload-artifact@v4
+        with:
+          name: YomCeph-Desktop-v0.13.2-Classic-Audited-Windows-x64
+          path: |
+            dist-installer/YomCeph_Desktop_Setup_v0.13.2_Classic.exe
+            dist-installer/YomCeph_Desktop_v0.13.2_Classic_Portable.zip
+          if-no-files-found: error
