@@ -74,12 +74,10 @@ jobs:
           v=e.directed_lines((0,0),(1,0),(0,0),(math.cos(math.radians(100)),math.sin(math.radians(100))))
           assert abs(v-100.0)<1e-9,v
           c1=e.signed_straight_deviation((0,0),(5,1),(10,0),(1,0));c2=e.signed_straight_deviation((0,0),(-5,1),(-10,0),(-1,0))
-          assert c1>0 and abs(c1-c2)<1e-9
+          assert abs(c1)>1e-9 and abs(c1-c2)<1e-9,(c1,c2)
           assert abs(e.signed_straight_deviation((0,0),(5,0),(10,0),(1,0)))<1e-9
           assert abs(e.compute(by[('Cráneo-cervical','C0–C1')],{'C1sup':(3,5),'Occ':(0,0),'PNS':(10,0)},1.0,'right')-5.0)<1e-9
-          # Research wrapper must preserve the same engine result when orientation is explicit.
           key='Wits::AO-BO';rr=rp.compute_selected([key],pts,1.0,side='right');assert len(rr)==1 and abs(rr[0]['value']-v1)<1e-9,rr
-          # Linear results without calibration must be explicit rather than silently using pixels as mm.
           lin=next(m for m in e.MEASUREMENTS if m.unit=='mm');lk=f'{lin.analysis}::{lin.name}'
           dummy={p:(float(i*10),float(i*3)) for i,p in enumerate(lin.pts)}
           lr=rp.compute_selected([lk],dummy,None,side='right');assert lr and lr[0]['value'] is None and 'calibr' in lr[0]['interpretation'].lower(),lr
