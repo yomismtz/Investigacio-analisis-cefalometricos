@@ -31,10 +31,23 @@ def random_seed(db,study_id):
     try:return int(db.study(study_id)['random_seed'])
     except Exception:return 15031992
 
+def list_cases(db,study_id,status=None,sex=None,age_min=None,age_max=None,search='',include_excluded=True,random_order=False):
+    sql='SELECT * FROM cases WHERE study_id=?';args=[study_id]
+    if status:sql+=' AND status=?';args.append(status)
+    if sex:sql+=' AND sex=?';args.append(sex)
+    if age_min is not None:sql+=' AND age>=?';args.append(age_min)
+    if age_max is not None:sql+=' AND age<=?';args.append(age_max)
+    if search:sql+=' AND (study_code LIKE ? OR original_filename LIKE ? OR CAST(case_number AS TEXT) LIKE ?)';q=f'%{search}%';args.extend([q,q,q])
+    if not include_excluded:sql+=' AND included=1'
+    sql+=' ORDER BY case_number'
+    with db.connect() as con:rows=list(con.execute(sql,args).fetchall())
+    if random_order:random.Random(db.random_seed(study_id)).shuffle(rows)
+    return rows
+
 def install():
     global _INSTALLED
     if _INSTALLED:return
     old=ResearchDB.__init__
     def init(self,*a,**kw):old(self,*a,**kw);migrate(self)
-    ResearchDB.__init__=init;ResearchDB.set_storage_root=set_storage_root;ResearchDB.study_root=study_root;ResearchDB._study_folder=study_folder;ResearchDB.set_random_seed=set_random_seed;ResearchDB.random_seed=random_seed
+    ResearchDB.__init__=init;ResearchDB.set_storage_root=set_storage_root;ResearchDB.study_root=study_root;ResearchDB._study_folder=study_folder;ResearchDB.set_random_seed=set_random_seed;ResearchDB.random_seed=random_seed;ResearchDB.list_cases=list_cases
     _INSTALLED=True
