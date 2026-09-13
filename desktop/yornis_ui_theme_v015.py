@@ -1,8 +1,8 @@
 from __future__ import annotations
 import tkinter as tk
-from tkinter import messagebox,simpledialog,ttk
+from tkinter import simpledialog,ttk
 import yornis_theme
-from yomceph_theme import PALETTE,RESEARCH_STATUS,SEMANTIC,TRACING
+from yomceph_theme import PALETTE,RESEARCH_STATUS,TRACING
 _INSTALLED=False
 
 def install(workspace_class):
@@ -18,11 +18,12 @@ def install(workspace_class):
         for name in yornis_theme.theme_names():appearance.add_command(label=name+(' · predeterminado' if name=='Agaporni' else ''),command=lambda n=name:change_theme(self,n))
         appearance.add_separator();appearance.add_command(label=self.T('Tamaño de puntos…','Landmark size…'),command=lambda:choose_radius(self));menu.add_cascade(label=self.T('APARIENCIA','APPEARANCE'),menu=appearance)
     workspace_class._build_menu=build_menu
+    workspace_class.redraw=lambda self:redraw_small(self)
     _INSTALLED=True
 
 def apply_widget_style(app):
     t=yornis_theme.THEMES[yornis_theme.current_theme_name()];app.configure(bg=t['bg']);s=ttk.Style(app)
-    s.configure('TFrame',background=t['bg']);s.configure('Panel.TFrame',background=t['panel']);s.configure('Title.TLabel',background=t['bg'],foreground=t['primary_dark']);s.configure('Heading.TLabel',background=t['panel'],foreground=t['primary']);s.configure('Muted.TLabel',background=t['panel'],foreground=t['muted']);s.configure('Primary.TButton',foreground=t['primary_dark']);s.configure('Treeview',fieldbackground=t['panel'],background=t['panel'],foreground=t['text']);s.configure('Treeview.Heading',background=t['panel_alt'],foreground=t['primary_dark'])
+    s.configure('TFrame',background=t['bg']);s.configure('Panel.TFrame',background=t['panel']);s.configure('Title.TLabel',background=t['bg'],foreground=t['primary_dark']);s.configure('Heading.TLabel',background=t['panel'],foreground=t['primary']);s.configure('Muted.TLabel',background=t['panel'],foreground=t['muted']);s.configure('Treeview',fieldbackground=t['panel'],background=t['panel'],foreground=t['text']);s.configure('Treeview.Heading',background=t['panel_alt'],foreground=t['primary_dark'])
     if hasattr(app,'canvas'):app.canvas.configure(bg=t['canvas'])
     if hasattr(app,'chart'):app.chart.configure(bg=t['panel'],highlightbackground=t['border'])
     if hasattr(app,'preview'):app.preview.configure(bg=t['canvas'])
