@@ -12,41 +12,28 @@ _ENGINE_PATCHED = False
 
 
 def _patch_engine_orientation() -> None:
-    """Normalize signed cephalometric geometry across horizontal mirroring.
+    """Normalize signed convexity geometry across horizontal mirroring.
 
     A lateral cephalogram mirrored horizontally is still the same anatomy.
-    Directed sagittal distances and signed straight-line deviations therefore
-    must retain their anatomical sign when the profile side is supplied.
+    Signed straight-line deviations are pseudoscalars in image coordinates and
+    would otherwise reverse sign.  The anatomical forward direction is used to
+    normalize that sign.  Wits is intentionally left to the core engine, which
+    already handles profile-side direction correctly.
     """
     global _ENGINE_PATCHED
     if _ENGINE_PATCHED:
         return
 
-    original_compute = _engine.compute
     original_straight_dev = _engine.signed_straight_deviation
 
     def signed_straight_deviation(a, b, c, forward):
         value = original_straight_dev(a, b, c, forward)
-        # The raw 2-D orientation is a pseudoscalar and flips under a mirror.
-        # Normalize it with the anatomical forward x direction so a mirrored
-        # tracing has the same convex/concave sign.  Lateral ceph profiles have
-        # a non-vertical forward axis; fall back to the original sign only when
-        # x is exactly zero.
         fx = float(forward[0]) if forward is not None else 0.0
         if fx < 0:
             return -value
         return value
 
-    def compute(measurement, points, mm_per_px, side="right"):
-        value = original_compute(measurement, points, mm_per_px, side)
-        if value is None:
-            return None
-        if getattr(measurement, "analysis", "") == "Wits" and side == "left":
-            return -value
-        return value
-
     _engine.signed_straight_deviation = signed_straight_deviation
-    _engine.compute = compute
     _ENGINE_PATCHED = True
 
 
