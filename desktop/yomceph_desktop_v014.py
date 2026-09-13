@@ -143,7 +143,9 @@ def main():
         app.mainloop()
     elif mode == "research":
         import research_ui
+        import research_ui_compat
         import research_enhancements
+        research_ui_compat.install(research_ui.ResearchWorkspace)
         research_enhancements.install(research_ui.ResearchWorkspace)
         app = research_ui.ResearchWorkspace(lang)
         app.mainloop()
