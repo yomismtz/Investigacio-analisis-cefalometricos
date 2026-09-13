@@ -3,10 +3,40 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
 
+import classic_engine as _engine
 from research_db import ResearchDB
 import research_protocol
 
 _INSTALLED = False
+_ENGINE_PATCHED = False
+
+
+def _patch_engine_orientation() -> None:
+    """Make signed sagittal results invariant to horizontal mirroring.
+
+    Wits is a directed distance along the occlusal plane.  When the same
+    radiograph is mirrored, the raw projected coordinate difference reverses
+    sign.  Anatomically the result must keep the same meaning, so the explicit
+    profile direction supplied by the case is used to normalize the sign.
+    """
+    global _ENGINE_PATCHED
+    if _ENGINE_PATCHED:
+        return
+    original_compute = _engine.compute
+
+    def compute(measurement, points, mm_per_px, side="right"):
+        value = original_compute(measurement, points, mm_per_px, side)
+        if value is None:
+            return None
+        if getattr(measurement, "analysis", "") == "Wits" and side == "left":
+            return -value
+        return value
+
+    _engine.compute = compute
+    _ENGINE_PATCHED = True
+
+
+_patch_engine_orientation()
 
 
 def _ensure_profile_side_column(db: ResearchDB) -> None:
@@ -44,50 +74,77 @@ def _set_profile_side(db: ResearchDB, case_id: int, side: str) -> None:
 def install(workspace_class) -> None:
     """Install v0.15.1 clinical-safety integration patches.
 
-    The geometric engine remains the single source of truth. This patch only
-    prevents silent orientation assumptions in Research mode and persists the
-    explicit face/profile direction per case.
+    The geometric engine remains the source of truth.  This integration layer
+    normalizes the Wits direction using the explicit profile side and prevents
+    silent orientation assumptions in Research mode.
     """
     global _INSTALLED
     if _INSTALLED:
         return
 
-    # Schema migration happens before ResearchWorkspace is instantiated.
     old_init_schema = ResearchDB._init_schema
+
     def init_schema(self):
         old_init_schema(self)
         _ensure_profile_side_column(self)
+
     ResearchDB._init_schema = init_schema
     ResearchDB.profile_side = lambda self, case_id: _profile_side(self, case_id)
     ResearchDB.set_profile_side = lambda self, case_id, side: _set_profile_side(self, case_id, side)
 
     old_build_trace = workspace_class._build_trace
+
     def build_trace(self):
         old_build_trace(self)
         self.profile_side_var = tk.StringVar(value="")
-        box = ttk.LabelFrame(self.trace_tab, text=self.T("Orientación radiográfica", "Radiographic orientation"), padding=5)
-        box.pack(fill="x", padx=5, pady=(0, 4), before=self.trace_tab.winfo_children()[0] if self.trace_tab.winfo_children() else None)
+        box = ttk.LabelFrame(
+            self.trace_tab,
+            text=self.T("Orientación radiográfica", "Radiographic orientation"),
+            padding=5,
+        )
+        box.pack(
+            fill="x",
+            padx=5,
+            pady=(0, 4),
+            before=self.trace_tab.winfo_children()[0] if self.trace_tab.winfo_children() else None,
+        )
         ttk.Label(box, text=self.T("El perfil mira a:", "Profile faces:")).pack(side="left", padx=(3, 5))
-        cb = ttk.Combobox(box, textvariable=self.profile_side_var, state="readonly", width=18,
-                          values=["", "right", "left"])
+        cb = ttk.Combobox(
+            box,
+            textvariable=self.profile_side_var,
+            state="readonly",
+            width=18,
+            values=["", "right", "left"],
+        )
         cb.pack(side="left")
-        self.profile_side_hint = ttk.Label(box, text=self.T("Obligatorio para conservar signos anatómicos.", "Required to preserve anatomical signs."))
+        self.profile_side_hint = ttk.Label(
+            box,
+            text=self.T(
+                "Obligatorio para conservar signos anatómicos.",
+                "Required to preserve anatomical signs.",
+            ),
+        )
         self.profile_side_hint.pack(side="left", padx=8)
+
         def changed(_event=None):
             if self.case_id:
                 self.db.set_profile_side(self.case_id, self.profile_side_var.get())
                 self.calculate_preview()
+
         cb.bind("<<ComboboxSelected>>", changed)
         self.profile_side_combo = cb
+
     workspace_class._build_trace = build_trace
 
     old_open = workspace_class.open_selected_case
+
     def open_selected_case(self, *args, **kwargs):
         out = old_open(self, *args, **kwargs)
         if hasattr(self, "profile_side_var"):
             self.profile_side_var.set(self.db.profile_side(self.case_id) if self.case_id else "")
             self.calculate_preview()
         return out
+
     workspace_class.open_selected_case = open_selected_case
 
     def calculate_preview(self):
@@ -100,17 +157,28 @@ def install(workspace_class) -> None:
         if not side:
             results = []
             for v in research_protocol.selected_variables(keys):
-                results.append({
-                    "analysis": v.analysis, "measurement": v.name, "value": None,
-                    "unit": v.unit,
-                    "reference": research_protocol.reference_for(v, c["sex"], c["age"]),
-                    "interpretation": self.T("Selecciona si el perfil mira a derecha o izquierda antes de calcular.",
-                                               "Select whether the profile faces right or left before calculating."),
-                    "missing": [],
-                })
+                results.append(
+                    {
+                        "analysis": v.analysis,
+                        "measurement": v.name,
+                        "value": None,
+                        "unit": v.unit,
+                        "reference": research_protocol.reference_for(v, c["sex"], c["age"]),
+                        "interpretation": self.T(
+                            "Selecciona si el perfil mira a derecha o izquierda antes de calcular.",
+                            "Select whether the profile faces right or left before calculating.",
+                        ),
+                        "missing": [],
+                    }
+                )
         else:
             results = research_protocol.compute_selected(
-                keys, self.points, self.mm_per_px, side=side, sex=c["sex"], age=c["age"]
+                keys,
+                self.points,
+                self.mm_per_px,
+                side=side,
+                sex=c["sex"],
+                age=c["age"],
             )
         groups = {}
         for r in results:
@@ -119,11 +187,17 @@ def install(workspace_class) -> None:
             val = "—" if r["value"] is None else f"{r['value']:.2f}"
             self.results_tree.insert(groups[a], "end", text=r["measurement"], values=(val, r["unit"]))
         if hasattr(self, "profile_side_hint"):
-            self.profile_side_hint.config(text=(
-                self.T("✓ Orientación guardada para este caso.", "✓ Orientation saved for this case.") if side else
-                self.T("⚠ Selecciona orientación: no se asumirá una por defecto.", "⚠ Select orientation: no default will be assumed.")
-            ))
+            self.profile_side_hint.config(
+                text=(
+                    self.T("✓ Orientación guardada para este caso.", "✓ Orientation saved for this case.")
+                    if side
+                    else self.T(
+                        "⚠ Selecciona orientación: no se asumirá una por defecto.",
+                        "⚠ Select orientation: no default will be assumed.",
+                    )
+                )
+            )
         return results
-    workspace_class.calculate_preview = calculate_preview
 
+    workspace_class.calculate_preview = calculate_preview
     _INSTALLED = True
