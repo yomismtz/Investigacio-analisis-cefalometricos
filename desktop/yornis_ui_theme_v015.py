@@ -33,6 +33,7 @@ def apply_widget_style(app):
 
 def change_theme(app,name):
     yornis_theme.apply_theme(name);apply_widget_style(app)
+    if hasattr(app,'refresh_status_buttons'):app.refresh_status_buttons()
     if hasattr(app,'refresh_cases'):app.refresh_cases()
     if hasattr(app,'refresh_dashboard'):app.refresh_dashboard()
     if hasattr(app,'redraw'):app.redraw()
