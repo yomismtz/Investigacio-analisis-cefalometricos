@@ -4,7 +4,7 @@ from tkinter import ttk
 import yomceph_desktop_v014 as base
 import yornis_theme
 
-APP_VERSION='0.15.0 Research Suite'
+APP_VERSION='0.15.1 Research Suite · Clinical Audit'
 
 class Launcher(base.Launcher):
     def __init__(self):
@@ -24,8 +24,8 @@ class Launcher(base.Launcher):
 def research_app(lang):
     import research_ui,research_ui_compat,research_enhancements
     import research_stability_db_v0141,research_stability_ui_core_v0141,research_stability_ui_perf_v0141,research_stability_export_ui_v0141
-    import yornis_storage_v015,yornis_import_v015,yornis_background_import_v015,yornis_research_controls_v015,yornis_ui_theme_v015,yornis_export_ui_v015,yornis_backup_v015,yornis_backup_ui_v015
-    research_ui_compat.install(research_ui.ResearchWorkspace);research_enhancements.install(research_ui.ResearchWorkspace);research_stability_db_v0141.install();yornis_storage_v015.install();yornis_import_v015.install();yornis_backup_v015.install();research_stability_ui_core_v0141.install(research_ui.ResearchWorkspace,research_ui.ScrollChecks);research_stability_ui_perf_v0141.install(research_ui.ResearchWorkspace);research_stability_export_ui_v0141.install(research_ui.ResearchWorkspace);yornis_background_import_v015.install(research_ui.ResearchWorkspace);yornis_research_controls_v015.install(research_ui.ResearchWorkspace);yornis_ui_theme_v015.install(research_ui.ResearchWorkspace);yornis_export_ui_v015.install(research_ui.ResearchWorkspace);yornis_backup_ui_v015.install(research_ui.ResearchWorkspace)
+    import yornis_storage_v015,yornis_import_v015,yornis_background_import_v015,yornis_research_controls_v015,yornis_ui_theme_v015,yornis_export_ui_v015,yornis_backup_v015,yornis_backup_ui_v015,yornis_clinical_audit_v0151
+    research_ui_compat.install(research_ui.ResearchWorkspace);research_enhancements.install(research_ui.ResearchWorkspace);research_stability_db_v0141.install();yornis_storage_v015.install();yornis_import_v015.install();yornis_backup_v015.install();research_stability_ui_core_v0141.install(research_ui.ResearchWorkspace,research_ui.ScrollChecks);research_stability_ui_perf_v0141.install(research_ui.ResearchWorkspace);research_stability_export_ui_v0141.install(research_ui.ResearchWorkspace);yornis_background_import_v015.install(research_ui.ResearchWorkspace);yornis_research_controls_v015.install(research_ui.ResearchWorkspace);yornis_ui_theme_v015.install(research_ui.ResearchWorkspace);yornis_export_ui_v015.install(research_ui.ResearchWorkspace);yornis_backup_ui_v015.install(research_ui.ResearchWorkspace);yornis_clinical_audit_v0151.install(research_ui.ResearchWorkspace)
     app=research_ui.ResearchWorkspace(lang);app.title(f'Yornis · Yom Dental Análisis · v{APP_VERSION}');return app
 
 def main():
