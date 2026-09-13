@@ -1,4 +1,4 @@
-name: Build Yornis v0.15.1 Audited
+name: Build Yornis v0.15.2 Cervical HiDPI
 on:
   workflow_dispatch:
   pull_request:
@@ -38,7 +38,7 @@ jobs:
         run: |
           Get-ChildItem desktop\yornis_*.py | ForEach-Object { python -m py_compile $_.FullName; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } }
           python -m py_compile desktop/classic_engine.py desktop/research_protocol.py desktop/research_ui.py desktop/yomceph_desktop_v130_classic.py
-      - name: Clinical geometry, landmarks and results audit gate
+      - name: Clinical geometry, landmarks, cervical posture and CVM audit gate
         shell: pwsh
         run: |
           @'
@@ -48,11 +48,12 @@ jobs:
           import classic_engine as e
           import research_protocol as rp
           import yornis_clinical_audit_v0151 as audit
+          import yornis_cervical_v0152 as cv
           from research_db import ResearchDB
           assert e.APP_VERSION=='0.13.2 Classic · Clinical Audit',e.APP_VERSION
-          assert len(e.ANALYSES)==15,len(e.ANALYSES)
-          assert len(e.MEASUREMENTS)==98,len(e.MEASUREMENTS)
-          assert len(e.POINT_HELP)>=61,len(e.POINT_HELP)
+          assert len(e.ANALYSES)==16,len(e.ANALYSES)
+          assert len(e.MEASUREMENTS)==99,len(e.MEASUREMENTS)
+          assert len(e.POINT_HELP)>=65,len(e.POINT_HELP)
           measure_keys=[f'{m.analysis}::{m.name}' for m in e.MEASUREMENTS]
           assert len(measure_keys)==len(set(measure_keys)),[k for k in measure_keys if measure_keys.count(k)>1]
           catalog=rp.analysis_catalog()
@@ -83,15 +84,32 @@ jobs:
           assert abs(v-100.0)<1e-9,v
           c1=e.signed_straight_deviation((0,0),(5,1),(10,0),(1,0));c2=e.signed_straight_deviation((0,0),(-5,1),(-10,0),(-1,0))
           assert abs(c1)>1e-9 and abs(c1-c2)<1e-9,(c1,c2)
-          assert abs(e.signed_straight_deviation((0,0),(5,0),(10,0),(1,0)))<1e-9
-          assert abs(e.compute(by[('Cráneo-cervical','C0–C1')],{'C1sup':(3,5),'Occ':(0,0),'PNS':(10,0)},1.0,'right')-5.0)<1e-9
+          lord=by[(cv.POSTURE_ANALYSIS,cv.POSTURE_MEASUREMENT)]
+          assert lord.pts==cv.LORDOSIS_POINTS and lord.kind=='yornis_cervical_lordosis'
+          p={'C1 tub post':(0,0),'C1 tub ant':(10,8.390996),'C7 inf post':(0,20),'C7 inf ant':(10,20)}
+          a=e.compute(lord,p,1.0,'right');pm={k:(-x,y) for k,(x,y) in p.items()};b=e.compute(lord,pm,1.0,'left')
+          assert 35<a<45,(a,b);assert abs(a-b)<1e-6,(a,b);assert 'referencia' in cv.posture_classification(a)[0].lower()
+          canonical=[
+            (('no','no','no','trapezoidal','trapezoidal'),1),
+            (('si','no','no','trapezoidal','trapezoidal'),2),
+            (('si','si','no','trapezoidal','horizontal'),3),
+            (('si','si','si','horizontal','horizontal'),4),
+            (('si','si','si','cuadrada','horizontal'),5),
+            (('si','si','si','vertical','cuadrada'),6),
+          ]
+          for args,stage in canonical:
+              r=cv.classify_cvm(*args);assert r['stage']==stage,(args,r)
+          assert cv.classify_cvm('no','si','no','trapezoidal','trapezoidal')['stage'] is None
           key=f'{w.analysis}::{w.name}';rr=rp.compute_selected([key],pts,1.0,side='right');assert len(rr)==1 and abs(rr[0]['value']-v1)<1e-9,(key,rr)
+          lkey=f'{lord.analysis}::{lord.name}';lr=rp.compute_selected([lkey],p,None,side='right');assert lr and 35<lr[0]['value']<45,lr
           lin=next(m for m in e.MEASUREMENTS if m.unit=='mm');lk=f'{lin.analysis}::{lin.name}'
           dummy={p:(float(i*10),float(i*3)) for i,p in enumerate(lin.pts)}
-          lr=rp.compute_selected([lk],dummy,None,side='right');assert lr and lr[0]['value'] is None and 'calibr' in lr[0]['interpretation'].lower(),lr
+          cal=rp.compute_selected([lk],dummy,None,side='right');assert cal and cal[0]['value'] is None and 'calibr' in cal[0]['interpretation'].lower(),cal
           with tempfile.TemporaryDirectory() as td:
-              db=ResearchDB(Path(td)/'audit.sqlite3');audit._ensure_profile_side_column(db);sid=db.create_study('Audit');cid=db.add_case(sid,'A001');assert audit._profile_side(db,cid)=='';audit._set_profile_side(db,cid,'left');assert audit._profile_side(db,cid)=='left'
-          print('CLINICAL AUDIT GATE OK',len(e.ANALYSES),len(e.MEASUREMENTS),len(e.POINT_HELP),'special',sorted(special))
+              db=ResearchDB(Path(td)/'audit.sqlite3');audit._ensure_profile_side_column(db);sid=db.create_study('Audit');cid=db.add_case(sid,'A001');assert audit._profile_side(db,cid)=='';audit._set_profile_side(db,cid,'left');assert audit._profile_side(db,cid)=='left';cv._ensure_table(db)
+              cols={r[1] for r in db.connect().__enter__().execute('PRAGMA table_info(cervical_assessments)').fetchall()}
+              assert {'lordosis_angle','cvm_stage','features_json'}.issubset(cols)
+          print('CERVICAL CLINICAL AUDIT OK',len(e.ANALYSES),len(e.MEASUREMENTS),len(e.POINT_HELP))
           '@ | python -
       - name: Yornis regression and 1000-case capacity
         shell: pwsh
@@ -114,23 +132,26 @@ jobs:
               except ValueError:pass
           print('Yornis regression OK')
           '@ | python -
-      - name: GUI smoke
+      - name: HiDPI, touch metrics and GUI smoke
         shell: pwsh
         run: |
           @'
-          import sys
+          import sys,tkinter.font as tkfont
           sys.path.insert(0,'desktop')
+          import yornis_display_v0152 as disp
           from yornis_desktop_v015 import Launcher,research_app,APP_VERSION
-          assert APP_VERSION.startswith('0.15.1')
-          a=Launcher();a.withdraw();a.update_idletasks();assert a.logo_photo is not None and 'Yornis' in a.title();a.destroy()
-          r=research_app('es');r.withdraw();r.update_idletasks();assert hasattr(r,'yornis_status_buttons') and len(r.yornis_status_buttons)==5;assert hasattr(r,'profile_side_var');r.destroy()
+          assert APP_VERSION.startswith('0.15.2')
+          a=Launcher();a.withdraw();a.update_idletasks();assert a.logo_photo is not None and 'Yornis' in a.title();assert float(a.tk.call('tk','scaling'))>0;assert 'Segoe UI' in tkfont.nametofont('TkDefaultFont',root=a).actual('family');a.destroy()
+          r=research_app('es');r.withdraw();r.update_idletasks();assert hasattr(r,'yornis_status_buttons') and len(r.yornis_status_buttons)==5;assert hasattr(r,'profile_side_var');assert int(r.minsize()[0])>=680;r.destroy()
           import yomceph_desktop_v130_classic as classic
-          c=classic.YomCephClassic();c.withdraw();c.update_idletasks();assert c.face_direction=='';c.destroy()
-          print('Yornis audited GUI OK')
+          import yornis_cervical_v0152 as cv
+          cv.install_individual(classic.YomCephClassic)
+          c=classic.YomCephClassic();c.withdraw();disp.apply_display_quality(c,launcher=False);c.update_idletasks();assert c.face_direction=='';c.destroy()
+          print('Yornis HiDPI/touch GUI OK; touch-capable=',disp.touch_capable())
           '@ | python -
       - name: Build application
         shell: pwsh
-        run: pyinstaller --noconfirm --clean --onedir --windowed --name Yornis --icon desktop/assets/yornis.ico --paths desktop --hidden-import classic_engine --hidden-import yomceph_desktop_v130_classic --hidden-import research_db --hidden-import research_protocol --hidden-import research_ui --hidden-import research_ui_compat --hidden-import research_enhancements --hidden-import research_stability_db_v0141 --hidden-import research_stability_ui_core_v0141 --hidden-import research_stability_ui_perf_v0141 --hidden-import research_stability_export_ui_v0141 --hidden-import yornis_theme --hidden-import yornis_storage_v015 --hidden-import yornis_import_v015 --hidden-import yornis_background_import_v015 --hidden-import yornis_research_controls_v015 --hidden-import yornis_ui_theme_v015 --hidden-import yornis_spss_v015 --hidden-import yornis_visual_report_v015 --hidden-import yornis_export_ui_v015 --hidden-import yornis_backup_v015 --hidden-import yornis_backup_ui_v015 --hidden-import yornis_clinical_audit_v0151 --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --collect-all pyzipper --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;." desktop/yornis_desktop_v015.py
+        run: pyinstaller --noconfirm --clean --onedir --windowed --name Yornis --icon desktop/assets/yornis.ico --paths desktop --hidden-import classic_engine --hidden-import yomceph_desktop_v130_classic --hidden-import research_db --hidden-import research_protocol --hidden-import research_ui --hidden-import research_ui_compat --hidden-import research_enhancements --hidden-import research_stability_db_v0141 --hidden-import research_stability_ui_core_v0141 --hidden-import research_stability_ui_perf_v0141 --hidden-import research_stability_export_ui_v0141 --hidden-import yornis_theme --hidden-import yornis_storage_v015 --hidden-import yornis_import_v015 --hidden-import yornis_background_import_v015 --hidden-import yornis_research_controls_v015 --hidden-import yornis_ui_theme_v015 --hidden-import yornis_spss_v015 --hidden-import yornis_visual_report_v015 --hidden-import yornis_export_ui_v015 --hidden-import yornis_backup_v015 --hidden-import yornis_backup_ui_v015 --hidden-import yornis_clinical_audit_v0151 --hidden-import yornis_cervical_v0152 --hidden-import yornis_display_v0152 --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --collect-all pyzipper --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;." desktop/yornis_desktop_v015.py
       - name: Cold start
         shell: pwsh
         run: |
@@ -142,12 +163,12 @@ jobs:
           choco install innosetup --no-progress -y
           New-Item -ItemType Directory -Force -Path dist-installer-yornis | Out-Null
           & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' desktop\Yornis_v015.iss
-          $setup='dist-installer-yornis/Yornis_Setup_v0.15.1_Audited.exe';if(!(Test-Path $setup)){throw 'Installer missing'};$bytes=[IO.File]::ReadAllBytes($setup);if($bytes[0]-ne 0x4D -or $bytes[1]-ne 0x5A){throw 'Installer missing MZ signature'};Get-FileHash $setup -Algorithm SHA256
-          Compress-Archive -Path dist\Yornis\* -DestinationPath dist-installer-yornis\Yornis_v0.15.1_Audited_Portable.zip -Force
+          $setup='dist-installer-yornis/Yornis_Setup_v0.15.2_Cervical_HiDPI.exe';if(!(Test-Path $setup)){throw 'Installer missing'};$bytes=[IO.File]::ReadAllBytes($setup);if($bytes[0]-ne 0x4D -or $bytes[1]-ne 0x5A){throw 'Installer missing MZ signature'};Get-FileHash $setup -Algorithm SHA256
+          Compress-Archive -Path dist\Yornis\* -DestinationPath dist-installer-yornis\Yornis_v0.15.2_Cervical_HiDPI_Portable.zip -Force
       - uses: actions/upload-artifact@v4
         with:
-          name: Yornis-v0.15.1-Audited-Windows-x64
+          name: Yornis-v0.15.2-Cervical-HiDPI-Windows-x64
           path: |
-            dist-installer-yornis/Yornis_Setup_v0.15.1_Audited.exe
-            dist-installer-yornis/Yornis_v0.15.1_Audited_Portable.zip
+            dist-installer-yornis/Yornis_Setup_v0.15.2_Cervical_HiDPI.exe
+            dist-installer-yornis/Yornis_v0.15.2_Cervical_HiDPI_Portable.zip
           if-no-files-found: error
