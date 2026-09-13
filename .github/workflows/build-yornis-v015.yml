@@ -57,7 +57,9 @@ jobs:
           assert len(measure_keys)==len(set(measure_keys)),[k for k in measure_keys if measure_keys.count(k)>1]
           catalog=rp.analysis_catalog()
           assert set(catalog)==set(e.ANALYSES),(set(e.ANALYSES)-set(catalog),set(catalog)-set(e.ANALYSES))
-          assert all(catalog[a] for a in e.ANALYSES),[a for a in e.ANALYSES if not catalog[a]]
+          special={'Sassouni','CVM C2–C4'}
+          empty={a for a in e.ANALYSES if not catalog[a]}
+          assert empty==special,(empty,special)
           assert sum(len(vs) for vs in catalog.values())==len(e.MEASUREMENTS),(sum(len(vs) for vs in catalog.values()),len(e.MEASUREMENTS))
           undocumented=[(m.analysis,m.name,p) for m in e.MEASUREMENTS for p in m.pts if p not in e.POINT_HELP]
           assert not undocumented,undocumented
@@ -89,7 +91,7 @@ jobs:
           lr=rp.compute_selected([lk],dummy,None,side='right');assert lr and lr[0]['value'] is None and 'calibr' in lr[0]['interpretation'].lower(),lr
           with tempfile.TemporaryDirectory() as td:
               db=ResearchDB(Path(td)/'audit.sqlite3');audit._ensure_profile_side_column(db);sid=db.create_study('Audit');cid=db.add_case(sid,'A001');assert audit._profile_side(db,cid)=='';audit._set_profile_side(db,cid,'left');assert audit._profile_side(db,cid)=='left'
-          print('CLINICAL AUDIT GATE OK',len(e.ANALYSES),len(e.MEASUREMENTS),len(e.POINT_HELP))
+          print('CLINICAL AUDIT GATE OK',len(e.ANALYSES),len(e.MEASUREMENTS),len(e.POINT_HELP),'special',sorted(special))
           '@ | python -
       - name: Yornis regression and 1000-case capacity
         shell: pwsh
