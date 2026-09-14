@@ -3,7 +3,7 @@ from __future__ import annotations
 # v0.15.4 is an additive hardening layer over the audited v0.15.3 engine.
 import yornis_desktop_v015 as legacy
 import yornis_audit_hardening_v0154 as hardening
-import yornis_reference_help_v0154 as reference_help
+import yornis_reference_help_v0154_all as reference_help
 
 APP_VERSION = "0.15.4 Research Suite · Audit Hardening + HiDPI"
 legacy.APP_VERSION = APP_VERSION
