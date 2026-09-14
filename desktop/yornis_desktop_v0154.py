@@ -3,6 +3,7 @@ from __future__ import annotations
 # v0.15.4 is an additive hardening layer over the audited v0.15.3 engine.
 import yornis_desktop_v015 as legacy
 import yornis_audit_hardening_v0154 as hardening
+import yornis_reference_help_v0154 as reference_help
 
 APP_VERSION = "0.15.4 Research Suite · Audit Hardening + HiDPI"
 legacy.APP_VERSION = APP_VERSION
@@ -37,11 +38,13 @@ def research_app(lang):
     app = research_ui.ResearchWorkspace(lang)
     app.title(f"Yornis · Yom Dental Análisis · v{APP_VERSION}")
     legacy.display.apply_display_quality(app, launcher=False)
+    reference_help.attach_help_button(app)
     return app
 
 
 def main():
     launch = Launcher()
+    reference_help.attach_help_button(launch, compact=True)
     launch.mainloop()
     mode = launch.choice
     lang = launch.language
@@ -54,6 +57,7 @@ def main():
         app = classic.YomCephClassic()
         app.title(f"Yornis · Yom Dental Análisis · v{APP_VERSION} · Individual")
         legacy.display.apply_display_quality(app, launcher=False)
+        reference_help.attach_help_button(app)
         app.mainloop()
     elif mode == "research":
         research_app(lang).mainloop()
