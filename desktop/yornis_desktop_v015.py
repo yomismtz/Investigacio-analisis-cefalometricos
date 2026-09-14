@@ -14,6 +14,7 @@ import yornis_theme
 # Individual Case and Research modes use the same audited engine.
 import yornis_clinical_audit_v0151
 import yornis_cervical_v0152
+import yornis_alignment_v0152
 
 APP_VERSION = '0.15.2 Research Suite · Cervical + HiDPI'
 
@@ -88,6 +89,7 @@ def research_app(lang):
     yornis_backup_ui_v015.install(research_ui.ResearchWorkspace)
     yornis_clinical_audit_v0151.install(research_ui.ResearchWorkspace)
     yornis_cervical_v0152.install_research(research_ui.ResearchWorkspace)
+    yornis_alignment_v0152.install_research(research_ui.ResearchWorkspace)
 
     app = research_ui.ResearchWorkspace(lang)
     app.title(f'Yornis · Yom Dental Análisis · v{APP_VERSION}')
@@ -103,6 +105,7 @@ def main():
     if mode == 'individual':
         import yomceph_desktop_v130_classic as classic
         yornis_cervical_v0152.install_individual(classic.YomCephClassic)
+        yornis_alignment_v0152.install_individual(classic.YomCephClassic)
         app = classic.YomCephClassic()
         app.title(f'Yornis · Yom Dental Análisis · v{APP_VERSION} · Individual')
         display.apply_display_quality(app, launcher=False)
