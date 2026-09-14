@@ -1,0 +1,103 @@
+name: Build YomCeph Desktop v0.14.1 Stabilized
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/build-desktop-v0141.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  windows-v0141:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Dependencies
+        shell: pwsh
+        run: python -m pip install pillow pymupdf reportlab openpyxl pyinstaller
+      - name: Restore verified YomCeph logo
+        shell: pwsh
+        run: |
+          @'
+          import base64,hashlib
+          from pathlib import Path
+          from PIL import Image
+          expected=['88bf8b9cf9310c3a7a599ddb109b73859002d7c5c7f5e29b345c506999c2f4d1','2e245334c261e09a67ef49279a5ce3add9e405f078c1698317f7d95957dd02a8','9c306c7f9a1f07216d17a01e1a5990e10ff82fcc5bf8c25e57a7d6f13ef68989','835bbe268c81056351f2c4b65d8288bc1da7967716fa4bd0354565f64803f73f']
+          chunks=[]
+          for i,e in enumerate(expected):
+              s=Path(f'desktop/assets/logo_exact_{i:02d}.b64').read_text().strip();assert hashlib.sha256(s.encode()).hexdigest()==e;chunks.append(s)
+          raw=base64.b64decode(''.join(chunks),validate=True);assert hashlib.sha256(raw).hexdigest()=='be024e025d7b58e0c801101b2b4dead72a416dff806eae18aea40667cbdd71ba'
+          p=Path('desktop/assets/yomceph_logo.png');p.write_bytes(raw);im=Image.open(p).convert('RGBA');assert im.size==(512,512);im.save('desktop/assets/yomceph.ico',sizes=[(16,16),(32,32),(48,48),(64,64),(128,128),(256,256)])
+          '@ | python -
+      - name: Syntax
+        shell: pwsh
+        run: |
+          python -m py_compile desktop/research_stability_db_v0141.py desktop/research_export_v0141.py desktop/research_stability_ui_core_v0141.py desktop/research_stability_ui_perf_v0141.py desktop/research_stability_export_ui_v0141.py desktop/yomceph_desktop_v0141.py
+      - name: Regression tests
+        shell: pwsh
+        run: |
+          @'
+          import csv,sys,tempfile
+          from pathlib import Path
+          sys.path.insert(0,'desktop')
+          import research_enhancements,research_stability_db_v0141 as stable
+          from research_db import ResearchDB
+          import research_protocol as rp
+          research_enhancements.install();stable.install()
+          with tempfile.TemporaryDirectory() as td:
+              db=ResearchDB(Path(td)/'r.sqlite3');sid=db.create_study('Version test')
+              cat=rp.analysis_catalog();a=next(iter(cat));v1=cat[a][0];v2=cat[a][1] if len(cat[a])>1 else v1
+              cfg1={'selected_variables':[v1.key],'required_landmarks':list(v1.points)};assert db.save_protocol(sid,cfg1)==1
+              cid=db.add_case(sid,'001');pts={p:(10+i,20+i) for i,p in enumerate(v1.points)};db.save_trace(cid,1,pts,[{'analysis':v1.analysis,'measurement':v1.name,'value':1.0,'unit':v1.unit}],[],0.1);assert db.case(cid)['status']=='complete';assert db.case_protocol_version(cid)==1
+              db.lock_protocol(sid);cfg2={'selected_variables':[v2.key],'required_landmarks':list(v2.points)};assert db.save_protocol(sid,cfg2)==2;assert db.refresh_case_status(cid)=='complete';assert db.case_protocol_version(cid)==1
+              cid2=db.add_case(sid,'002');assert db.case_protocol_version(cid2)==2
+              db.mark_in_progress(cid);assert db.case(cid)['status']=='complete'
+              d1=Path(td)/'a';d2=Path(td)/'b';d1.mkdir();d2.mkdir();(d1/'same.png').write_bytes(b'one');(d2/'same.png').write_bytes(b'two');sid2=db.create_study('Duplicates');db.save_protocol(sid2,cfg1);db.add_case(sid2,'A',image_path=str(d1/'same.png'),copy_image=False);db.add_case(sid2,'B',image_path=str(d2/'same.png'),copy_image=False)
+              from research_export_v0141 import export_wide
+              out=Path(td)/'wide.csv';export_wide(db,sid,str(out),True);rows=list(csv.DictReader(open(out,encoding='utf-8-sig')));assert {r['protocol_version'] for r in rows}=={'1','2'}
+          print('v0.14.1 regression tests OK')
+          '@ | python -
+      - name: GUI smoke
+        shell: pwsh
+        run: |
+          @'
+          import sys
+          sys.path.insert(0,'desktop')
+          import research_ui,research_ui_compat,research_enhancements,research_stability_db_v0141,research_stability_ui_core_v0141,research_stability_ui_perf_v0141,research_stability_export_ui_v0141
+          from yomceph_desktop_v0141 import Launcher
+          research_ui_compat.install(research_ui.ResearchWorkspace);research_enhancements.install(research_ui.ResearchWorkspace);research_stability_db_v0141.install();research_stability_ui_core_v0141.install(research_ui.ResearchWorkspace,research_ui.ScrollChecks);research_stability_ui_perf_v0141.install(research_ui.ResearchWorkspace);research_stability_export_ui_v0141.install(research_ui.ResearchWorkspace)
+          a=Launcher();a.withdraw();a.update_idletasks();assert a.logo_photo is not None;a.destroy()
+          r=research_ui.ResearchWorkspace('es');r.withdraw();r.update_idletasks();assert hasattr(r.db,'case_protocol_version');analysis=r.analysis_combo.get();r.measure_checks.set_all(True);assert any(k.startswith(analysis+'::') for k in r.selected_variable_keys);r.destroy()
+          print('GUI smoke OK')
+          '@ | python -
+      - name: Build application
+        shell: pwsh
+        run: |
+          pyinstaller --noconfirm --clean --onedir --windowed --name YomCeph_Desktop --icon desktop/assets/yomceph.ico --paths desktop --hidden-import classic_engine --hidden-import yomceph_desktop_v130_classic --hidden-import research_db --hidden-import research_protocol --hidden-import research_export --hidden-import research_enhancements --hidden-import research_ui --hidden-import research_ui_compat --hidden-import research_stability_db_v0141 --hidden-import research_export_v0141 --hidden-import research_stability_ui_core_v0141 --hidden-import research_stability_ui_perf_v0141 --hidden-import research_stability_export_ui_v0141 --hidden-import yomceph_theme --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yomceph.ico;." desktop/yomceph_desktop_v0141.py
+      - name: Cold start
+        shell: pwsh
+        run: |
+          $exe=Resolve-Path 'dist/YomCeph_Desktop/YomCeph_Desktop.exe';$p=Start-Process -FilePath $exe -PassThru;Start-Sleep -Seconds 8;if($p.HasExited){throw "EXE exited $($p.ExitCode)"};Stop-Process -Id $p.Id -Force
+      - name: Inno Setup
+        shell: pwsh
+        run: choco install innosetup --no-progress -y
+      - name: Installer and portable
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist-installer-v0141 | Out-Null
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' desktop\YomCeph_Desktop_v0141.iss
+          Compress-Archive -Path dist\YomCeph_Desktop\* -DestinationPath dist-installer-v0141\YomCeph_Desktop_v0.14.1_Classic_Research_Suite_Portable.zip -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: YomCeph-Desktop-v0.14.1-Classic-Research-Suite-Windows-x64
+          path: |
+            dist-installer-v0141/YomCeph_Desktop_Setup_v0.14.1_Classic_Research_Suite.exe
+            dist-installer-v0141/YomCeph_Desktop_v0.14.1_Classic_Research_Suite_Portable.zip
+          if-no-files-found: error
