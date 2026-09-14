@@ -12,25 +12,30 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 # Match the application install order before the v0.15.4 replacement layer.
-import yornis_ceph_quality_v0153
+import yornis_ceph_quality_v0153 as quality153
 import research_stability_db_v0141
 import yornis_storage_v015
 import yornis_import_v015
 import yornis_backup_v015
+import research_ui
+import yornis_cervical_v0152 as cv
+import yornis_alignment_v0152 as al
 from research_db import ResearchDB
 
 research_stability_db_v0141.install()
 yornis_storage_v015.install()
 yornis_import_v015.install()
 yornis_backup_v015.install()
+# Register the same special Research outcomes as the real application.
+cv.install_research(research_ui.ResearchWorkspace)
+al.install_research(research_ui.ResearchWorkspace)
+quality153.install_research(research_ui.ResearchWorkspace)
 
 import yornis_audit_hardening_v0154 as hard
 hard.install_global()
 
 import classic_engine as engine
 import research_protocol as rp
-import yornis_cervical_v0152 as cv
-import yornis_alignment_v0152 as al
 
 
 class AuditHardeningTests(unittest.TestCase):
@@ -118,12 +123,15 @@ class AuditHardeningTests(unittest.TestCase):
         self.assertIn("(NOMINAL)", s)
 
     def test_all_numeric_measurements_compute_finite_on_nondegenerate_geometry(self):
+        # Regression net: every registered automatic measurement must be callable
+        # with a complete, non-degenerate synthetic landmark field.
         names = set()
         for m in engine.MEASUREMENTS:
             names.update(getattr(m, "pts", ()) or ())
         names.update(("S", "N", "Po", "Or", "Me", "Go", "Pg", "A", "B"))
         points = {}
         for i, name in enumerate(sorted(n for n in names if n), 1):
+            # Irrational-ish deterministic field avoids coincident/parallel lines.
             points[name] = (float(i * 13 + (i % 5) * 2), float(i * i * 0.37 + (i % 7) * 11 + 3))
         failures = []
         for m in engine.MEASUREMENTS:
