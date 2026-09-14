@@ -10,13 +10,15 @@ from tkinter import ttk
 
 import yomceph_desktop_v014 as base
 import yornis_theme
+# v0.15.3 patches the numerical engine before research_protocol imports it.
+import yornis_ceph_quality_v0153
 # Geometry safety and cervical extensions are imported at application startup so
 # Individual Case and Research modes use the same audited engine.
 import yornis_clinical_audit_v0151
 import yornis_cervical_v0152
 import yornis_alignment_v0152
 
-APP_VERSION = '0.15.2 Research Suite · Cervical + HiDPI'
+APP_VERSION = '0.15.3 Research Suite · Clinical Quality + HiDPI'
 
 
 class Launcher(base.Launcher):
@@ -90,6 +92,7 @@ def research_app(lang):
     yornis_clinical_audit_v0151.install(research_ui.ResearchWorkspace)
     yornis_cervical_v0152.install_research(research_ui.ResearchWorkspace)
     yornis_alignment_v0152.install_research(research_ui.ResearchWorkspace)
+    yornis_ceph_quality_v0153.install_research(research_ui.ResearchWorkspace)
 
     app = research_ui.ResearchWorkspace(lang)
     app.title(f'Yornis · Yom Dental Análisis · v{APP_VERSION}')
@@ -106,6 +109,7 @@ def main():
         import yomceph_desktop_v130_classic as classic
         yornis_cervical_v0152.install_individual(classic.YomCephClassic)
         yornis_alignment_v0152.install_individual(classic.YomCephClassic)
+        yornis_ceph_quality_v0153.install_individual(classic.YomCephClassic)
         app = classic.YomCephClassic()
         app.title(f'Yornis · Yom Dental Análisis · v{APP_VERSION} · Individual')
         display.apply_display_quality(app, launcher=False)
