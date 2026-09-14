@@ -4,7 +4,7 @@
 
 La edición **Yom análisis de lateral de cráneo** se construye con un criterio conservador: una medición recibe el nombre de un análisis histórico únicamente cuando su construcción geométrica puede reproducirse a partir de landmarks definidos y existe una fuente original identificable. Las medias y desviaciones de una muestra histórica se muestran como **referencias de esa muestra**, no como normalidad universal ni como diagnóstico.
 
-La cadena de compilación está fijada al commit fuente `4fdbd4aed457aae8ec15e1a23a6ea9830092b3ac` de `yomismtz/Cefalometria-`. Sobre ese estado se aplican, en orden, las correcciones clínicas, la edición standalone y los pases de auditoría de fuentes primarias. Esto hace reproducible cada APK.
+La auditoría clínica parte del motor cefalométrico fijado y aplica de forma versionada las correcciones geométricas, la integración de Investigación y los pases de calidad. En Windows, Yornis v0.15.4 se construye desde la rama auditada correspondiente y GitHub Actions publica instalador, portable y checksums SHA-256 reproducibles. La cadena Android original se mantiene separada y no se usa como evidencia de validación del ejecutable Windows.
 
 ## Fuentes originales verificadas
 
@@ -58,7 +58,7 @@ Holdaway RA. **A soft-tissue cephalometric analysis and its use in orthodontic t
 
 Holdaway RA. **A soft-tissue cephalometric analysis and its use in orthodontic treatment planning. Part II.** American Journal of Orthodontics. 1984;85(4):279-293. DOI: `10.1016/0002-9416(84)90185-4`. PMID: `6585146`.
 
-Se incorporan ángulo H, ángulo facial de tejidos blandos, Li-línea H y espesor Pg-Pg'. No se fuerza un único valor del ángulo H independientemente de la convexidad esquelética.
+Se incorporan ángulo H, ángulo facial de tejidos blandos, Li-línea H y **espesor de mentón blando de Holdaway al nivel de suprapogonion (SPg)**, calculado como la separación horizontal entre el plano facial óseo y el plano facial de tejidos blandos. La implementación v0.15.3+ no usa la distancia euclidiana directa Pg-Pg' como sustituto de esta construcción. No se fuerza un único valor del ángulo H independientemente de la convexidad esquelética.
 
 ### Burstone COGS
 
@@ -72,7 +72,7 @@ El COGS se implementa como análisis quirúrgico real y no como una lista de nom
 - N-ANS, ANS-Gn y PNS-N perpendiculares a HP.
 - MP-HP.
 - Alturas dentoalveolares U1-NF, U6-NF, L1-MP y L6-MP.
-- PNS-ANS paralelo a HP como medida geométrica descriptiva.
+- PNS-ANS paralelo a HP; v0.15.4 conserva como referencia histórica 57.7 ± 2.5 mm en hombres y 52.6 ± 3.5 mm en mujeres, identificándola expresamente como referencia de muestra histórica.
 - Ar-Go, Go-Pg y B-Pg paralelo al plano mandibular.
 - Ángulo goníaco Ar-Go-Gn.
 - OP-HP, A-B/OP, U1-NF y L1-MP.
@@ -100,7 +100,7 @@ El bloque de tejidos blandos complementa COGS e incluye:
 - exposición del incisivo superior;
 - espacio interlabial.
 
-Se añadieron Sn, Cm, Gn', Si, Stms y Stmi con guías anatómicas explícitas.
+Se añadieron Sn, Cm, Gn', Si, Stms y Stmi con guías anatómicas explícitas. Las construcciones que dependen del plano horizontal HP requieren además S, N, Po y Or; desde v0.15.4 esos landmarks auxiliares se incorporan automáticamente al mínimo de trazado en modo Investigación.
 
 ### Sassouni — arquitectura original implementada
 
@@ -119,7 +119,7 @@ Sassouni no se implementa como tres o cuatro ángulos aislados. La edición audi
 9. arco posterior con radio O-Sp y residuo radial de Go;
 10. relaciones dentarias originales M' = I' + 10°, m' = i' + 5° y R = i cuando están colocados los landmarks necesarios.
 
-El motor no introduce un umbral milimétrico universal para decidir un “Sassouni normal”, porque el trabajo original no proporciona un corte moderno único para automatizar esa decisión. La clasificación de tipo mostrada por software se identifica como ayuda geométrica y debe confirmarse visualmente.
+El motor no introduce un umbral milimétrico universal para decidir un “Sassouni normal”, porque el trabajo original no proporciona un corte moderno único para automatizar esa decisión. La clasificación de tipo mostrada por software se identifica como **ayuda geométrica computacional**, no como diagnóstico automático original de Sassouni, y debe confirmarse visualmente.
 
 ### Powell
 
@@ -138,18 +138,24 @@ La evaluación CVM C2-C4 permanece accesible en la edición dedicada de lateral 
 - Las medidas lineales requieren calibración radiográfica válida.
 - Las medidas con signo utilizan direcciones anatómicas para evitar invertir una interpretación solo porque una imagen esté espejada.
 - Los resultados parciales se permiten: no se obliga a marcar landmarks de un análisis que no se desea realizar.
-- La aplicación continúa identificándose como herramienta educativa y no como dispositivo médico.
+- La aplicación continúa identificándose como herramienta educativa y de investigación, no como dispositivo médico.
 
-## Validación de software
+## Validación de software Windows
 
-Cada cambio de esta auditoría debe pasar la misma cadena antes de fusionarse:
+Cada cambio de la edición Windows debe pasar la cadena de validación correspondiente antes de considerarse candidato de integración:
 
-- ejecución de todos los generadores;
-- pruebas unitarias de catálogos y geometría;
-- Android Lint debug y release;
-- compilación del APK;
-- instalación en emulador Android;
+- compilación sintáctica de todos los módulos Python del escritorio;
+- ejecución de la suite `unittest` existente y de las pruebas de regresión v0.15.4;
+- comprobación de dependencias de landmarks, persistencia/versionado de outcomes y geometría sintética no degenerada de todas las mediciones automáticas registradas;
+- pruebas de integridad, alcance por estudio y extracción verificada de respaldos SQLite;
+- pruebas de privacidad de exportación JSON y de sintaxis/metadatos SPSS;
+- prueba de interfaz de Investigación y HiDPI/PerMonitorV2;
+- compilación del ejecutable Windows con PyInstaller;
 - arranque en frío y comprobación de que el proceso permanece activo;
-- creación del artefacto APK versionado.
+- compilación del instalador Inno Setup y del paquete portable;
+- generación y publicación de checksums SHA-256;
+- firma Authenticode únicamente cuando existe un certificado real configurado; la ausencia de certificado se declara y no se sustituye por una firma autofirmada.
 
-La rama no debe fusionarse a `main` si cualquiera de estas etapas falla.
+La validación de software comprueba consistencia y regresiones de implementación. **No sustituye una validación clínica externa** contra trazados de referencia, población definida, protocolo radiográfico y reproducibilidad intra/interobservador.
+
+La rama no debe fusionarse si cualquiera de las etapas obligatorias de CI falla.
