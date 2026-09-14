@@ -30,25 +30,45 @@ jobs:
         shell: pwsh
         run: python -m pip install pillow pymupdf reportlab openpyxl pyinstaller pyzipper
 
-      - name: Validate corrected Yornis branding
+      - name: Rebuild corrected Yornis branding
         shell: pwsh
         run: |
           @'
           from pathlib import Path
           from PIL import Image
-          import hashlib
-          logo = Path('desktop/assets/yornis_logo.png')
-          twin = Path('desktop/assets/yomceph_logo.png')
-          assert logo.exists() and twin.exists(), 'Corrected branding assets are missing'
-          raw = logo.read_bytes()
-          assert hashlib.sha256(raw).hexdigest() == '7cadc211b72b6bab14a6016121681a9473d067c29cb4f37d2b45f6716f2d3ac6'
-          im = Image.open(logo).convert('RGBA')
-          assert im.size == (256, 256), im.size
-          alpha = im.getchannel('A')
-          bbox = alpha.getbbox()
-          assert bbox is not None
-          im.save('desktop/assets/yornis.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
-          print('Corrected Yornis logo/icon validated:', im.size, hashlib.sha256(raw).hexdigest())
+          import base64, hashlib, io
+
+          parts = sorted(Path('desktop/assets').glob('yornis_logo_chunk_*.b64'))
+          assert len(parts) == 12, len(parts)
+          source = base64.b64decode(''.join(p.read_text(encoding='utf-8').strip() for p in parts), validate=True)
+          assert hashlib.sha256(source).hexdigest() == '076f10e95b384ef8da2caf98006d8c84ea43a3108275553516e0a2657bba68b9'
+
+          original = Image.open(io.BytesIO(source)).convert('RGBA')
+          assert original.size == (192, 192), original.size
+          # The original artwork touches the lower edge. Scale it down and move it
+          # upward so the Yornis wordmark remains visible in the launcher and ICO.
+          canvas = Image.new('RGBA', (256, 256), (255, 255, 255, 255))
+          inner = original.resize((210, 210), Image.Resampling.LANCZOS)
+          canvas.alpha_composite(inner, (23, 10))
+          canvas.save('desktop/assets/yornis_logo.png')
+          canvas.save('desktop/assets/yomceph_logo.png')
+          canvas.save('desktop/assets/yornis.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
+
+          check = Image.open('desktop/assets/yornis_logo.png').convert('RGB')
+          assert check.size == (256, 256)
+          # Require a real lower safety margin instead of merely trusting dimensions.
+          bg = check.getpixel((0, 255))
+          non_bg = []
+          px = check.load()
+          for y in range(check.height):
+              for x in range(check.width):
+                  r,g,b = px[x,y]
+                  if max(abs(r-bg[0]), abs(g-bg[1]), abs(b-bg[2])) > 12:
+                      non_bg.append((x,y))
+          assert non_bg
+          max_y = max(y for _,y in non_bg)
+          assert max_y <= 224, max_y
+          print('Corrected Yornis branding OK · source SHA256', hashlib.sha256(source).hexdigest(), '· bottom content y=', max_y)
           '@ | python -
 
       - name: Compile every desktop Python module
