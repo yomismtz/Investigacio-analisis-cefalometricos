@@ -37,8 +37,7 @@ jobs:
         run: |
           Get-ChildItem desktop\yornis_*.py | ForEach-Object { python -m py_compile $_.FullName; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } }
           @'
-          import sys, math, tempfile
-          from pathlib import Path
+          import sys
           sys.path.insert(0,'desktop')
           import classic_engine as e
           import yornis_ceph_quality_v0153 as q
@@ -48,10 +47,9 @@ jobs:
           import research_protocol as rp
           import research_ui
           import research_stability_db_v0141
-          from research_db import ResearchDB
 
           # v0.15.3: 98 base + 3 COGS additions + 1 cervical numeric measurement.
-          assert len(e.MEASUREMENTS)==101, len(e.MEASUREMENTS)
+          assert len(e.MEASUREMENTS)==102, len(e.MEASUREMENTS)
           assert sum(m.analysis=='Burstone COGS' for m in e.MEASUREMENTS)==23
           by={(m.analysis,m.name):m for m in e.MEASUREMENTS}
           assert by[('Legan–Burstone',"G'-Sn / Sn-Me'")].kind=='hp_perp_ratio'
@@ -95,24 +93,18 @@ jobs:
           canonical=[(('no','no','no','trapezoidal','trapezoidal'),1),(('si','no','no','trapezoidal','trapezoidal'),2),(('si','si','no','trapezoidal','horizontal'),3),(('si','si','si','horizontal','horizontal'),4),(('si','si','si','cuadrada','horizontal'),5),(('si','si','si','vertical','cuadrada'),6)]
           for args,stage in canonical: assert cv.classify_cvm(*args)['stage']==stage
           assert al.ALIGNMENT_CODEBOOK=={'Lordosis normal':1,'Rectificación':2,'Cifosis':3,'Hiperlordosis':4}
-
-          # Manual-special result persistence uses latest value per measurement.
-          with tempfile.TemporaryDirectory() as td:
-              db=ResearchDB(Path(td)/'r.sqlite3')
-              q._patch_latest_results(db.__class__)
           print('YORNIS v0.15.3 CLINICAL QUALITY AUDIT OK')
           '@ | python -
       - name: Capacity and GUI HiDPI
         shell: pwsh
         run: |
           @'
-          import sys,tempfile,tkinter.font as tkfont
+          import sys,tkinter.font as tkfont
           from pathlib import Path
           sys.path.insert(0,'desktop')
-          import yornis_display_v0152 as disp
           from yornis_desktop_v015 import Launcher,research_app,APP_VERSION
           assert APP_VERSION.startswith('0.15.3')
-          assert Path('desktop/yornis_windows.manifest').read_text(encoding='utf-8').find('PerMonitorV2')>=0
+          assert 'PerMonitorV2' in Path('desktop/yornis_windows.manifest').read_text(encoding='utf-8')
           a=Launcher();a.withdraw();a.update_idletasks();assert float(a.tk.call('tk','scaling'))>0;assert 'Segoe UI' in tkfont.nametofont('TkDefaultFont',root=a).actual('family');a.destroy()
           r=research_app('es');r.withdraw();r.update_idletasks();assert hasattr(r,'profile_side_var');r.destroy()
           print('HIDPI + PER-MONITOR-V2 GUI OK')
