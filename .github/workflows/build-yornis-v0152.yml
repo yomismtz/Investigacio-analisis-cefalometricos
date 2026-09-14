@@ -44,13 +44,14 @@ jobs:
           import research_protocol as rp
           import yornis_clinical_audit_v0151 as audit
           import yornis_cervical_v0152 as cv
+          import yornis_alignment_v0152 as al
           from research_db import ResearchDB
-          assert len(e.ANALYSES)==16,len(e.ANALYSES)
+          assert len(e.ANALYSES)==17,len(e.ANALYSES)
           assert len(e.MEASUREMENTS)==99,len(e.MEASUREMENTS)
           assert len(e.POINT_HELP)>=65,len(e.POINT_HELP)
           keys=[f'{m.analysis}::{m.name}' for m in e.MEASUREMENTS];assert len(keys)==len(set(keys))
           catalog=rp.analysis_catalog();assert set(catalog)==set(e.ANALYSES)
-          assert {a for a in e.ANALYSES if not catalog[a]}=={'Sassouni','CVM C2–C4'}
+          assert {a for a in e.ANALYSES if not catalog[a]}=={'Sassouni','CVM C2–C4',al.ALIGNMENT_ANALYSIS}
           assert sum(map(len,catalog.values()))==99
           assert not [(m.analysis,m.name,p) for m in e.MEASUREMENTS for p in m.pts if p not in e.POINT_HELP]
           by={(m.analysis,m.name):m for m in e.MEASUREMENTS}
@@ -68,14 +69,19 @@ jobs:
           canonical=[(('no','no','no','trapezoidal','trapezoidal'),1),(('si','no','no','trapezoidal','trapezoidal'),2),(('si','si','no','trapezoidal','horizontal'),3),(('si','si','si','horizontal','horizontal'),4),(('si','si','si','cuadrada','horizontal'),5),(('si','si','si','vertical','cuadrada'),6)]
           for args,stage in canonical: assert cv.classify_cvm(*args)['stage']==stage,(args,cv.classify_cvm(*args))
           assert cv.classify_cvm('no','si','no','trapezoidal','trapezoidal')['stage'] is None
+          expected={'Lordosis normal':1,'Rectificación':2,'Cifosis':3,'Hiperlordosis':4}
+          assert al.ALIGNMENT_CODEBOOK==expected
+          for label,code in expected.items():
+              r=al.classify_alignment(label);assert r['code']==code and r['label']==label,r
+          assert al.classify_alignment('')['code'] is None
           lkey=f'{lord.analysis}::{lord.name}';rr=rp.compute_selected([lkey],p,None,side='right');assert rr and 35<rr[0]['value']<45,rr
           lin=next(m for m in e.MEASUREMENTS if m.unit=='mm');dummy={q:(float(i*10),float(i*3)) for i,q in enumerate(lin.pts)};lr=rp.compute_selected([f'{lin.analysis}::{lin.name}'],dummy,None,side='right');assert lr[0]['value'] is None and 'calibr' in lr[0]['interpretation'].lower()
           with tempfile.TemporaryDirectory() as td:
-              db=ResearchDB(Path(td)/'a.sqlite3');audit._ensure_profile_side_column(db);sid=db.create_study('Audit');cid=db.add_case(sid,'A001');audit._set_profile_side(db,cid,'left');assert audit._profile_side(db,cid)=='left';cv._ensure_table(db)
+              db=ResearchDB(Path(td)/'a.sqlite3');audit._ensure_profile_side_column(db);sid=db.create_study('Audit');cid=db.add_case(sid,'A001');audit._set_profile_side(db,cid,'left');assert audit._profile_side(db,cid)=='left';cv._ensure_table(db);al._ensure_columns(db)
               with db.connect() as con:
                   cols={r[1] for r in con.execute('PRAGMA table_info(cervical_assessments)').fetchall()}
-              assert {'lordosis_angle','cvm_stage','features_json'}.issubset(cols)
-          print('CERVICAL AUDIT OK')
+              assert {'lordosis_angle','cvm_stage','features_json','alignment_code','alignment_class','alignment_notes'}.issubset(cols)
+          print('CERVICAL + C2-C4 ALIGNMENT AUDIT OK')
           '@ | python -
       - name: Capacity and GUI HiDPI
         shell: pwsh
@@ -97,12 +103,12 @@ jobs:
           from yornis_desktop_v015 import Launcher,research_app,APP_VERSION
           assert APP_VERSION.startswith('0.15.2')
           a=Launcher();a.withdraw();a.update_idletasks();assert 'Yornis' in a.title();assert float(a.tk.call('tk','scaling'))>0;assert 'Segoe UI' in tkfont.nametofont('TkDefaultFont',root=a).actual('family');a.destroy()
-          r=research_app('es');r.withdraw();r.update_idletasks();assert hasattr(r,'profile_side_var');r.destroy()
-          print('CAPACITY + HIDPI GUI OK')
+          r=research_app('es');r.withdraw();r.update_idletasks();assert hasattr(r,'profile_side_var');assert getattr(r,'_yornis_alignment_menu_v0152',False);r.destroy()
+          print('CAPACITY + HIDPI + TOUCH GUI OK')
           '@ | python -
       - name: Build application
         shell: pwsh
-        run: pyinstaller --noconfirm --clean --onedir --windowed --name Yornis --icon desktop/assets/yornis.ico --paths desktop --hidden-import classic_engine --hidden-import yomceph_desktop_v130_classic --hidden-import research_db --hidden-import research_protocol --hidden-import research_ui --hidden-import research_ui_compat --hidden-import research_enhancements --hidden-import research_stability_db_v0141 --hidden-import research_stability_ui_core_v0141 --hidden-import research_stability_ui_perf_v0141 --hidden-import research_stability_export_ui_v0141 --hidden-import yornis_theme --hidden-import yornis_storage_v015 --hidden-import yornis_import_v015 --hidden-import yornis_background_import_v015 --hidden-import yornis_research_controls_v015 --hidden-import yornis_ui_theme_v015 --hidden-import yornis_spss_v015 --hidden-import yornis_visual_report_v015 --hidden-import yornis_export_ui_v015 --hidden-import yornis_backup_v015 --hidden-import yornis_backup_ui_v015 --hidden-import yornis_clinical_audit_v0151 --hidden-import yornis_cervical_v0152 --hidden-import yornis_display_v0152 --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --collect-all pyzipper --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;." desktop/yornis_desktop_v015.py
+        run: pyinstaller --noconfirm --clean --onedir --windowed --name Yornis --icon desktop/assets/yornis.ico --paths desktop --hidden-import classic_engine --hidden-import yomceph_desktop_v130_classic --hidden-import research_db --hidden-import research_protocol --hidden-import research_ui --hidden-import research_ui_compat --hidden-import research_enhancements --hidden-import research_stability_db_v0141 --hidden-import research_stability_ui_core_v0141 --hidden-import research_stability_ui_perf_v0141 --hidden-import research_stability_export_ui_v0141 --hidden-import yornis_theme --hidden-import yornis_storage_v015 --hidden-import yornis_import_v015 --hidden-import yornis_background_import_v015 --hidden-import yornis_research_controls_v015 --hidden-import yornis_ui_theme_v015 --hidden-import yornis_spss_v015 --hidden-import yornis_visual_report_v015 --hidden-import yornis_export_ui_v015 --hidden-import yornis_backup_v015 --hidden-import yornis_backup_ui_v015 --hidden-import yornis_clinical_audit_v0151 --hidden-import yornis_cervical_v0152 --hidden-import yornis_alignment_v0152 --hidden-import yornis_display_v0152 --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --collect-all pyzipper --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;." desktop/yornis_desktop_v015.py
       - name: Cold start
         shell: pwsh
         run: |
