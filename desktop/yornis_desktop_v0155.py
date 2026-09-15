@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-# v0.15.5 is a maintenance release over the audited v0.15.4 stack.
-# It keeps the calculation engine unchanged and focuses on release integrity,
-# packaging reproducibility, version consistency and public-site synchronization.
+# v0.15.5 is a maintenance/evidence release over the audited v0.15.4 stack.
+# Calculation geometry is preserved. Age/sex references are only applied when
+# the published measurement is compatible; missing ages are not interpolated.
 import yornis_desktop_v015 as legacy
 import yornis_audit_hardening_v0154 as hardening
-import yornis_reference_help_v0154_all as reference_help
+import yornis_evidence_v0155 as evidence
 
-APP_VERSION = "0.15.5 Research Suite · Release Integrity"
+reference_help = evidence.reference_help
+APP_VERSION = "0.15.5 Research Suite · Evidence by Age/Sex"
 legacy.APP_VERSION = APP_VERSION
 Launcher = legacy.Launcher
 
@@ -36,6 +37,9 @@ def research_app(lang):
     legacy.yornis_alignment_v0152.install_research(research_ui.ResearchWorkspace)
     legacy.yornis_ceph_quality_v0153.install_research(research_ui.ResearchWorkspace)
     hardening.install_research(research_ui.ResearchWorkspace)
+    # Evidence layer goes last so older compatibility layers cannot restore a
+    # previous reference or universal cut-off during application startup.
+    evidence.install()
 
     app = research_ui.ResearchWorkspace(lang)
     app.title(f"Yornis · Yom Dental Análisis · v{APP_VERSION}")
@@ -45,6 +49,7 @@ def research_app(lang):
 
 
 def main():
+    evidence.install()
     launch = Launcher()
     reference_help.attach_help_button(launch, compact=True)
     launch.mainloop()
@@ -56,6 +61,7 @@ def main():
         legacy.yornis_alignment_v0152.install_individual(classic.YomCephClassic)
         legacy.yornis_ceph_quality_v0153.install_individual(classic.YomCephClassic)
         hardening.install_individual(classic.YomCephClassic)
+        evidence.install()
         app = classic.YomCephClassic()
         app.title(f"Yornis · Yom Dental Análisis · v{APP_VERSION} · Individual")
         legacy.display.apply_display_quality(app, launcher=False)

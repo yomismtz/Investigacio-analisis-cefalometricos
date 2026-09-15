@@ -1,0 +1,5 @@
+Yornis v0.15.5 · Evidence by Age/Sex
+Release candidate: 2026-09-15
+
+This marker intentionally triggers the v0.15.5 Windows release workflow once when merged to main.
+It prevents unrelated future desktop changes from silently replacing binaries under the same version tag.

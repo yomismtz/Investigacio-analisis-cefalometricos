@@ -1,9 +1,9 @@
-name: Build Yornis v0.15.4 Final Audit + HiDPI
+name: Build Yornis v0.15.5 Evidence by Age-Sex + HiDPI
 
 on:
   workflow_dispatch:
   pull_request:
-    branches: [main, feature/yornis-v0153-clinical-quality]
+    branches: [main]
     paths:
       - 'desktop/**'
       - 'docs/**'
@@ -11,8 +11,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'desktop/**'
-      - '.github/workflows/build-yornis-v0154.yml'
+      - 'desktop/YORNIS_RELEASE_V0155.txt'
 
 permissions:
   contents: write
@@ -37,38 +36,26 @@ jobs:
           from pathlib import Path
           from PIL import Image
           import base64, hashlib, io
-
           parts = sorted(Path('desktop/assets').glob('yornis_logo_chunk_*.b64'))
           assert len(parts) == 12, len(parts)
           source = base64.b64decode(''.join(p.read_text(encoding='utf-8').strip() for p in parts), validate=True)
           assert hashlib.sha256(source).hexdigest() == '076f10e95b384ef8da2caf98006d8c84ea43a3108275553516e0a2657bba68b9'
-
           original = Image.open(io.BytesIO(source)).convert('RGBA')
           assert original.size == (192, 192), original.size
-          # The original artwork touches the lower edge. Scale it down and move it
-          # upward so the Yornis wordmark remains visible in the launcher and ICO.
           canvas = Image.new('RGBA', (256, 256), (255, 255, 255, 255))
           inner = original.resize((210, 210), Image.Resampling.LANCZOS)
           canvas.alpha_composite(inner, (23, 10))
           canvas.save('desktop/assets/yornis_logo.png')
           canvas.save('desktop/assets/yomceph_logo.png')
           canvas.save('desktop/assets/yornis.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
-
           check = Image.open('desktop/assets/yornis_logo.png').convert('RGB')
-          assert check.size == (256, 256)
-          # Require a real lower safety margin instead of merely trusting dimensions.
-          bg = check.getpixel((0, 255))
-          non_bg = []
-          px = check.load()
+          bg = check.getpixel((0, 255)); non_bg=[]; px=check.load()
           for y in range(check.height):
               for x in range(check.width):
-                  r,g,b = px[x,y]
-                  if max(abs(r-bg[0]), abs(g-bg[1]), abs(b-bg[2])) > 12:
-                      non_bg.append((x,y))
-          assert non_bg
-          max_y = max(y for _,y in non_bg)
-          assert max_y <= 224, max_y
-          print('Corrected Yornis branding OK · source SHA256', hashlib.sha256(source).hexdigest(), '· bottom content y=', max_y)
+                  r,g,b=px[x,y]
+                  if max(abs(r-bg[0]),abs(g-bg[1]),abs(b-bg[2])) > 12: non_bg.append((x,y))
+          assert non_bg and max(y for _,y in non_bg) <= 224
+          print('Yornis branding OK')
           '@ | python -
 
       - name: Compile every desktop Python module
@@ -83,7 +70,7 @@ jobs:
         shell: pwsh
         run: python -m unittest discover -s desktop/tests -p "test_*.py" -v
 
-      - name: v0.15.4 final clinical and research audit
+      - name: v0.15.5 clinical, research and evidence audit
         shell: pwsh
         run: |
           @'
@@ -94,13 +81,20 @@ jobs:
           research_stability_db_v0141.install(); yornis_storage_v015.install(); yornis_import_v015.install(); yornis_backup_v015.install()
           import yornis_audit_hardening_v0154 as h
           h.install_global()
+          import yornis_evidence_v0155 as ev
+          ev.install()
           import classic_engine as e, research_protocol as rp
           import yornis_cervical_v0152 as cv, yornis_alignment_v0152 as al
-          import yornis_reference_help_v0154_all as refs
+          refs = ev.reference_help
           refs.validate_tables()
           assert len(refs.TABLES) == 17, len(refs.TABLES)
           assert len(e.MEASUREMENTS) == 102, len(e.MEASUREMENTS)
           assert all(hasattr(m, 'norm_text') and m.norm_text for m in e.MEASUREMENTS)
+          posture = [m for m in e.MEASUREMENTS if m.analysis == cv.POSTURE_ANALYSIS and m.name == cv.POSTURE_MEASUREMENT]
+          assert len(posture) == 1
+          assert '50.7' in posture[0].norm_text and '45.6' in posture[0].norm_text
+          assert '35–45' not in posture[0].norm_text
+          assert posture[0].lo is None and posture[0].hi is None
           hp = [v for vs in rp.analysis_catalog().values() for v in vs if str(v.kind).lower().startswith('hp_')]
           assert hp
           for v in hp:
@@ -111,7 +105,10 @@ jobs:
           canonical=[(('no','no','no','trapezoidal','trapezoidal'),1),(('si','no','no','trapezoidal','trapezoidal'),2),(('si','si','no','trapezoidal','horizontal'),3),(('si','si','si','horizontal','horizontal'),4),(('si','si','si','cuadrada','horizontal'),5),(('si','si','si','vertical','cuadrada'),6)]
           for args,stage in canonical: assert cv.classify_cvm(*args)['stage'] == stage
           assert al.ALIGNMENT_CODEBOOK == {'Lordosis normal':1,'Rectificación':2,'Cifosis':3,'Hiperlordosis':4}
-          print('YORNIS v0.15.4 FINAL AUDIT OK · 102 measurements · 17 reference tables')
+          airway = next(t for t in refs.TABLES if t['id']=='via_aerea')
+          assert any(r[0]=='McNamara superior · 6 años' and r[1]=='7.500 mm' for r in airway['rows'])
+          assert not any('· 7 años' in r[0] for r in airway['rows'])
+          print('YORNIS v0.15.5 EVIDENCE AUDIT OK · 102 measurements · 17 reference tables')
           '@ | python -
 
       - name: GUI HiDPI smoke test
@@ -121,14 +118,14 @@ jobs:
           import sys, tkinter.font as tkfont
           from pathlib import Path
           sys.path.insert(0, 'desktop')
-          from yornis_desktop_v0154 import Launcher, research_app, APP_VERSION
-          import yornis_reference_help_v0154_all as refs
-          assert APP_VERSION.startswith('0.15.4')
-          assert len(refs.TABLES) == 17
+          from yornis_desktop_v0155 import Launcher, research_app, APP_VERSION
+          import yornis_evidence_v0155 as ev
+          assert APP_VERSION.startswith('0.15.5')
+          assert len(ev.reference_help.TABLES) == 17
           assert 'PerMonitorV2' in Path('desktop/yornis_windows.manifest').read_text(encoding='utf-8')
           a=Launcher(); a.withdraw(); a.update_idletasks(); assert float(a.tk.call('tk','scaling')) > 0; assert 'Segoe UI' in tkfont.nametofont('TkDefaultFont',root=a).actual('family'); a.destroy()
           r=research_app('es'); r.withdraw(); r.update_idletasks(); assert hasattr(r,'profile_side_var'); assert hasattr(r,'population_var'); assert hasattr(r.db,'restore_backup_archive'); r.destroy()
-          print('HIDPI + RESEARCH + HELP v0.15.4 GUI OK')
+          print('HIDPI + RESEARCH + EVIDENCE v0.15.5 GUI OK')
           '@ | python -
 
       - name: Build application
@@ -144,10 +141,10 @@ jobs:
           --hidden-import yornis_theme --hidden-import yornis_storage_v015 --hidden-import yornis_import_v015 --hidden-import yornis_background_import_v015 --hidden-import yornis_research_controls_v015 --hidden-import yornis_ui_theme_v015
           --hidden-import yornis_spss_v015 --hidden-import yornis_visual_report_v015 --hidden-import yornis_export_ui_v015 --hidden-import yornis_backup_v015 --hidden-import yornis_backup_ui_v015
           --hidden-import yornis_clinical_audit_v0151 --hidden-import yornis_cervical_v0152 --hidden-import yornis_alignment_v0152 --hidden-import yornis_display_v0152 --hidden-import yornis_ceph_quality_v0153 --hidden-import yornis_audit_hardening_v0154
-          --hidden-import yornis_reference_help_v0154 --hidden-import yornis_reference_help_v0154_all
+          --hidden-import yornis_reference_help_v0154 --hidden-import yornis_reference_help_v0154_all --hidden-import yornis_evidence_v0155
           --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --collect-all pyzipper
           --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;."
-          desktop/yornis_desktop_v0154.py
+          desktop/yornis_desktop_v0155.py
 
       - name: Optional Authenticode sign application
         shell: pwsh
@@ -180,12 +177,12 @@ jobs:
         run: |
           choco install innosetup --no-progress -y
           New-Item -ItemType Directory -Force -Path dist-installer-yornis | Out-Null
-          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' desktop\Yornis_v0154.iss
-          $setup='dist-installer-yornis/Yornis_Setup_v0.15.4_Audit_Hardening_HiDPI.exe'
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' desktop\Yornis_v0155.iss
+          $setup='dist-installer-yornis/Yornis_Setup_v0.15.5_Evidence_Age_Sex_HiDPI.exe'
           if(!(Test-Path $setup)){throw 'Installer missing'}
           $bytes=[IO.File]::ReadAllBytes($setup)
           if($bytes[0]-ne 0x4D -or $bytes[1]-ne 0x5A){throw 'Installer missing MZ'}
-          Compress-Archive -Path dist\Yornis\* -DestinationPath dist-installer-yornis\Yornis_v0.15.4_Audit_Hardening_HiDPI_Portable.zip -Force
+          Compress-Archive -Path dist\Yornis\* -DestinationPath dist-installer-yornis\Yornis_v0.15.5_Evidence_Age_Sex_HiDPI_Portable.zip -Force
 
       - name: Optional Authenticode sign installer
         shell: pwsh
@@ -198,14 +195,14 @@ jobs:
           [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CERT_B64))
           $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Filter signtool.exe -Recurse | Sort-Object FullName -Descending | Select-Object -First 1
           if (-not $signtool) { throw 'signtool.exe not found' }
-          & $signtool.FullName sign /fd SHA256 /f $pfx /p $env:CERT_PASSWORD /tr http://timestamp.digicert.com /td SHA256 dist-installer-yornis\Yornis_Setup_v0.15.4_Audit_Hardening_HiDPI.exe
+          & $signtool.FullName sign /fd SHA256 /f $pfx /p $env:CERT_PASSWORD /tr http://timestamp.digicert.com /td SHA256 dist-installer-yornis\Yornis_Setup_v0.15.5_Evidence_Age_Sex_HiDPI.exe
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Remove-Item $pfx -Force
 
       - name: Checksums
         shell: pwsh
         run: |
-          $files=@('dist-installer-yornis/Yornis_Setup_v0.15.4_Audit_Hardening_HiDPI.exe','dist-installer-yornis/Yornis_v0.15.4_Audit_Hardening_HiDPI_Portable.zip')
+          $files=@('dist-installer-yornis/Yornis_Setup_v0.15.5_Evidence_Age_Sex_HiDPI.exe','dist-installer-yornis/Yornis_v0.15.5_Evidence_Age_Sex_HiDPI_Portable.zip')
           $out=@()
           foreach($f in $files){$h=Get-FileHash $f -Algorithm SHA256;$out += "$($h.Hash.ToLower())  $([IO.Path]::GetFileName($f))"}
           $out | Set-Content -Encoding ascii dist-installer-yornis\SHA256SUMS.txt
@@ -213,10 +210,10 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Yornis-v0.15.4-Final-Audit-HiDPI-Windows-x64
+          name: Yornis-v0.15.5-Evidence-Age-Sex-HiDPI-Windows-x64
           path: |
-            dist-installer-yornis/Yornis_Setup_v0.15.4_Audit_Hardening_HiDPI.exe
-            dist-installer-yornis/Yornis_v0.15.4_Audit_Hardening_HiDPI_Portable.zip
+            dist-installer-yornis/Yornis_Setup_v0.15.5_Evidence_Age_Sex_HiDPI.exe
+            dist-installer-yornis/Yornis_v0.15.5_Evidence_Age_Sex_HiDPI_Portable.zip
             dist-installer-yornis/SHA256SUMS.txt
           if-no-files-found: error
 
@@ -224,17 +221,19 @@ jobs:
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v0.15.4
-          name: Yornis v0.15.4 · Final Audit
+          tag_name: v0.15.5
+          name: Yornis v0.15.5 · Evidence by Age/Sex
           make_latest: true
           body: |
-            Yornis · Yom Dental Análisis v0.15.4.
+            Yornis · Yom Dental Análisis v0.15.5.
 
-            Incluye 17 tablas de referencia dentro de la app, auditoría de 102 mediciones automáticas, CVM/alineación/lordosis cervical, mejoras de Investigación, backups y exportaciones endurecidos, texto HiDPI y branding Yornis corregido para evitar recortes del logo/icono.
+            Actualización científica conservadora de lordosis C1–C7, vía aérea de McNamara y contexto cráneo-cervical por edad/sexo. El ángulo C1–C7 conserva la misma geometría, pero se retira el antiguo corte universal 35–45° y se muestran referencias de muestra compatibles. Se añaden referencias pediátricas de vía aérea a 6, 8, 10 y 12 años sin interpolar edades faltantes. Las referencias históricas cráneo-cervicales se contextualizan por población/edad y no se convierten en normalidad universal.
+
+            Incluye las auditorías previas de 102 mediciones automáticas y 17 tablas, Investigación, backups/exportaciones, HiDPI, arranque en frío y checksums SHA-256.
 
             Herramienta educativa y de investigación. La validación de software no sustituye validación clínica externa.
           files: |
-            dist-installer-yornis/Yornis_Setup_v0.15.4_Audit_Hardening_HiDPI.exe
-            dist-installer-yornis/Yornis_v0.15.4_Audit_Hardening_HiDPI_Portable.zip
+            dist-installer-yornis/Yornis_Setup_v0.15.5_Evidence_Age_Sex_HiDPI.exe
+            dist-installer-yornis/Yornis_v0.15.5_Evidence_Age_Sex_HiDPI_Portable.zip
             dist-installer-yornis/SHA256SUMS.txt
           fail_on_unmatched_files: true
