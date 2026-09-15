@@ -1,0 +1,9 @@
+# Yornis v0.15.5 application/build dependency roots.
+# The CI compiles this file into requirements-v0155.lock with SHA-256 hashes.
+Pillow==12.3.0
+PyMuPDF==1.28.2
+reportlab==5.0.1
+openpyxl==3.1.5
+pyzipper==0.4.0
+pyinstaller==6.22.3
+defusedxml==0.7.1
