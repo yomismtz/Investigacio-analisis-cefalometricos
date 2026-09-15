@@ -54,6 +54,8 @@ Valores globales por sexo, 6–12 años:
 
 Las diferencias por sexo para estas dos variables no fueron estadísticamente significativas. No se crean valores para 4–5, 7, 9, 11 ni 13–30 años a partir de esta muestra.
 
+Para no perder trazabilidad con versiones previas, Yornis conserva además los valores históricos que ya mostraba la aplicación (superior 17 ± 4 mm e inferior 12 ± 3 mm), pero ahora quedan etiquetados explícitamente como **referencias históricas no estratificadas por edad**, no como normas pediátricas universales.
+
 Fuentes:
 
 - McNamara JA Jr. A method of cephalometric evaluation. Am J Orthod. 1984;86(6):449-469. doi:10.1016/S0002-9416(84)90352-X.
