@@ -34,8 +34,6 @@ CRANIOCERVICAL_SOURCE = (
     "SN-CVT 106.59±8.00°. Estos datos se muestran como referencias de muestra y no como cortes diagnósticos."
 )
 
-_INSTALLED = False
-
 
 def _set_attr(obj, name: str, value) -> None:
     try:
@@ -171,9 +169,7 @@ def _patch_craniocervical_help() -> None:
     table["title"] = "ANÁLISIS CRÁNEO-CERVICAL · CONTEXTO DE EDAD"
     table["subtitle"] = "Solow–Tallgren y datos pediátricos · referencias de muestra"
     table["source"] = CRANIOCERVICAL_SOURCE
-    # Preserve the pre-existing historical/orientative entries because this review
-    # did not establish a compatible annual 4–30 reference series for all of them.
-    table["rows"].extend([
+    additions = [
         _sample_row("SN-OPT · control pediátrico 9–16 años", "101.72°", "±7.68°", "Muestra control contemporánea; no es una norma anual ni universal."),
         _sample_row("SN-CVT · control pediátrico 9–16 años", "106.59°", "±8.00°", "Muestra control contemporánea; no es una norma anual ni universal."),
         (
@@ -184,7 +180,9 @@ def _patch_craniocervical_help() -> None:
             "La cohorte original fue de estudiantes daneses varones; los valores históricos deben leerse en ese contexto.",
             "No extrapolar a otras poblaciones como límite diagnóstico.",
         ),
-    ])
+    ]
+    existing_labels = {row[0] for row in table["rows"]}
+    table["rows"].extend(row for row in additions if row[0] not in existing_labels)
     table["note"] = (
         "No se encontró una serie compatible que permita asignar SN-OPT, SN-CVT, OPT-CVT u otros valores año por año de 4 a 30 años. "
         "Se conservan las referencias históricas existentes, pero se identifican como orientativas/de muestra y no como normalidad universal."
@@ -192,14 +190,13 @@ def _patch_craniocervical_help() -> None:
 
 
 def install() -> None:
-    global _INSTALLED
-    if _INSTALLED:
-        return
+    # Deliberately reapplied on every call. Older compatibility/audit layers can
+    # be imported after this module during test discovery or application startup;
+    # reapplying makes v0.15.5 authoritative without duplicating reference rows.
     _patch_c1_c7()
     _patch_airway_help()
     _patch_craniocervical_help()
     reference_help.validate_tables()
-    _INSTALLED = True
 
 
 install()
