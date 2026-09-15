@@ -147,6 +147,8 @@ def _patch_airway_help() -> None:
         _sample_row("McNamara superior · niños 6–12 (global)", "9.472 mm", "±2.616 mm", "Promedio por sexo; diferencia frente a niñas no significativa."),
         _sample_row("McNamara inferior · niñas 6–12 (global)", "11.714 mm", "±2.658 mm", "Promedio por sexo; diferencia frente a niños no significativa."),
         _sample_row("McNamara inferior · niños 6–12 (global)", "11.399 mm", "±2.626 mm", "Promedio por sexo; diferencia frente a niñas no significativa."),
+        _sample_row("McNamara superior · referencia histórica de la app", "17 mm", "±4 mm", "Valor histórico no estratificado por edad en esta revisión; se conserva para trazabilidad y no se usa como corte pediátrico universal."),
+        _sample_row("McNamara inferior · referencia histórica de la app", "12 mm", "±3 mm", "Valor histórico no estratificado por edad en esta revisión; se conserva para trazabilidad y no se usa como corte pediátrico universal."),
         (
             "Edades 4–5, 7, 9, 11 y 13–30",
             "Sin valor anual validado en esta tabla",
@@ -159,7 +161,8 @@ def _patch_airway_help() -> None:
     table["rows"] = rows
     table["note"] = (
         "En la muestra de 480 niños, la vía superior de McNamara aumentó con la edad; la inferior no mostró cambio significativo. "
-        "No hubo diferencias significativas por sexo para estas dos variables. La cefalometría 2D no diagnostica obstrucción ni apnea."
+        "No hubo diferencias significativas por sexo para estas dos variables. Se conservan 17±4 mm y 12±3 mm sólo como referencias históricas de trazabilidad, no como normas pediátricas. "
+        "La cefalometría 2D no diagnostica obstrucción ni apnea."
     )
 
 
