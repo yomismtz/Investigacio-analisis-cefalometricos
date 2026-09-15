@@ -1,0 +1,344 @@
+name: Build Yornis v0.15.5 Final Hardening
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/build-yornis-v0155.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/build-yornis-v0155.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13.15'
+          architecture: 'x64'
+
+      - name: Bootstrap lock tooling
+        shell: pwsh
+        run: python -m pip install "pip-tools==7.6.1" "pip-audit==2.10.1"
+
+      - name: Compile fully hashed dependency lock
+        shell: pwsh
+        run: |
+          pip-compile desktop\requirements-v0155.in --generate-hashes --resolver=backtracking --output-file desktop\requirements-v0155.lock
+          Get-Content desktop\requirements-v0155.lock | Select-Object -First 40
+
+      - name: Install only hashed application dependencies
+        shell: pwsh
+        run: python -m pip install --require-hashes -r desktop\requirements-v0155.lock
+
+      - name: Verify runtime and pinned package versions
+        shell: pwsh
+        run: |
+          @'
+          import importlib.metadata as md, ssl, sys
+          assert sys.version_info[:3] == (3, 13, 15), sys.version
+          expected = {
+              'Pillow':'12.3.0', 'PyMuPDF':'1.28.2', 'reportlab':'5.0.1',
+              'openpyxl':'3.1.5', 'pyzipper':'0.4.0', 'pyinstaller':'6.22.3',
+              'defusedxml':'0.7.1'
+          }
+          for package, version in expected.items():
+              actual = md.version(package)
+              assert actual == version, (package, actual, version)
+          print(sys.version)
+          print(ssl.OPENSSL_VERSION)
+          assert ssl.OPENSSL_VERSION_INFO >= (3, 0, 21, 0, 0), ssl.OPENSSL_VERSION
+          '@ | python -
+
+      - name: Dependency vulnerability audit
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist-installer-yornis | Out-Null
+          python -m pip_audit -r desktop\requirements-v0155.lock --require-hashes --strict -f json -o dist-installer-yornis\PIP_AUDIT.json
+
+      - name: Generate CycloneDX SBOM
+        shell: pwsh
+        run: python -m pip_audit -r desktop\requirements-v0155.lock --require-hashes -f cyclonedx-json -o dist-installer-yornis\Yornis_v0.15.5_SBOM.cdx.json
+
+      - name: Record exact downloaded dependency hashes
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dependency-wheels | Out-Null
+          python -m pip download --require-hashes -r desktop\requirements-v0155.lock --dest dependency-wheels
+          Get-ChildItem dependency-wheels -File | Sort-Object Name | ForEach-Object {
+            $h = Get-FileHash $_.FullName -Algorithm SHA256
+            "$($h.Hash.ToLower())  $($_.Name)"
+          } | Set-Content -Encoding ascii dist-installer-yornis\DEPENDENCY_SHA256SUMS.txt
+
+      - name: Rebuild corrected Yornis branding
+        shell: pwsh
+        run: |
+          @'
+          from pathlib import Path
+          from PIL import Image
+          import base64, hashlib, io
+          parts = sorted(Path('desktop/assets').glob('yornis_logo_chunk_*.b64'))
+          assert len(parts) == 12, len(parts)
+          source = base64.b64decode(''.join(p.read_text(encoding='utf-8').strip() for p in parts), validate=True)
+          assert hashlib.sha256(source).hexdigest() == '076f10e95b384ef8da2caf98006d8c84ea43a3108275553516e0a2657bba68b9'
+          original = Image.open(io.BytesIO(source)).convert('RGBA')
+          assert original.size == (192, 192)
+          canvas = Image.new('RGBA', (256, 256), (255, 255, 255, 255))
+          inner = original.resize((210, 210), Image.Resampling.LANCZOS)
+          canvas.alpha_composite(inner, (23, 10))
+          canvas.save('desktop/assets/yornis_logo.png')
+          canvas.save('desktop/assets/yomceph_logo.png')
+          canvas.save('desktop/assets/yornis.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
+          check = Image.open('desktop/assets/yornis_logo.png').convert('RGB')
+          bg = check.getpixel((0, 255)); non_bg=[]; px=check.load()
+          for y in range(check.height):
+              for x in range(check.width):
+                  r,g,b=px[x,y]
+                  if max(abs(r-bg[0]),abs(g-bg[1]),abs(b-bg[2])) > 12: non_bg.append((x,y))
+          assert non_bg and max(y for _,y in non_bg) <= 224
+          print('Yornis branding rebuilt safely')
+          '@ | python -
+
+      - name: Materialize legacy embedded sources
+        shell: pwsh
+        run: python desktop\materialize_embedded_sources_v0155.py
+
+      - name: Reject runtime self-decoding loaders in packaged modules
+        shell: pwsh
+        run: |
+          $targets=@('desktop/classic_engine.py','desktop/yomceph_desktop_v130_classic.py','desktop/yornis_ceph_quality_v0153.py','desktop/yornis_audit_hardening_v0154.py')
+          foreach($f in $targets){
+            $t=Get-Content $f -Raw
+            if($t.Contains('exec(compile(')){throw "runtime exec loader remained in $f"}
+            if($t.Contains('zlib.decompress(base64')){throw "runtime self-decoder remained in $f"}
+          }
+
+      - name: Compile every desktop Python module
+        shell: pwsh
+        run: |
+          Get-ChildItem desktop\*.py | ForEach-Object {
+            python -m py_compile $_.FullName
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
+
+      - name: Unit and regression tests
+        shell: pwsh
+        run: python -m unittest discover -s desktop/tests -p "test_*.py" -v
+
+      - name: Generate 102-measurement golden bootstrap
+        shell: pwsh
+        run: python desktop\generate_measurement_golden_v0155.py --output dist-installer-yornis\v0155_measurement_golden.generated.json
+
+      - name: v0.15.5 clinical/research audit
+        shell: pwsh
+        run: |
+          @'
+          import sys
+          sys.path.insert(0, 'desktop')
+          import yornis_ceph_quality_v0153
+          import research_stability_db_v0141, yornis_storage_v015, yornis_import_v015, yornis_backup_v015
+          research_stability_db_v0141.install(); yornis_storage_v015.install(); yornis_import_v015.install(); yornis_backup_v015.install()
+          import yornis_audit_hardening_v0154 as h
+          h.install_global()
+          import classic_engine as e, research_protocol as rp
+          import yornis_cervical_v0152 as cv, yornis_alignment_v0152 as al
+          import yornis_reference_help_v0154_all as refs
+          refs.validate_tables()
+          assert len(refs.TABLES) == 17
+          assert len(e.MEASUREMENTS) == 102
+          hp=[v for vs in rp.analysis_catalog().values() for v in vs if str(v.kind).lower().startswith('hp_')]
+          assert hp
+          for v in hp:
+              req=rp.minimum_landmarks([v.key]); assert all(p in req for p in ('S','N','Po','Or')), (v.key,req)
+          canonical=[(('no','no','no','trapezoidal','trapezoidal'),1),(('si','no','no','trapezoidal','trapezoidal'),2),(('si','si','no','trapezoidal','horizontal'),3),(('si','si','si','horizontal','horizontal'),4),(('si','si','si','cuadrada','horizontal'),5),(('si','si','si','vertical','cuadrada'),6)]
+          for args,stage in canonical: assert cv.classify_cvm(*args)['stage']==stage
+          assert al.ALIGNMENT_CODEBOOK == {'Lordosis normal':1,'Rectificación':2,'Cifosis':3,'Hiperlordosis':4}
+          print('YORNIS v0.15.5 CLINICAL/RESEARCH AUDIT OK')
+          '@ | python -
+
+      - name: GUI HiDPI + PDF guard smoke
+        shell: pwsh
+        run: |
+          @'
+          import sys, tkinter.font as tkfont
+          from pathlib import Path
+          sys.path.insert(0,'desktop')
+          from yornis_desktop_v0155 import Launcher, research_app, APP_VERSION
+          assert APP_VERSION.startswith('0.15.5')
+          assert 'PerMonitorV2' in Path('desktop/yornis_windows.manifest').read_text(encoding='utf-8')
+          a=Launcher(); a.withdraw(); a.update_idletasks(); assert float(a.tk.call('tk','scaling'))>0; assert 'Segoe UI' in tkfont.nametofont('TkDefaultFont',root=a).actual('family'); a.destroy()
+          r=research_app('es'); r.withdraw(); r.update_idletasks(); assert getattr(type(r),'_yornis_pdf_safe_v0155',False); r.destroy()
+          print('HIDPI + PDF GUARD GUI OK')
+          '@ | python -
+
+      - name: Build application without PyMuPDF collect-all bloat
+        shell: pwsh
+        run: >-
+          pyinstaller --noconfirm --clean --onedir --windowed --name Yornis
+          --icon desktop/assets/yornis.ico
+          --manifest desktop/yornis_windows.manifest
+          --version-file desktop/yornis_version_info_v0155.txt
+          --paths desktop
+          --hidden-import classic_engine --hidden-import yomceph_desktop_v130_classic
+          --hidden-import research_db --hidden-import research_protocol --hidden-import research_ui --hidden-import research_ui_compat --hidden-import research_enhancements
+          --hidden-import research_stability_db_v0141 --hidden-import research_stability_ui_core_v0141 --hidden-import research_stability_ui_perf_v0141 --hidden-import research_stability_export_ui_v0141
+          --hidden-import yornis_theme --hidden-import yornis_storage_v015 --hidden-import yornis_import_v015 --hidden-import yornis_background_import_v015 --hidden-import yornis_research_controls_v015 --hidden-import yornis_ui_theme_v015
+          --hidden-import yornis_spss_v015 --hidden-import yornis_visual_report_v015 --hidden-import yornis_export_ui_v015 --hidden-import yornis_backup_v015 --hidden-import yornis_backup_ui_v015
+          --hidden-import yornis_clinical_audit_v0151 --hidden-import yornis_cervical_v0152 --hidden-import yornis_alignment_v0152 --hidden-import yornis_display_v0152 --hidden-import yornis_ceph_quality_v0153 --hidden-import yornis_audit_hardening_v0154
+          --hidden-import yornis_reference_help_v0154 --hidden-import yornis_reference_help_v0154_all --hidden-import yornis_pdf_safe_v0155
+          --hidden-import pymupdf --hidden-import fitz
+          --collect-all PIL --collect-all reportlab --collect-all openpyxl --collect-all pyzipper
+          --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;."
+          desktop/yornis_desktop_v0155.py
+
+      - name: Verify Windows VERSIONINFO
+        shell: pwsh
+        run: |
+          $v=(Get-Item dist\Yornis\Yornis.exe).VersionInfo
+          Write-Host "FileVersion=$($v.FileVersion) ProductVersion=$($v.ProductVersion) ProductName=$($v.ProductName)"
+          if($v.FileVersion -ne '0.15.5.0'){throw "Incorrect FileVersion: $($v.FileVersion)"}
+          if($v.ProductName -ne 'Yornis'){throw "Incorrect ProductName: $($v.ProductName)"}
+
+      - name: Create development code-signing certificate
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist-installer-yornis | Out-Null
+          $cert=New-SelfSignedCertificate -Type CodeSigningCert -Subject 'CN=Yornis Development Code Signing' -FriendlyName 'Yornis Development Code Signing' -CertStoreLocation 'Cert:\CurrentUser\My' -KeyAlgorithm RSA -KeyLength 3072 -HashAlgorithm SHA256 -KeyUsage DigitalSignature -NotAfter (Get-Date).AddYears(3)
+          Export-Certificate -Cert $cert -FilePath dist-installer-yornis\Yornis_Development_CodeSigning.cer | Out-Null
+          Import-Certificate -FilePath dist-installer-yornis\Yornis_Development_CodeSigning.cer -CertStoreLocation 'Cert:\CurrentUser\Root' | Out-Null
+          "YORNIS_CERT_THUMBPRINT=$($cert.Thumbprint)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          Write-Host "Created self-signed development signing certificate $($cert.Thumbprint). It is not a public-CA certificate."
+
+      - name: Sign application with development certificate
+        shell: pwsh
+        run: |
+          $signtool=Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Filter signtool.exe -Recurse | Sort-Object FullName -Descending | Select-Object -First 1
+          if(-not $signtool){throw 'signtool.exe not found'}
+          & $signtool.FullName sign /fd SHA256 /s My /sha1 $env:YORNIS_CERT_THUMBPRINT dist\Yornis\Yornis.exe
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+          $sig=Get-AuthenticodeSignature dist\Yornis\Yornis.exe
+          if(-not $sig.SignerCertificate){throw 'EXE has no Authenticode signer'}
+          Write-Host "EXE signature: $($sig.Status) / $($sig.SignerCertificate.Subject)"
+
+      - name: Cold start packaged EXE
+        shell: pwsh
+        run: |
+          $p=Start-Process -FilePath (Resolve-Path 'dist/Yornis/Yornis.exe') -PassThru
+          Start-Sleep 10
+          if($p.HasExited){throw "Yornis exited during cold start: $($p.ExitCode)"}
+          Stop-Process -Id $p.Id -Force
+          $exe=Resolve-Path 'dist/Yornis/Yornis.exe'; $bytes=[IO.File]::ReadAllBytes($exe)
+          if($bytes[0]-ne 0x4D -or $bytes[1]-ne 0x5A){throw 'Missing MZ'}
+          Get-FileHash $exe -Algorithm SHA256
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          choco install innosetup --no-progress -y
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' desktop\Yornis_v0155.iss
+          $setup='dist-installer-yornis/Yornis_Setup_v0.15.5_Final_Hardening_HiDPI.exe'
+          if(!(Test-Path $setup)){throw 'Installer missing'}
+          $bytes=[IO.File]::ReadAllBytes($setup)
+          if($bytes[0]-ne 0x4D -or $bytes[1]-ne 0x5A){throw 'Installer missing MZ'}
+
+      - name: Sign installer with development certificate
+        shell: pwsh
+        run: |
+          $signtool=Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Filter signtool.exe -Recurse | Sort-Object FullName -Descending | Select-Object -First 1
+          & $signtool.FullName sign /fd SHA256 /s My /sha1 $env:YORNIS_CERT_THUMBPRINT dist-installer-yornis\Yornis_Setup_v0.15.5_Final_Hardening_HiDPI.exe
+          if($LASTEXITCODE -ne 0){exit $LASTEXITCODE}
+          $sig=Get-AuthenticodeSignature dist-installer-yornis\Yornis_Setup_v0.15.5_Final_Hardening_HiDPI.exe
+          if(-not $sig.SignerCertificate){throw 'Installer has no Authenticode signer'}
+          Write-Host "Installer signature: $($sig.Status) / $($sig.SignerCertificate.Subject)"
+
+      - name: Real silent install, launch and uninstall E2E
+        shell: pwsh
+        run: |
+          $setup=Resolve-Path 'dist-installer-yornis/Yornis_Setup_v0.15.5_Final_Hardening_HiDPI.exe'
+          $target=Join-Path $env:RUNNER_TEMP 'YornisE2E'
+          $proc=Start-Process -FilePath $setup -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART','/SP-',"/DIR=$target") -Wait -PassThru
+          if($proc.ExitCode -ne 0){throw "Installer exit code $($proc.ExitCode)"}
+          $installed=Join-Path $target 'Yornis.exe'
+          if(!(Test-Path $installed)){throw 'Installed Yornis.exe missing'}
+          $app=Start-Process -FilePath $installed -PassThru
+          Start-Sleep 8
+          if($app.HasExited){throw "Installed app exited during E2E launch: $($app.ExitCode)"}
+          Stop-Process -Id $app.Id -Force
+          $uninstaller=Join-Path $target 'unins000.exe'
+          if(!(Test-Path $uninstaller)){throw 'Uninstaller missing'}
+          $un=Start-Process -FilePath $uninstaller -ArgumentList @('/VERYSILENT','/SUPPRESSMSGBOXES','/NORESTART') -Wait -PassThru
+          if($un.ExitCode -ne 0){throw "Uninstaller exit code $($un.ExitCode)"}
+          Start-Sleep 2
+          if(Test-Path $installed){throw 'Yornis.exe still exists after uninstall'}
+          Write-Host 'INSTALL -> LAUNCH -> UNINSTALL E2E OK'
+
+      - name: Create portable archive
+        shell: pwsh
+        run: Compress-Archive -Path dist\Yornis\* -DestinationPath dist-installer-yornis\Yornis_v0.15.5_Final_Hardening_HiDPI_Portable.zip -Force
+
+      - name: Checksums
+        shell: pwsh
+        run: |
+          $files=@(
+            'dist-installer-yornis/Yornis_Setup_v0.15.5_Final_Hardening_HiDPI.exe',
+            'dist-installer-yornis/Yornis_v0.15.5_Final_Hardening_HiDPI_Portable.zip',
+            'dist-installer-yornis/Yornis_v0.15.5_SBOM.cdx.json',
+            'dist-installer-yornis/DEPENDENCY_SHA256SUMS.txt',
+            'dist-installer-yornis/Yornis_Development_CodeSigning.cer'
+          )
+          $out=@()
+          foreach($f in $files){$h=Get-FileHash $f -Algorithm SHA256;$out += "$($h.Hash.ToLower())  $([IO.Path]::GetFileName($f))"}
+          $out | Set-Content -Encoding ascii dist-installer-yornis\SHA256SUMS.txt
+          Get-Content dist-installer-yornis\SHA256SUMS.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Yornis-v0.15.5-Final-Hardening-Windows-x64
+          path: |
+            dist-installer-yornis/Yornis_Setup_v0.15.5_Final_Hardening_HiDPI.exe
+            dist-installer-yornis/Yornis_v0.15.5_Final_Hardening_HiDPI_Portable.zip
+            dist-installer-yornis/SHA256SUMS.txt
+            dist-installer-yornis/DEPENDENCY_SHA256SUMS.txt
+            dist-installer-yornis/PIP_AUDIT.json
+            dist-installer-yornis/Yornis_v0.15.5_SBOM.cdx.json
+            dist-installer-yornis/Yornis_Development_CodeSigning.cer
+            dist-installer-yornis/v0155_measurement_golden.generated.json
+            desktop/requirements-v0155.lock
+          if-no-files-found: error
+
+      - name: Publish v0.15.5 GitHub Release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.15.5
+          name: Yornis v0.15.5 · Final Hardening
+          make_latest: true
+          body: |
+            Yornis v0.15.5 Final Hardening.
+
+            Security/reliability hardening: Python 3.13.15 runtime, hashed dependency lock, SBOM and dependency vulnerability audit, Windows VERSIONINFO, build-time materialization of historical compressed source wrappers, isolated/timeout-limited PDF rendering, reduced PyMuPDF packaging, real silent install/launch/uninstall E2E validation, 102-measurement deterministic golden baseline, and Authenticode development signing.
+
+            IMPORTANT: the included Authenticode certificate is self-signed for integrity/development testing and is not a public-CA trust certificate. Windows trust/reputation requires a publicly trusted code-signing service/certificate.
+
+            Educational/research software. Software regression validation is not external clinical validation.
+          files: |
+            dist-installer-yornis/Yornis_Setup_v0.15.5_Final_Hardening_HiDPI.exe
+            dist-installer-yornis/Yornis_v0.15.5_Final_Hardening_HiDPI_Portable.zip
+            dist-installer-yornis/SHA256SUMS.txt
+            dist-installer-yornis/DEPENDENCY_SHA256SUMS.txt
+            dist-installer-yornis/PIP_AUDIT.json
+            dist-installer-yornis/Yornis_v0.15.5_SBOM.cdx.json
+            dist-installer-yornis/Yornis_Development_CodeSigning.cer
+            desktop/requirements-v0155.lock
+          fail_on_unmatched_files: true
