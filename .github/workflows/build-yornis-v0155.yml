@@ -35,7 +35,7 @@ jobs:
       - name: Compile fully hashed dependency lock
         shell: pwsh
         run: |
-          pip-compile desktop\requirements-v0155.in --generate-hashes --resolver=backtracking --output-file desktop\requirements-v0155.lock
+          pip-compile desktop\requirements-v0155.in --generate-hashes --allow-unsafe --resolver=backtracking --output-file desktop\requirements-v0155.lock
           Get-Content desktop\requirements-v0155.lock | Select-Object -First 40
 
       - name: Install only hashed application dependencies
@@ -47,6 +47,7 @@ jobs:
         run: |
           @'
           import importlib.metadata as md, ssl, sys
+          from packaging.version import Version
           assert sys.version_info[:3] == (3, 13, 15), sys.version
           expected = {
               'Pillow':'12.3.0', 'PyMuPDF':'1.28.2', 'reportlab':'5.0.1',
@@ -58,7 +59,8 @@ jobs:
               assert actual == version, (package, actual, version)
           print(sys.version)
           print(ssl.OPENSSL_VERSION)
-          assert ssl.OPENSSL_VERSION_INFO >= (3, 0, 21, 0, 0), ssl.OPENSSL_VERSION
+          openssl_version = ssl.OPENSSL_VERSION.split()[1]
+          assert Version(openssl_version) >= Version('3.0.21'), ssl.OPENSSL_VERSION
           '@ | python -
 
       - name: Dependency vulnerability audit
