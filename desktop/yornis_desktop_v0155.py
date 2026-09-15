@@ -1,13 +1,14 @@
 from __future__ import annotations
 
-# v0.15.5 is a maintenance release over the audited v0.15.4 stack.
-# It keeps the calculation engine unchanged and focuses on release integrity,
-# packaging reproducibility, version consistency and public-site synchronization.
+# v0.15.5 is a maintenance/evidence release over the audited v0.15.4 stack.
+# Calculation geometry is preserved. Age/sex references are only applied when
+# the published measurement is compatible; missing ages are not interpolated.
 import yornis_desktop_v015 as legacy
 import yornis_audit_hardening_v0154 as hardening
-import yornis_reference_help_v0154_all as reference_help
+import yornis_evidence_v0155 as evidence
 
-APP_VERSION = "0.15.5 Research Suite · Release Integrity"
+reference_help = evidence.reference_help
+APP_VERSION = "0.15.5 Research Suite · Evidence by Age/Sex"
 legacy.APP_VERSION = APP_VERSION
 Launcher = legacy.Launcher
 
@@ -17,6 +18,7 @@ def research_app(lang):
     import research_stability_db_v0141, research_stability_ui_core_v0141, research_stability_ui_perf_v0141, research_stability_export_ui_v0141
     import yornis_storage_v015, yornis_import_v015, yornis_background_import_v015, yornis_research_controls_v015, yornis_ui_theme_v015, yornis_export_ui_v015, yornis_backup_v015, yornis_backup_ui_v015
 
+    evidence.install()
     research_ui_compat.install(research_ui.ResearchWorkspace)
     research_enhancements.install(research_ui.ResearchWorkspace)
     research_stability_db_v0141.install()
@@ -45,6 +47,7 @@ def research_app(lang):
 
 
 def main():
+    evidence.install()
     launch = Launcher()
     reference_help.attach_help_button(launch, compact=True)
     launch.mainloop()
