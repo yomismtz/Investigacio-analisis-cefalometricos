@@ -11,11 +11,11 @@ const analyses = [
   ["Legan–Burstone","Tejidos blandos","Proporciones y relaciones faciales para cirugía ortognática."],
   ["Sassouni","Arquitectura facial","Convergencia de planos, arcos y relaciones arquitectónicas."],
   ["Powell","Estética facial","Ángulos nasofrontal, nasofacial, nasomental y mentocervical."],
-  ["Vía aérea","Faríngeo","Dimensiones nasofaríngea y orofaríngea orientativas."],
-  ["Cráneo-cervical","Postura","SN-OPT, SN-CVT, OPT-CVT, espacios y triángulo hioideo."],
+  ["Vía aérea","Faríngeo · edad","McNamara superior/inferior con referencias pediátricas publicadas a 6, 8, 10 y 12 años; sin interpolar edades faltantes."],
+  ["Cráneo-cervical","Postura · contexto","SN-OPT, SN-CVT, OPT-CVT, espacios y triángulo hioideo con contexto de edad/población cuando existe evidencia compatible."],
   ["CVM C2–C4","Maduración","Estadios CS1–CS6 por morfología cervical."],
   ["Alineación C2–C4","Postura","Lordosis, rectificación, cifosis e hiperlordosis cualitativas."],
-  ["Lordosis C1–C7","Cervical","Ángulo cervical y rango orientativo 35°–45°."],
+  ["Lordosis C1–C7","Cervical · edad y sexo","Ángulo C1–C7 con referencias publicadas por grupos de edad y sexo; sin corte universal 35–45° ni interpolación anual."],
 ];
 
 const grid = document.querySelector('#analysis-grid');
