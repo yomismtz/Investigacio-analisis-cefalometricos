@@ -35,11 +35,37 @@ CRANIOCERVICAL_SOURCE = (
 )
 
 
-def _set_attr(obj, name: str, value) -> None:
-    try:
-        object.__setattr__(obj, name, value)
-    except Exception:
-        setattr(obj, name, value)
+class _EvidenceMeasurement:
+    """Read-only view that preserves measurement geometry but replaces evidence metadata.
+
+    classic_engine.Measurement is frozen and some compatibility layers expose
+    norm_text as a read-only property. A view avoids mutating that object while
+    keeping every computational attribute delegated to the audited measurement.
+    """
+
+    __slots__ = ("_base",)
+
+    def __init__(self, base):
+        self._base = base._base if isinstance(base, _EvidenceMeasurement) else base
+
+    def __getattr__(self, name):
+        return getattr(self._base, name)
+
+    @property
+    def norm_text(self):
+        return C1_C7_REFERENCE
+
+    @property
+    def reference(self):
+        return C1_C7_REFERENCE
+
+    @property
+    def lo(self):
+        return None
+
+    @property
+    def hi(self):
+        return None
 
 
 def _table(table_id: str) -> dict:
@@ -76,17 +102,12 @@ def _patch_c1_c7() -> None:
 
     cervical.posture_classification = descriptive_classification
 
-    for measurement in engine.MEASUREMENTS:
+    for index, measurement in enumerate(engine.MEASUREMENTS):
         if (
             getattr(measurement, "analysis", "") == cervical.POSTURE_ANALYSIS
             and getattr(measurement, "name", "") == cervical.POSTURE_MEASUREMENT
         ):
-            _set_attr(measurement, "norm_text", C1_C7_REFERENCE)
-            _set_attr(measurement, "reference", C1_C7_REFERENCE)
-            # The former 35–45° band was being treated like a universal cut-off.
-            # Remove automatic low/high classification; age/sex context is shown instead.
-            _set_attr(measurement, "lo", None)
-            _set_attr(measurement, "hi", None)
+            engine.MEASUREMENTS[index] = _EvidenceMeasurement(measurement)
 
     table = _table("lordosis_c1_c7")
     table["title"] = "LORDOSIS CERVICAL C1–C7 · EDAD Y SEXO"
