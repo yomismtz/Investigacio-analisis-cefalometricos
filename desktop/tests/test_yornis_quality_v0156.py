@@ -48,8 +48,10 @@ class QualityUXV0156Tests(unittest.TestCase):
         html = (ROOT / "docs" / "index.html").read_text(encoding="utf-8")
         js = (ROOT / "docs" / "app.js").read_text(encoding="utf-8")
         css = (ROOT / "docs" / "styles.css").read_text(encoding="utf-8")
+        # v0.15.6 remains part of the documented quality lineage even when the
+        # public website advances to a newer product release.
         self.assertIn("v0.15.6", html)
-        self.assertIn("Quality & UX", html)
+        self.assertTrue("Quality & UX" in html or "Bird Assistant" in html)
         self.assertIn("filter-chip", js)
         self.assertIn("focus-visible", css)
         self.assertNotIn("rango orientativo 35°–45°", html)

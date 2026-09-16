@@ -18,92 +18,139 @@ const analyses = [
   {name:"Lordosis C1–C7",category:"Cervical",tag:"Cervical · edad y sexo",desc:"Ángulo C1–C7 con referencias publicadas por grupos de edad y sexo; sin corte universal 35–45° ni interpolación anual."},
 ];
 
+const palettes = [
+  {name:"Agaporni",glyph:"A",desc:"Violeta, ciruela y turquesa. Equilibrado para lectura y ayuda general.",primary:"#5A246F",dark:"#32103F",soft:"#D9C3EE",secondary:"#17A8A2",accent:"#65D8BC",bg:"#F8F3FC"},
+  {name:"Tucán",glyph:"T",desc:"Turquesa tropical, naranja y amarillo. Más energético y contrastado.",primary:"#D96816",dark:"#7C3511",soft:"#FFD0A3",secondary:"#15AFA5",accent:"#F4C542",bg:"#FFF8E8"},
+  {name:"Pavorreal",glyph:"P",desc:"Azul pavo real, petróleo, violeta y oro. Sobrio y profundo.",primary:"#15517A",dark:"#082F4B",soft:"#BDD6E5",secondary:"#138F85",accent:"#D6A82B",bg:"#F1F7FA"},
+  {name:"Ninfa",glyph:"N",desc:"Perla, crema, amarillo suave y ciruela. Una paleta clara y delicada.",primary:"#7A587F",dark:"#4A344E",soft:"#E0D2E4",secondary:"#D8A82E",accent:"#E6A0AD",bg:"#FAF8F5"},
+  {name:"Faisán",glyph:"F",desc:"Ciruela, borgoña, cobre y oliva. Cálido y académico.",primary:"#7B294B",dark:"#48152B",soft:"#E7BFD0",secondary:"#9B5A32",accent:"#B49B42",bg:"#FBF6F2"},
+  {name:"Quetzal",glyph:"Q",desc:"Esmeralda, turquesa profundo y rubí. Verde intenso con alto contraste.",primary:"#087D64",dark:"#06483D",soft:"#B9E6D8",secondary:"#0BA39B",accent:"#BB3545",bg:"#F2FAF7"},
+  {name:"Guacamaya Roja",glyph:"R",desc:"Escarlata, amarillo y azul. La paleta más vibrante del conjunto.",primary:"#B52632",dark:"#70141D",soft:"#F2BBC0",secondary:"#185CB7",accent:"#F0B82E",bg:"#FFF6F4"},
+  {name:"Guacamaya Azul",glyph:"G",desc:"Cobalto, cyan y dorado. Fresca, técnica y muy visible.",primary:"#176BB4",dark:"#0A3C70",soft:"#B9D8F2",secondary:"#1AA6C7",accent:"#F2C54D",bg:"#F1F7FD"},
+];
+
+const assistantHints = [
+  {keys:["via aérea","vía aérea","airway","mcnamara"],text:"El asistente puede localizar la tabla de vía aérea, mostrar referencias de McNamara y recordarte que las edades pediátricas publicadas son 6, 8, 10 y 12 años sin interpolación."},
+  {keys:["cvm","c2","c3","c4","maduración"],text:"Puede explicarte cómo revisar CVM C2–C4, localizar la guía de maduración cervical y abrir la referencia correspondiente."},
+  {keys:["lordosis","c1","c7","cervical"],text:"Puede llevarte a C1–C7, mostrar el contexto por edad/sexo disponible y recordar que Yornis no usa 35–45° como normalidad universal."},
+  {keys:["calibrar","calibración","escala","mm"],text:"Puede explicarte el flujo de calibración paso a paso antes de interpretar medidas lineales en milímetros."},
+  {keys:["landmark","punto","marcar","trazado"],text:"Puede ayudarte a colocar, corregir y revisar landmarks, además de localizar qué puntos necesita cada medición."},
+  {keys:["steiner","sna","snb","anb"],text:"Puede encontrar Steiner y sus mediciones relacionadas, además de abrir la tabla de referencia desde la ayuda."},
+  {keys:["exportar","spss","csv","excel","pdf"],text:"Puede guiarte hacia las exportaciones científicas, incluyendo CSV, sintaxis SPSS, Excel/PDF y salidas pseudonimizadas."},
+  {keys:["respaldo","backup","restaurar"],text:"Puede mostrarte el flujo de respaldo/restauración y explicar cómo conservar la base de investigación de forma consistente."},
+];
+
+function setPalette(palette) {
+  const root = document.documentElement;
+  root.style.setProperty('--assistant-primary', palette.primary);
+  root.style.setProperty('--assistant-dark', palette.dark);
+  root.style.setProperty('--assistant-soft', palette.soft);
+  root.style.setProperty('--assistant-secondary', palette.secondary);
+  root.style.setProperty('--assistant-accent', palette.accent);
+  root.style.setProperty('--assistant-bg', palette.bg);
+  document.querySelector('meta[name="theme-color"]')?.setAttribute('content', palette.dark);
+  const name = document.querySelector('#assistant-name');
+  const desc = document.querySelector('#assistant-description');
+  const avatar = document.querySelector('#assistant-avatar');
+  const chip = document.querySelector('#assistant-chip');
+  const status = document.querySelector('#palette-status');
+  if (name) name.textContent = palette.name;
+  if (desc) desc.textContent = palette.desc;
+  if (avatar) avatar.textContent = palette.glyph;
+  if (chip) chip.textContent = `Paleta activa · ${palette.name}`;
+  if (status) status.textContent = `${palette.name} seleccionado`;
+  document.querySelectorAll('.palette-card').forEach(card => card.classList.toggle('active', card.dataset.palette === palette.name));
+}
+
+function renderPalettes() {
+  const host = document.querySelector('#palette-grid');
+  if (!host) return;
+  host.innerHTML = palettes.map((p,index) => `<button type="button" class="palette-card ${index===0?'active':''}" data-palette="${p.name}" aria-pressed="${index===0}"><strong>${p.name}</strong><small>${p.desc}</small><span class="swatches" aria-hidden="true"><i style="background:${p.primary}"></i><i style="background:${p.secondary}"></i><i style="background:${p.accent}"></i><i style="background:${p.dark}"></i></span></button>`).join('');
+  host.querySelectorAll('.palette-card').forEach(card => card.addEventListener('click', () => {
+    const palette = palettes.find(p => p.name === card.dataset.palette) || palettes[0];
+    host.querySelectorAll('.palette-card').forEach(b => b.setAttribute('aria-pressed', String(b === card)));
+    setPalette(palette);
+  }));
+}
+
+function assistantDemoSearch() {
+  const input = document.querySelector('#assistant-demo-search');
+  const answer = document.querySelector('#assistant-demo-answer');
+  if (!input || !answer) return;
+  const q = input.value.trim().toLocaleLowerCase('es');
+  if (!q) {
+    answer.textContent = 'Escribe un tema para ver qué tipo de ayuda encontrará tu ave dentro de Yornis.';
+    return;
+  }
+  const hint = assistantHints.find(item => item.keys.some(key => q.includes(key)));
+  const analysis = analyses.find(item => `${item.name} ${item.category} ${item.tag} ${item.desc}`.toLocaleLowerCase('es').includes(q));
+  if (hint) answer.textContent = hint.text;
+  else if (analysis) answer.textContent = `El buscador interno puede localizar ${analysis.name}: ${analysis.desc}`;
+  else answer.textContent = 'Dentro de Yornis, Ctrl+K busca el término entre guías de uso, 17 tablas de referencia y 102 mediciones. Si existe una tabla relacionada, puede abrirse directamente desde el resultado.';
+}
+
+renderPalettes();
+setPalette(palettes[0]);
+document.querySelector('#assistant-demo-button')?.addEventListener('click', assistantDemoSearch);
+document.querySelector('#assistant-demo-search')?.addEventListener('keydown', event => {
+  if (event.key === 'Enter') assistantDemoSearch();
+  if (event.key === 'Escape') { event.currentTarget.value = ''; assistantDemoSearch(); }
+});
+
 const grid = document.querySelector('#analysis-grid');
 const search = document.querySelector('#analysis-search');
 const count = document.querySelector('#analysis-count');
 const filters = document.querySelector('#analysis-filters');
 let activeCategory = 'Todos';
-
 const categories = ['Todos', ...new Set(analyses.map(a => a.category))];
 
 function renderFilters() {
   if (!filters) return;
-  filters.innerHTML = categories.map(category => `
-    <button type="button" class="filter-chip ${category === activeCategory ? 'active' : ''}" data-category="${category}" aria-pressed="${category === activeCategory}">${category}</button>
-  `).join('');
-  filters.querySelectorAll('.filter-chip').forEach(button => {
-    button.addEventListener('click', () => {
-      activeCategory = button.dataset.category || 'Todos';
-      renderFilters();
-      render();
-    });
-  });
+  filters.innerHTML = categories.map(category => `<button type="button" class="filter-chip ${category === activeCategory ? 'active' : ''}" data-category="${category}" aria-pressed="${category === activeCategory}">${category}</button>`).join('');
+  filters.querySelectorAll('.filter-chip').forEach(button => button.addEventListener('click', () => {
+    activeCategory = button.dataset.category || 'Todos';
+    renderFilters();
+    render();
+  }));
 }
 
 function matches(item, query) {
   const q = query.trim().toLocaleLowerCase('es');
-  const categoryOk = activeCategory === 'Todos' || item.category === activeCategory;
-  const textOk = !q || `${item.name} ${item.category} ${item.tag} ${item.desc}`.toLocaleLowerCase('es').includes(q);
-  return categoryOk && textOk;
+  return (activeCategory === 'Todos' || item.category === activeCategory) && (!q || `${item.name} ${item.category} ${item.tag} ${item.desc}`.toLocaleLowerCase('es').includes(q));
 }
 
 function render() {
   if (!grid || !count) return;
-  const query = search?.value || '';
-  const items = analyses.filter(item => matches(item, query));
-  grid.innerHTML = items.length
-    ? items.map(item => `<article class="analysis-card reveal visible"><span class="tag">${item.tag}</span><h3>${item.name}</h3><p>${item.desc}</p></article>`).join('')
-    : '<div class="empty-state" role="status"><strong>No encontramos coincidencias.</strong><br>Prueba otro término o cambia el filtro.</div>';
+  const items = analyses.filter(item => matches(item, search?.value || ''));
+  grid.innerHTML = items.length ? items.map(item => `<article class="analysis-card reveal visible"><span class="tag">${item.tag}</span><h3>${item.name}</h3><p>${item.desc}</p></article>`).join('') : '<div class="empty-state" role="status"><strong>No encontramos coincidencias.</strong><br>Prueba otro término o cambia el filtro.</div>';
   count.textContent = `${items.length} ${items.length === 1 ? 'disponible' : 'disponibles'}`;
 }
-
 renderFilters();
 render();
 search?.addEventListener('input', render);
-search?.addEventListener('keydown', event => {
-  if (event.key === 'Escape' && search.value) {
-    search.value = '';
-    render();
-  }
-});
+search?.addEventListener('keydown', event => { if (event.key === 'Escape' && search.value) { search.value = ''; render(); } });
 
 const toggle = document.querySelector('.menu-toggle');
 const links = document.querySelector('#nav-links');
-function closeMenu() {
-  links?.classList.remove('open');
-  toggle?.setAttribute('aria-expanded', 'false');
-}
-
-toggle?.addEventListener('click', () => {
-  const open = links?.classList.toggle('open') ?? false;
-  toggle.setAttribute('aria-expanded', String(open));
-});
+function closeMenu() { links?.classList.remove('open'); toggle?.setAttribute('aria-expanded', 'false'); }
+toggle?.addEventListener('click', () => { const open = links?.classList.toggle('open') ?? false; toggle.setAttribute('aria-expanded', String(open)); });
 links?.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape') closeMenu();
   if ((event.ctrlKey || event.metaKey) && event.key.toLocaleLowerCase('es') === 'k') {
     event.preventDefault();
-    search?.focus();
+    const assistantSearch = document.querySelector('#assistant-demo-search');
+    assistantSearch?.focus();
+    assistantSearch?.scrollIntoView({behavior:'smooth',block:'center'});
   }
 });
-document.addEventListener('click', event => {
-  if (!links?.classList.contains('open')) return;
-  if (links.contains(event.target) || toggle?.contains(event.target)) return;
-  closeMenu();
-});
-window.addEventListener('resize', () => {
-  if (window.innerWidth > 1050) closeMenu();
-});
+document.addEventListener('click', event => { if (links?.classList.contains('open') && !links.contains(event.target) && !toggle?.contains(event.target)) closeMenu(); });
+window.addEventListener('resize', () => { if (window.innerWidth > 1050) closeMenu(); });
 
 const revealItems = document.querySelectorAll('.reveal');
 if ('IntersectionObserver' in window) {
   const io = new IntersectionObserver(entries => entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('visible');
-      io.unobserve(entry.target);
-    }
-  }), {threshold: 0.08, rootMargin: '0px 0px -24px 0px'});
+    if (entry.isIntersecting) { entry.target.classList.add('visible'); io.unobserve(entry.target); }
+  }), {threshold:0.08,rootMargin:'0px 0px -24px 0px'});
   revealItems.forEach(el => io.observe(el));
-} else {
-  revealItems.forEach(el => el.classList.add('visible'));
-}
+} else revealItems.forEach(el => el.classList.add('visible'));

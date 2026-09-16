@@ -3,12 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#24113f">
-  <meta name="description" content="Yornis v0.15.6 · Yom Dental Análisis. Cefalometría lateral e investigación con 102 mediciones, 17 tablas, referencias por edad/sexo cuando existe evidencia compatible y funcionamiento local.">
+  <meta name="theme-color" content="#32103F">
+  <meta name="description" content="Yornis v0.15.7 · Yom Dental Análisis. Cefalometría lateral e investigación con 102 mediciones, 17 tablas, 8 asistentes-ave, buscador interno y referencias contextualizadas por edad/sexo.">
   <meta name="robots" content="index,follow">
-  <title>Yornis v0.15.6 · Cefalometría e investigación</title>
+  <title>Yornis v0.15.7 · Bird Assistant · Cefalometría e investigación</title>
   <link rel="icon" href="assets/yornis-logo.png" type="image/png">
   <link rel="stylesheet" href="styles.css">
+  <style>
+    :root{--assistant-primary:#5A246F;--assistant-dark:#32103F;--assistant-soft:#D9C3EE;--assistant-secondary:#17A8A2;--assistant-accent:#65D8BC;--assistant-bg:#F8F3FC}
+    .assistant-section{position:relative;overflow:hidden}.assistant-section:before{content:"";position:absolute;width:680px;height:680px;right:-300px;top:40px;border-radius:50%;background:radial-gradient(circle,var(--assistant-soft),transparent 68%);opacity:.38;pointer-events:none}.assistant-layout{display:grid;grid-template-columns:.92fr 1.08fr;gap:26px;align-items:stretch}.assistant-panel{background:linear-gradient(145deg,#fff,var(--assistant-bg));border:1px solid var(--line);border-radius:30px;padding:30px;box-shadow:var(--shadow-soft);position:relative;overflow:hidden}.assistant-panel:after{content:"";position:absolute;inset:auto -90px -120px auto;width:300px;height:300px;border-radius:50%;background:var(--assistant-soft);opacity:.28}.assistant-identity{display:flex;align-items:center;gap:18px;position:relative;z-index:2}.assistant-avatar{width:94px;height:94px;border-radius:28px;display:grid;place-items:center;background:linear-gradient(145deg,var(--assistant-primary),var(--assistant-secondary));color:#fff;box-shadow:0 16px 38px rgba(30,20,50,.18);font-size:40px;font-weight:900}.assistant-copy h3{font-size:30px;line-height:1;margin:0 0 8px}.assistant-copy p{margin:0;color:var(--muted)}.assistant-chip{display:inline-flex;margin-top:10px;padding:6px 9px;border-radius:999px;background:var(--assistant-soft);color:var(--assistant-dark);font-size:10px;letter-spacing:.09em;text-transform:uppercase;font-weight:900}.assistant-search-demo{margin-top:26px;position:relative;z-index:2}.assistant-search-demo label{display:block;font-size:12px;font-weight:850;margin-bottom:7px;color:var(--ink2)}.assistant-search-shell{display:flex;gap:8px}.assistant-search-shell input{flex:1;border:1px solid var(--line2);border-radius:14px;padding:13px 14px;background:#fff}.assistant-search-shell button{border:0;border-radius:14px;padding:0 17px;background:var(--assistant-dark);color:#fff;font-weight:850;cursor:pointer}.assistant-answer{margin-top:12px;padding:14px 15px;border-radius:15px;background:rgba(255,255,255,.82);border:1px solid var(--line);font-size:13px;color:var(--ink2);min-height:72px}.assistant-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:16px;position:relative;z-index:2}.assistant-actions div{padding:12px;border-radius:14px;background:#fff;border:1px solid var(--line)}.assistant-actions b{display:block;font-size:12px;color:var(--assistant-dark)}.assistant-actions span{display:block;font-size:11px;color:var(--muted);margin-top:3px}.palette-wrap{background:#fff;border:1px solid var(--line);border-radius:30px;padding:26px;box-shadow:var(--shadow-soft)}.palette-head{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:16px}.palette-head h3{font-size:23px;margin:0}.palette-head span{font-size:12px;color:var(--muted)}.palette-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.palette-card{appearance:none;text-align:left;background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;cursor:pointer;transition:.2s ease;color:var(--ink)}.palette-card:hover,.palette-card.active{transform:translateY(-2px);border-color:var(--assistant-primary);box-shadow:0 10px 28px rgba(42,22,74,.08)}.palette-card.active{box-shadow:0 0 0 3px var(--assistant-soft)}.palette-card strong{display:block;font-size:14px}.palette-card small{display:block;color:var(--muted);font-size:10px;margin-top:3px}.swatches{display:flex;gap:5px;margin-top:10px}.swatches i{width:26px;height:9px;border-radius:999px;display:block}.assistant-banner{margin-top:18px;border-radius:18px;padding:16px 18px;background:linear-gradient(90deg,var(--assistant-dark),var(--assistant-primary),var(--assistant-secondary));color:#fff;display:flex;justify-content:space-between;gap:16px;align-items:center}.assistant-banner b{font-size:14px}.assistant-banner span{font-size:11px;opacity:.85}.release-pill{display:inline-flex;gap:7px;align-items:center;background:#e7f8f3;color:#167864;border:1px solid #caeee4;border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900}.download-card .hash{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:10px;word-break:break-all;color:var(--muted);margin-top:10px}.release-highlights{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-top:18px}.release-highlights div{border:1px solid var(--line);background:#fff;border-radius:16px;padding:15px}.release-highlights b{display:block;color:var(--assistant-dark);font-size:13px}.release-highlights span{display:block;color:var(--muted);font-size:11px;margin-top:4px}@media(max-width:980px){.assistant-layout{grid-template-columns:1fr}.release-highlights{grid-template-columns:1fr 1fr}}@media(max-width:640px){.palette-grid,.release-highlights,.assistant-actions{grid-template-columns:1fr}.assistant-search-shell{flex-direction:column}.assistant-search-shell button{padding:12px}.assistant-identity{align-items:flex-start}.assistant-avatar{width:76px;height:76px;border-radius:22px}}
+  </style>
 </head>
 <body>
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
@@ -22,11 +26,11 @@
       </a>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Abrir o cerrar menú">Menú</button>
       <div id="nav-links" class="nav-links">
+        <a href="#asistente">Asistente</a>
         <a href="#funciones">Funciones</a>
         <a href="#analisis">Análisis</a>
         <a href="#evidencia">Evidencia</a>
         <a href="#investigacion">Investigación</a>
-        <a href="#auditoria">Auditoría</a>
         <a href="#descargar" class="nav-download">Descargar</a>
       </div>
     </nav>
@@ -35,53 +39,77 @@
   <main id="contenido">
     <section id="inicio" class="hero section">
       <div class="hero-copy reveal">
-        <div class="eyebrow"><span class="status-dot"></span> v0.15.6 · Quality & UX · Windows x64</div>
-        <h1>Más claro para aprender.<br><span>Más sólido para investigar.</span></h1>
-        <p class="hero-lede">Yornis integra trazado cefalométrico lateral, control de calidad, investigación reproducible y referencias clínicas contextualizadas en una aplicación local, gratuita y sin suscripciones.</p>
+        <div class="eyebrow"><span class="status-dot"></span> v0.15.7 · Bird Assistant · Windows x64</div>
+        <h1>Tu análisis.<br><span>Tu ave asistente.</span></h1>
+        <p class="hero-lede">Yornis combina cefalometría lateral, referencias científicas, investigación reproducible y ahora un asistente virtual local que cambia con tu paleta de color y te guía dentro de la aplicación.</p>
         <div class="hero-actions">
-          <a class="button primary" href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/releases/latest">Descargar versión actual <span aria-hidden="true">→</span></a>
-          <a class="button ghost" href="#evidencia">Ver referencias por edad/sexo</a>
+          <a class="button primary" href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/releases/download/v0.15.7/Yornis_Setup_v0.15.7_Bird_Assistant_HiDPI.exe">Descargar EXE v0.15.7 <span aria-hidden="true">→</span></a>
+          <a class="button ghost" href="#asistente">Conocer los 8 asistentes</a>
         </div>
         <div class="hero-badges" aria-label="Características principales">
-          <span>102 mediciones</span><span>17 tablas</span><span>Edad / sexo</span><span>HiDPI</span><span>Datos locales</span>
+          <span>8 asistentes-ave</span><span>Ctrl+K</span><span>102 mediciones</span><span>17 tablas</span><span>HiDPI</span><span>Datos locales</span>
         </div>
       </div>
 
-      <div class="hero-visual reveal" aria-label="Vista conceptual de Yornis">
+      <div class="hero-visual reveal" aria-label="Vista conceptual de Yornis v0.15.7">
         <div class="halo h1"></div><div class="halo h2"></div>
         <div class="product-card">
-          <div class="product-top"><span class="product-chip">YORNIS</span><span class="product-version">0.15.6</span></div>
+          <div class="product-top"><span class="product-chip">YORNIS</span><span class="product-version">0.15.7</span></div>
           <img src="assets/yornis-logo.png" alt="Ave de Yornis integrada con una radiografía lateral de cráneo">
-          <div class="product-copy"><strong>Ciencia que vuela más alto</strong><span>Cefalometría · evidencia · investigación</span></div>
+          <div class="product-copy"><strong>Bird Assistant</strong><span>Ayuda · búsqueda · referencias · cefalometría</span></div>
         </div>
-        <div class="float-card fc1"><b>✓</b><span>Geometría auditada</span></div>
-        <div class="float-card fc2"><b>17</b><span>tablas de ayuda</span></div>
-        <div class="float-card fc3"><b>F1</b><span>referencias rápidas</span></div>
+        <div class="float-card fc1"><b>Ctrl+K</b><span>buscador interno</span></div>
+        <div class="float-card fc2"><b>8</b><span>aves asistentes</span></div>
+        <div class="float-card fc3"><b>F1</b><span>17 tablas</span></div>
       </div>
     </section>
 
     <section class="quality-strip" aria-label="Principios de calidad">
-      <div><b>Sin nube obligatoria</b><span>Radiografías y base de datos permanecen en tu equipo.</span></div>
-      <div><b>Sin interpolaciones clínicas</b><span>Si no hay referencia compatible por edad/sexo, Yornis lo dice.</span></div>
-      <div><b>Sin diagnóstico automático</b><span>Una media histórica no se convierte en diagnóstico.</span></div>
+      <div><b>Asistente local</b><span>Explica flujos y busca dentro de Yornis sin enviar tus radiografías a una nube.</span></div>
+      <div><b>Evidencia contextual</b><span>Edad, sexo, método y población se muestran cuando la evidencia es compatible.</span></div>
+      <div><b>Geometría preservada</b><span>v0.15.7 mejora ayuda e interfaz sin cambiar las fórmulas auditadas.</span></div>
+    </section>
+
+    <section id="asistente" class="section assistant-section">
+      <div class="section-heading reveal"><div><p class="kicker">Nuevo en v0.15.7</p><h2>La paleta que eliges también elige a tu asistente.</h2></div><p>Cada tema inspirado en aves cambia de forma visible la interfaz y activa un asistente con identidad propia. La ayuda interna busca en guías, 17 tablas de referencia y 102 mediciones.</p></div>
+      <div class="assistant-layout">
+        <article class="assistant-panel reveal">
+          <div class="assistant-identity">
+            <div id="assistant-avatar" class="assistant-avatar" aria-hidden="true">A</div>
+            <div class="assistant-copy"><h3 id="assistant-name">Agaporni</h3><p id="assistant-description">Asistente violeta y turquesa para navegar Yornis, encontrar referencias y explicar qué hacer paso a paso.</p><span id="assistant-chip" class="assistant-chip">Paleta activa · Agaporni</span></div>
+          </div>
+          <div class="assistant-search-demo">
+            <label for="assistant-demo-search">Prueba cómo piensa el buscador interno</label>
+            <div class="assistant-search-shell"><input id="assistant-demo-search" type="search" placeholder="Ej. vía aérea, calibrar, CVM, Steiner…"><button id="assistant-demo-button" type="button">Buscar</button></div>
+            <div id="assistant-demo-answer" class="assistant-answer" aria-live="polite">Escribe un tema para ver qué tipo de ayuda encontrará tu ave dentro de Yornis.</div>
+          </div>
+          <div class="assistant-actions"><div><b>Ctrl+K</b><span>abre el asistente y buscador</span></div><div><b>F1</b><span>abre las referencias completas</span></div><div><b>Offline</b><span>la ayuda base vive dentro de la app</span></div></div>
+        </article>
+
+        <div class="palette-wrap reveal">
+          <div class="palette-head"><div><h3>8 paletas · 8 aves</h3><span>Selecciona una para cambiar esta vista.</span></div><span id="palette-status" class="release-pill">Agaporni seleccionado</span></div>
+          <div id="palette-grid" class="palette-grid" aria-label="Paletas de asistentes"></div>
+          <div class="assistant-banner"><div><b>Los cambios de color ahora son más evidentes.</b><br><span>Botones, pestañas, tablas, selecciones y estados reflejan la paleta elegida.</span></div><span>HiDPI · supersampling</span></div>
+        </div>
+      </div>
     </section>
 
     <section id="funciones" class="section">
-      <div class="section-heading reveal"><div><p class="kicker">Flujo de trabajo</p><h2>Una interfaz más consistente de principio a fin.</h2></div><p>v0.15.6 unifica jerarquía visual, botones, campos, tablas, pestañas, ayudas y estados para que Individual, Investigación y Referencias se sientan parte del mismo producto.</p></div>
+      <div class="section-heading reveal"><div><p class="kicker">Flujo de trabajo</p><h2>Más fácil de aprender sin simplificar la ciencia.</h2></div><p>La nueva capa de ayuda se suma a la interfaz unificada de v0.15.6: botones, campos, tablas, pestañas, foco de teclado, referencias y estados siguen el mismo lenguaje visual.</p></div>
       <div class="feature-grid">
-        <article class="feature reveal"><span class="feature-icon">01</span><h3>Trazado guiado</h3><p>Landmarks según las variables elegidas, lupa, arrastre, zoom, calibración, deshacer/rehacer y control geométrico.</p><ul><li>Etiquetas de alto contraste</li><li>Landmarks adaptables</li><li>Canvas optimizado para HiDPI</li></ul></article>
-        <article class="feature reveal"><span class="feature-icon">02</span><h3>Referencias F1</h3><p>Ayuda nativa rediseñada con búsqueda, zoom y lectura más prudente de los rangos.</p><ul><li>17 tablas</li><li>Fuente principal visible</li><li>Edad/sexo cuando aplica</li></ul></article>
-        <article class="feature reveal"><span class="feature-icon">03</span><h3>Modo Investigación</h3><p>Protocolos versionados, inclusión/exclusión, aleatorización reproducible y hasta 1000 casos.</p><ul><li>Estados auditables</li><li>QC técnico</li><li>Reproducibilidad</li></ul></article>
-        <article class="feature reveal"><span class="feature-icon">04</span><h3>Exportación científica</h3><p>CSV, sintaxis SPSS, JSON pseudonimizado, Excel/PDF y respaldos consistentes de SQLite.</p><ul><li>Campos estructurados</li><li>Privacidad local</li><li>Backups verificables</li></ul></article>
-        <article class="feature reveal"><span class="feature-icon">05</span><h3>Cervical y crecimiento</h3><p>CVM C2–C4, alineación, C1–C7 y cráneo-cervical con advertencias de contexto cuando la evidencia no es universal.</p><ul><li>Sin corte 35–45° universal</li><li>Contexto por muestra</li><li>Geometría conservada</li></ul></article>
-        <article class="feature reveal"><span class="feature-icon">06</span><h3>Diseño accesible</h3><p>Mejor foco de teclado, áreas de clic más grandes, contraste, navegación móvil y soporte de movimiento reducido.</p><ul><li>Segoe UI en escritorio</li><li>Atajos visibles</li><li>Responsive en la web</li></ul></article>
+        <article class="feature reveal"><span class="feature-icon">01</span><h3>Asistente contextual</h3><p>Explica cómo cargar un caso, marcar landmarks, calibrar, calcular, exportar o respaldar.</p><ul><li>Guías paso a paso</li><li>Atajo Ctrl+K</li><li>8 identidades visuales</li></ul></article>
+        <article class="feature reveal"><span class="feature-icon">02</span><h3>Buscador interno</h3><p>Busca en guías, referencias y mediciones sin salir de la aplicación.</p><ul><li>102 mediciones</li><li>17 tablas</li><li>Acceso directo a referencias</li></ul></article>
+        <article class="feature reveal"><span class="feature-icon">03</span><h3>Trazado guiado</h3><p>Landmarks según las variables elegidas, lupa, arrastre, zoom, calibración y control geométrico.</p><ul><li>Etiquetas de alto contraste</li><li>Landmarks adaptables</li><li>Canvas HiDPI</li></ul></article>
+        <article class="feature reveal"><span class="feature-icon">04</span><h3>Referencias F1</h3><p>Ayuda nativa con búsqueda, zoom, navegación y fuente principal visible.</p><ul><li>Edad/sexo cuando aplica</li><li>Sin interpolar datos faltantes</li><li>Interpretación prudente</li></ul></article>
+        <article class="feature reveal"><span class="feature-icon">05</span><h3>Modo Investigación</h3><p>Protocolos versionados, inclusión/exclusión, aleatorización reproducible y hasta 1000 casos.</p><ul><li>QC técnico</li><li>SPSS y CSV</li><li>Backups verificables</li></ul></article>
+        <article class="feature reveal"><span class="feature-icon">06</span><h3>Definición mejorada</h3><p>Avatares y branding reconstruidos con escalado de alta calidad para pantallas modernas.</p><ul><li>PerMonitorV2</li><li>Supersampling/LANCZOS</li><li>Segoe UI</li></ul></article>
       </div>
     </section>
 
     <section id="analisis" class="section analyses-section">
-      <div class="section-heading reveal"><div><p class="kicker">17 análisis y referencias</p><h2>Encuentra rápido lo que necesitas.</h2></div><p>Busca por nombre o filtra por área. La clasificación es de navegación; no cambia los cálculos ni la interpretación clínica.</p></div>
+      <div class="section-heading reveal"><div><p class="kicker">17 análisis y referencias</p><h2>Explora el contenido científico de Yornis.</h2></div><p>Busca por nombre o filtra por área. El buscador de esta página es una vista del catálogo; dentro de la app, Ctrl+K amplía la búsqueda a guías y a las 102 mediciones.</p></div>
       <div class="analysis-controls reveal">
-        <div class="search-box"><label for="analysis-search">Buscar</label><input id="analysis-search" type="search" placeholder="Ej. Steiner, vía aérea, cervical…" autocomplete="off"></div>
+        <div class="search-box"><label for="analysis-search">Buscar análisis</label><input id="analysis-search" type="search" placeholder="Ej. Steiner, vía aérea, cervical…" autocomplete="off"></div>
         <div id="analysis-filters" class="filter-chips" aria-label="Filtrar análisis"></div>
         <span id="analysis-count" class="result-count" aria-live="polite">17 disponibles</span>
       </div>
@@ -89,57 +117,42 @@
     </section>
 
     <section id="evidencia" class="section evidence-section">
-      <div class="section-heading reveal"><div><p class="kicker">Interpretación responsable</p><h2>La referencia correcta depende del método y la población.</h2></div><p>v0.15.5/v0.15.6 separan mejor el valor calculado de la referencia usada para contextualizarlo.</p></div>
+      <div class="section-heading reveal"><div><p class="kicker">Interpretación responsable</p><h2>La referencia depende del método y la población.</h2></div><p>v0.15.7 conserva la revisión por edad/sexo incorporada en v0.15.5 y la presentación prudente de v0.15.6.</p></div>
       <div class="evidence-grid">
-        <article class="evidence-card sample reveal"><div class="evidence-label">Referencia de muestra</div><h3>Lordosis C1–C7</h3><p>La geometría se conserva. Se retiró 35–45° como normalidad universal automática y se muestran grupos publicados compatibles.</p><dl><div><dt>6–19 años</dt><dd>50.7 ± 10.5°</dd></div><div><dt>20–50 años</dt><dd>45.6 ± 10.4°</dd></div></dl><small>Sin tabla anual 4–30; no se interpolan edades.</small></article>
-        <article class="evidence-card age reveal"><div class="evidence-label">Edad publicada</div><h3>Vía aérea McNamara</h3><p>Se incorporaron valores pediátricos compatibles a edades específicas.</p><dl><div><dt>6 años · superior</dt><dd>7.500 ± 1.827 mm</dd></div><div><dt>12 años · superior</dt><dd>11.416 ± 2.261 mm</dd></div></dl><small>Hay datos a 6, 8, 10 y 12 años; no se inventan 7, 9 u 11.</small></article>
-        <article class="evidence-card historical reveal"><div class="evidence-label">Referencia histórica</div><h3>Cráneo-cervical</h3><p>Los valores de Solow–Tallgren se contextualizan según la cohorte original y dejan de presentarse como norma universal infantil o femenina.</p><dl><div><dt>Fuente histórica</dt><dd>Varones 22–30</dd></div><div><dt>Contexto pediátrico</dt><dd>9–16 años</dd></div></dl><small>Sin cortes anuales inventados para SN-OPT, SN-CVT u OPT-CVT.</small></article>
+        <article class="evidence-card sample reveal"><div class="evidence-label">Referencia de muestra</div><h3>Lordosis C1–C7</h3><p>La geometría se conserva. 35–45° no se usa como normalidad universal automática.</p><dl><div><dt>6–19 años</dt><dd>50.7 ± 10.5°</dd></div><div><dt>20–50 años</dt><dd>45.6 ± 10.4°</dd></div></dl><small>Sin tabla anual 4–30; no se interpolan edades.</small></article>
+        <article class="evidence-card age reveal"><div class="evidence-label">Edad publicada</div><h3>Vía aérea McNamara</h3><p>Se muestran valores pediátricos compatibles a edades específicas.</p><dl><div><dt>6 años · superior</dt><dd>7.500 ± 1.827 mm</dd></div><div><dt>12 años · superior</dt><dd>11.416 ± 2.261 mm</dd></div></dl><small>Datos a 6, 8, 10 y 12 años; no se inventan edades intermedias.</small></article>
+        <article class="evidence-card historical reveal"><div class="evidence-label">Contexto histórico</div><h3>Cráneo-cervical</h3><p>Los valores históricos se presentan con contexto de cohorte, no como norma universal.</p><dl><div><dt>Solow–Tallgren</dt><dd>Varones 22–30</dd></div><div><dt>Contexto pediátrico</dt><dd>9–16 años</dd></div></dl><small>Sin cortes anuales inventados para SN-OPT, SN-CVT u OPT-CVT.</small></article>
       </div>
-      <div class="evidence-action reveal"><a class="button ghost" href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/blob/main/docs/revision-edad-sexo-lordosis-via-aerea-craneocervical-2026.md">Leer revisión por edad y sexo <span aria-hidden="true">→</span></a></div>
+      <div class="evidence-action reveal"><a class="button ghost" href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/blob/main/docs/revision-edad-sexo-lordosis-via-aerea-craneocervical-2026.md">Leer revisión científica <span aria-hidden="true">→</span></a></div>
     </section>
 
     <section id="investigacion" class="research-band">
       <div class="research-inner">
         <div class="research-copy reveal"><p class="kicker">Investigación reproducible</p><h2>Del protocolo al dataset sin perder trazabilidad.</h2><p>Yornis conserva protocolos, landmarks, resultados, versiones y auditoría. Los respaldos usan snapshots consistentes de SQLite y las exportaciones pseudonimizadas evitan exponer rutas locales.</p><div class="research-pills"><span>Protocolos versionados</span><span>QC técnico</span><span>SPSS</span><span>Backups</span><span>Hasta 1000 casos</span></div></div>
-        <div class="research-metric reveal"><div><b>1000</b><span>casos por estudio</span></div><div><b>102</b><span>mediciones automáticas</span></div><div><b>17</b><span>tablas de referencia</span></div><div><b>0</b><span>suscripciones requeridas</span></div></div>
+        <div class="research-metric reveal"><div><b>1000</b><span>casos por estudio</span></div><div><b>102</b><span>mediciones automáticas</span></div><div><b>17</b><span>tablas de referencia</span></div><div><b>8</b><span>aves asistentes</span></div></div>
       </div>
     </section>
 
     <section id="auditoria" class="section">
-      <div class="section-heading reveal"><div><p class="kicker">Transparencia</p><h2>Qué se prueba y qué sigue siendo una limitación.</h2></div><p>Una compilación correcta no equivale a validación clínica. Yornis diferencia pruebas de software, fuentes cefalométricas y validación externa.</p></div>
+      <div class="section-heading reveal"><div><p class="kicker">Transparencia</p><h2>Interfaz más amable, motor clínico sin atajos.</h2></div><p>La publicación de v0.15.7 repitió pruebas unitarias, auditoría clínica del asistente, GUI HiDPI, PyInstaller, arranque en frío, instalador y checksums.</p></div>
       <div class="audit-grid">
-        <article class="audit-card ok reveal"><span>✓</span><h3>Geometría y regresión</h3><p>Suite automatizada sobre las 102 mediciones y pruebas específicas para Wits, CVM, HP, vía aérea y resultados cervicales.</p></article>
-        <article class="audit-card ok reveal"><span>✓</span><h3>Datos y exportación</h3><p>Pruebas para SQLite/WAL, historial de outcomes, backups/restauración, privacidad JSON y sintaxis SPSS.</p></article>
-        <article class="audit-card ok reveal"><span>✓</span><h3>Windows y HiDPI</h3><p>PerMonitorV2, Segoe UI, build PyInstaller, arranque en frío, instalador y SHA-256.</p></article>
-        <article class="audit-card caution reveal"><span>!</span><h3>Límite explícito</h3><p>La validación clínica externa requiere comparación con trazados de referencia y reproducibilidad intra/interobservador.</p></article>
+        <article class="audit-card ok reveal"><span>✓</span><h3>30 pruebas</h3><p>Incluyen compatibilidad histórica, 8 perfiles de asistente, búsqueda interna, 17 tablas y 102 mediciones.</p></article>
+        <article class="audit-card ok reveal"><span>✓</span><h3>Geometría preservada</h3><p>La nueva versión no modifica las fórmulas cefalométricas auditadas.</p></article>
+        <article class="audit-card ok reveal"><span>✓</span><h3>Windows + HiDPI</h3><p>Build real, arranque en frío, instalador y renderizado adaptado a pantallas de alta densidad.</p></article>
+        <article class="audit-card caution reveal"><span>!</span><h3>Límite explícito</h3><p>El asistente guía y recupera información; no sustituye el criterio clínico ni constituye diagnóstico automático.</p></article>
       </div>
-      <div class="doc-links reveal">
-        <a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/blob/main/docs/auditoria-software-2026-09-15.md">Auditoría de software</a>
-        <a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/blob/main/docs/auditoria-cefalometrica-fuentes-primarias-2026.md">Fuentes primarias</a>
-        <a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/blob/main/docs/revision-edad-sexo-lordosis-via-aerea-craneocervical-2026.md">Edad y sexo</a>
-        <a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos">Repositorio</a>
-      </div>
+      <div class="doc-links reveal"><a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/blob/main/docs/yornis-v0157-bird-assistant.md">Cambios v0.15.7</a><a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/blob/main/docs/auditoria-software-2026-09-15.md">Auditoría de software</a><a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/blob/main/docs/auditoria-cefalometrica-fuentes-primarias-2026.md">Fuentes primarias</a><a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos">Repositorio</a></div>
     </section>
 
     <section id="descargar" class="section download-section">
       <div class="download-card reveal">
-        <div class="download-copy"><p class="kicker">v0.15.6 · Windows x64</p><h2>Descarga Yornis.</h2><p>La versión Quality & UX conserva la geometría auditada y eleva la consistencia de interfaz, ayuda de referencias, navegación, accesibilidad y presentación de evidencia.</p><div class="download-actions"><a class="button primary large" href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/releases/latest">Abrir última versión y descargas <span aria-hidden="true">→</span></a><a class="button ghost large" href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/releases/latest">Ver notas de versión</a></div><p class="small-note">Herramienta educativa y de investigación. No se presenta como dispositivo médico ni sustituye el diagnóstico clínico.</p></div>
-        <div class="download-meta" aria-label="Contenido de la descarga"><span>Instalador</span><span>Portable ZIP</span><span>SHA-256</span><span>Arranque en frío verificado</span></div>
+        <div class="download-copy"><p class="kicker">v0.15.7 · Windows x64</p><h2>Descarga Yornis Bird Assistant.</h2><p>La versión actual incorpora las 8 aves asistentes, buscador interno, paletas más expresivas y mejoras de definición HiDPI, manteniendo la geometría clínica y las referencias científicas auditadas.</p><div class="download-actions"><a class="button primary large" href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/releases/download/v0.15.7/Yornis_Setup_v0.15.7_Bird_Assistant_HiDPI.exe">Descargar instalador EXE <span aria-hidden="true">→</span></a><a class="button ghost large" href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/releases/tag/v0.15.7">Ver Release v0.15.7</a></div><p class="hash">SHA-256 · b60ed81ec26b5360632f0799c0b416123dcaf2b45c264a3d69076bc0dcc52703</p><p class="small-note">Herramienta educativa y de investigación. No se presenta como dispositivo médico ni sustituye el diagnóstico clínico.</p></div>
+        <div class="download-meta" aria-label="Contenido de la versión"><span class="release-pill">Última versión estable</span><div class="release-highlights"><div><b>Bird Assistant</b><span>8 aves ligadas a las paletas</span></div><div><b>Ctrl+K</b><span>búsqueda interna</span></div><div><b>F1</b><span>17 tablas científicas</span></div><div><b>HiDPI</b><span>mayor definición visual</span></div></div></div>
       </div>
-    </section>
-
-    <section class="section faq">
-      <div class="section-heading reveal"><div><p class="kicker">Preguntas frecuentes</p><h2>Lo esencial antes de empezar.</h2></div></div>
-      <details class="reveal"><summary>¿Los valores “normales” son universales?</summary><p>No. Yornis distingue referencias históricas, referencias de muestra y valores por edad/sexo cuando la evidencia es geométricamente compatible. Si no existe una referencia válida, no interpola una.</p></details>
-      <details class="reveal"><summary>¿Necesita internet para analizar radiografías?</summary><p>No. La aplicación de escritorio funciona localmente. Internet sólo es necesario para descargar nuevas versiones.</p></details>
-      <details class="reveal"><summary>¿Yornis es gratis?</summary><p>Sí. La descarga no requiere suscripción y la versión estable se distribuye desde GitHub Releases.</p></details>
-      <details class="reveal"><summary>¿Es un dispositivo médico?</summary><p>No. Yornis se identifica como herramienta educativa y de investigación. La validación de software no sustituye la validación clínica externa.</p></details>
     </section>
   </main>
 
-  <footer>
-    <div class="footer-inner"><div class="footer-brand"><img src="assets/yornis-logo.png" alt=""><div><b>Yornis</b><span>Yom Dental Análisis · v0.15.6</span></div></div><p>Quality & UX · evidencia contextualizada · datos locales</p><div class="footer-links"><a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos">GitHub</a><a href="#auditoria">Auditoría</a><a href="#descargar">Descargar</a></div></div>
-  </footer>
-  <script src="app.js" defer></script>
+  <footer><div><b>Yornis · Yom Dental Análisis</b><span>v0.15.7 · Bird Assistant · 2026</span></div><div><a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos">Código y documentación</a></div></footer>
+  <script src="app.js"></script>
 </body>
 </html>
