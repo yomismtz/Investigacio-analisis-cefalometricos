@@ -3,28 +3,143 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#170f35">
-  <meta name="description" content="Yornis · Yom Dental Análisis v0.15.5. Aplicación gratuita para análisis cefalométrico lateral e investigación, con referencias de edad y sexo cuando existe evidencia compatible.">
+  <meta name="theme-color" content="#24113f">
+  <meta name="description" content="Yornis v0.15.6 · Yom Dental Análisis. Cefalometría lateral e investigación con 102 mediciones, 17 tablas, referencias por edad/sexo cuando existe evidencia compatible y funcionamiento local.">
   <meta name="robots" content="index,follow">
-  <title>Yornis v0.15.5 · Yom Dental Análisis</title>
+  <title>Yornis v0.15.6 · Cefalometría e investigación</title>
   <link rel="icon" href="assets/yornis-logo.png" type="image/png">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <a class="skip-link" href="#contenido">Saltar al contenido</a>
-  <div class="sky" aria-hidden="true"><span></span><span></span><span></span></div>
-  <header class="nav-shell"><nav class="nav" aria-label="Navegación principal"><a class="brand" href="#inicio"><img src="assets/yornis-logo.png" alt="Logo de Yornis"><span><b>Yornis</b><small>Yom Dental Análisis</small></span></a><button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Abrir o cerrar menú">Menú</button><div id="nav-links" class="nav-links"><a href="#funciones">Funciones</a><a href="#analisis">Análisis</a><a href="#investigacion">Investigación</a><a href="#auditoria">Auditoría</a><a href="#descargar" class="nav-download">Descargar</a></div></nav></header>
+  <div class="ambient" aria-hidden="true"><span></span><span></span><span></span></div>
+
+  <header class="nav-shell">
+    <nav class="nav" aria-label="Navegación principal">
+      <a class="brand" href="#inicio" aria-label="Yornis, inicio">
+        <span class="brand-mark"><img src="assets/yornis-logo.png" alt=""></span>
+        <span class="brand-copy"><b>Yornis</b><small>Yom Dental Análisis</small></span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Abrir o cerrar menú">Menú</button>
+      <div id="nav-links" class="nav-links">
+        <a href="#funciones">Funciones</a>
+        <a href="#analisis">Análisis</a>
+        <a href="#evidencia">Evidencia</a>
+        <a href="#investigacion">Investigación</a>
+        <a href="#auditoria">Auditoría</a>
+        <a href="#descargar" class="nav-download">Descargar</a>
+      </div>
+    </nav>
+  </header>
+
   <main id="contenido">
-    <section id="inicio" class="hero section"><div class="hero-copy reveal"><div class="eyebrow">Cefalometría lateral · investigación · Windows · v0.15.5</div><h1>Precisión para analizar.<br><span>Alas para investigar.</span></h1><p class="hero-lede">Yornis reúne trazado cefalométrico, control de calidad, investigación reproducible y referencias clínicas en una aplicación local, gratuita y sin suscripciones.</p><div class="hero-actions"><a class="button primary" href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/releases/latest">Descargar versión actual</a><a class="button ghost" href="#auditoria">Ver auditoría</a></div><div class="trust-row"><span>v0.15.5 estable</span><span>Evidencia por edad y sexo</span><span>17 tablas de referencia</span><span>102 mediciones automáticas</span><span>Hasta 1000 casos</span><span>Datos locales</span></div></div><div class="hero-visual reveal"><div class="orbit orbit-a"></div><div class="orbit orbit-b"></div><div class="logo-card"><img src="assets/yornis-logo.png" alt="Ave Yornis integrada con una radiografía lateral de cráneo"><div class="logo-caption"><strong>YORNIS</strong><span>Ciencia que vuela más alto</span></div></div><div class="feather-card f1">Agaporni</div><div class="feather-card f2">Quetzal</div><div class="feather-card f3">Pavorreal</div></div></section>
-    <section class="statement section reveal"><p class="kicker">Un flujo completo, sin nube obligatoria</p><h2>Del trazado a la base de datos, sin perder el control del método.</h2><p>Yornis fue diseñado para trabajo educativo y de investigación. Separa la geometría de las referencias clínicas, conserva auditoría de resultados y evita convertir una media histórica en un diagnóstico automático.</p></section>
-    <section id="funciones" class="section"><div class="section-heading reveal"><div><p class="kicker">Funciones</p><h2>Una app para el caso individual y para la investigación.</h2></div><p>La interfaz mantiene el concepto de aves de Yornis: precisión, perspectiva y movimiento, con temas inspirados en distintas especies.</p></div><div class="feature-grid"><article class="feature reveal"><span class="num">01</span><h3>Trazado guiado</h3><p>Landmarks mínimos según las variables seleccionadas, lupa, arrastre, zoom, calibración y control geométrico.</p></article><article class="feature reveal"><span class="num">02</span><h3>Modo Investigación</h3><p>Protocolos versionados, criterios de inclusión/exclusión, aleatorización reproducible, hasta 1000 casos y estados auditables.</p></article><article class="feature reveal"><span class="num">03</span><h3>Exportación científica</h3><p>CSV, sintaxis SPSS, JSON pseudonimizado, Excel/PDF y respaldo consistente de SQLite.</p></article><article class="feature reveal"><span class="num">04</span><h3>Referencias dentro de la app</h3><p>Botón de ayuda y F1 con tablas nativas, texto nítido HiDPI y referencias por edad, sexo o población cuando la evidencia es metodológicamente compatible.</p></article><article class="feature reveal"><span class="num">05</span><h3>Cervical y crecimiento</h3><p>CVM C2–C4, lordosis C1–C7 contextualizada por edad y sexo, alineación cervical y análisis cráneo-cervical sin interpolar edades no publicadas.</p></article><article class="feature reveal"><span class="num">06</span><h3>Privacidad local</h3><p>Radiografías y base de datos permanecen en el equipo. Yornis no exige cuenta, servidor remoto ni subida automática de pacientes.</p></article></div></section>
-    <section id="analisis" class="section analyses-section"><div class="section-heading reveal"><div><p class="kicker">17 referencias</p><h2>Todos los análisis y tablas de ayuda.</h2></div><p>Busca por nombre. Las referencias se presentan como históricas o de muestra y se contextualizan por edad, sexo, población y técnica cuando la fuente lo permite.</p></div><div class="analysis-tools reveal"><label for="analysis-search">Buscar análisis</label><input id="analysis-search" type="search" placeholder="Ej. Steiner, cervical, vía aérea…" autocomplete="off"><span id="analysis-count" aria-live="polite">17 disponibles</span></div><div id="analysis-grid" class="analysis-grid"></div></section>
-    <section id="investigacion" class="section research-band"><div class="research-copy reveal"><p class="kicker">Investigación reproducible</p><h2>Construido para que el resultado pueda revisarse.</h2><p>Yornis conserva protocolos, landmarks, resultados, versiones y auditoría. Los respaldos usan snapshots consistentes de SQLite y las exportaciones pseudonimizadas evitan exponer rutas locales o nombres de archivos de origen.</p><div class="research-pills"><span>Protocolos versionados</span><span>QC técnico</span><span>SPSS</span><span>Reproducibilidad</span><span>Backups verificados</span></div></div><div class="research-metric reveal"><div><b>1000</b><span>casos por estudio</span></div><div><b>102</b><span>mediciones automáticas</span></div><div><b>17</b><span>tablas de referencia</span></div><div><b>0</b><span>suscripciones requeridas</span></div></div></section>
-    <section id="auditoria" class="section"><div class="section-heading reveal"><div><p class="kicker">Transparencia</p><h2>Auditoría clínica y técnica visible.</h2></div><p>El objetivo no es “hacer que el build quede verde”, sino documentar qué se comprobó y qué sigue necesitando validación externa.</p></div><div class="audit-grid"><article class="audit-card ok reveal"><h3>Geometría y regresión</h3><p>La suite recorre todas las mediciones automáticas con geometría sintética no degenerada y pruebas específicas de Wits, CVM, HP y resultados cervicales.</p></article><article class="audit-card ok reveal"><h3>Edad y sexo sin interpolación</h3><p>v0.15.5 retira 35–45° como corte universal de C1–C7, incorpora grupos publicados compatibles y añade vía aérea pediátrica a 6, 8, 10 y 12 años sin inventar edades intermedias.</p></article><article class="audit-card ok reveal"><h3>Windows y HiDPI</h3><p>PerMonitorV2, Segoe UI, arranque en frío, instalador y checksums SHA-256 forman parte de la cadena final.</p></article><article class="audit-card caution reveal"><h3>Límite explícito</h3><p>Pasar pruebas de software no equivale a validación clínica externa. Las referencias históricas o de muestra no deben interpretarse como normalidad universal ni sustituir el diagnóstico clínico.</p></article></div><div class="doc-links reveal"><a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/blob/main/docs/revision-edad-sexo-lordosis-via-aerea-craneocervical-2026.md">Revisión por edad y sexo v0.15.5</a><a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/blob/main/docs/auditoria-software-2026-09-15.md">Auditoría de software 15-sep-2026</a><a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/blob/main/docs/auditoria-cefalometrica-fuentes-primarias-2026.md">Fuentes primarias y auditoría cefalométrica</a><a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos">Código y repositorio</a></div></section>
-    <section id="descargar" class="section download-section"><div class="download-card reveal"><div class="download-bird">✦</div><p class="kicker">v0.15.5 · estable · Windows x64</p><h2>Descarga Yornis.</h2><p>Versión publicada y verificada el 15 de septiembre de 2026. El pipeline completó pruebas unitarias y de regresión, auditoría científica, GUI HiDPI, build, arranque en frío, instalador, portable y checksums SHA-256 antes de publicar los archivos.</p><div class="download-actions"><a class="button primary large" href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/releases/latest">Abrir última versión y descargas</a></div><p class="small-note">Herramienta educativa y de investigación. No se presenta como dispositivo médico ni sustituye el diagnóstico clínico.</p></div></section>
-    <section class="section faq"><div class="section-heading reveal"><div><p class="kicker">Preguntas frecuentes</p><h2>Lo esencial antes de empezar.</h2></div></div><details class="reveal"><summary>¿Yornis es gratis?</summary><p>Sí. La descarga no requiere suscripción. El sitio se aloja en GitHub Pages y la versión estable se distribuye desde GitHub Releases.</p></details><details class="reveal"><summary>¿Necesita internet para analizar radiografías?</summary><p>No. La aplicación de escritorio funciona localmente. Internet sólo es necesario para descargar nuevas versiones desde esta web.</p></details><details class="reveal"><summary>¿Los valores “normales” son universales?</summary><p>No. Yornis distingue referencias históricas y referencias de muestra. Si una fuente no ofrece una edad, sexo, población o método compatible, Yornis no interpola ni inventa un valor.</p></details><details class="reveal"><summary>¿Es un dispositivo médico?</summary><p>No. Yornis se identifica como herramienta educativa y de investigación. La validación de software no sustituye validación clínica externa.</p></details></section>
+    <section id="inicio" class="hero section">
+      <div class="hero-copy reveal">
+        <div class="eyebrow"><span class="status-dot"></span> v0.15.6 · Quality & UX · Windows x64</div>
+        <h1>Más claro para aprender.<br><span>Más sólido para investigar.</span></h1>
+        <p class="hero-lede">Yornis integra trazado cefalométrico lateral, control de calidad, investigación reproducible y referencias clínicas contextualizadas en una aplicación local, gratuita y sin suscripciones.</p>
+        <div class="hero-actions">
+          <a class="button primary" href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/releases/latest">Descargar versión actual <span aria-hidden="true">→</span></a>
+          <a class="button ghost" href="#evidencia">Ver referencias por edad/sexo</a>
+        </div>
+        <div class="hero-badges" aria-label="Características principales">
+          <span>102 mediciones</span><span>17 tablas</span><span>Edad / sexo</span><span>HiDPI</span><span>Datos locales</span>
+        </div>
+      </div>
+
+      <div class="hero-visual reveal" aria-label="Vista conceptual de Yornis">
+        <div class="halo h1"></div><div class="halo h2"></div>
+        <div class="product-card">
+          <div class="product-top"><span class="product-chip">YORNIS</span><span class="product-version">0.15.6</span></div>
+          <img src="assets/yornis-logo.png" alt="Ave de Yornis integrada con una radiografía lateral de cráneo">
+          <div class="product-copy"><strong>Ciencia que vuela más alto</strong><span>Cefalometría · evidencia · investigación</span></div>
+        </div>
+        <div class="float-card fc1"><b>✓</b><span>Geometría auditada</span></div>
+        <div class="float-card fc2"><b>17</b><span>tablas de ayuda</span></div>
+        <div class="float-card fc3"><b>F1</b><span>referencias rápidas</span></div>
+      </div>
+    </section>
+
+    <section class="quality-strip" aria-label="Principios de calidad">
+      <div><b>Sin nube obligatoria</b><span>Radiografías y base de datos permanecen en tu equipo.</span></div>
+      <div><b>Sin interpolaciones clínicas</b><span>Si no hay referencia compatible por edad/sexo, Yornis lo dice.</span></div>
+      <div><b>Sin diagnóstico automático</b><span>Una media histórica no se convierte en diagnóstico.</span></div>
+    </section>
+
+    <section id="funciones" class="section">
+      <div class="section-heading reveal"><div><p class="kicker">Flujo de trabajo</p><h2>Una interfaz más consistente de principio a fin.</h2></div><p>v0.15.6 unifica jerarquía visual, botones, campos, tablas, pestañas, ayudas y estados para que Individual, Investigación y Referencias se sientan parte del mismo producto.</p></div>
+      <div class="feature-grid">
+        <article class="feature reveal"><span class="feature-icon">01</span><h3>Trazado guiado</h3><p>Landmarks según las variables elegidas, lupa, arrastre, zoom, calibración, deshacer/rehacer y control geométrico.</p><ul><li>Etiquetas de alto contraste</li><li>Landmarks adaptables</li><li>Canvas optimizado para HiDPI</li></ul></article>
+        <article class="feature reveal"><span class="feature-icon">02</span><h3>Referencias F1</h3><p>Ayuda nativa rediseñada con búsqueda, zoom y lectura más prudente de los rangos.</p><ul><li>17 tablas</li><li>Fuente principal visible</li><li>Edad/sexo cuando aplica</li></ul></article>
+        <article class="feature reveal"><span class="feature-icon">03</span><h3>Modo Investigación</h3><p>Protocolos versionados, inclusión/exclusión, aleatorización reproducible y hasta 1000 casos.</p><ul><li>Estados auditables</li><li>QC técnico</li><li>Reproducibilidad</li></ul></article>
+        <article class="feature reveal"><span class="feature-icon">04</span><h3>Exportación científica</h3><p>CSV, sintaxis SPSS, JSON pseudonimizado, Excel/PDF y respaldos consistentes de SQLite.</p><ul><li>Campos estructurados</li><li>Privacidad local</li><li>Backups verificables</li></ul></article>
+        <article class="feature reveal"><span class="feature-icon">05</span><h3>Cervical y crecimiento</h3><p>CVM C2–C4, alineación, C1–C7 y cráneo-cervical con advertencias de contexto cuando la evidencia no es universal.</p><ul><li>Sin corte 35–45° universal</li><li>Contexto por muestra</li><li>Geometría conservada</li></ul></article>
+        <article class="feature reveal"><span class="feature-icon">06</span><h3>Diseño accesible</h3><p>Mejor foco de teclado, áreas de clic más grandes, contraste, navegación móvil y soporte de movimiento reducido.</p><ul><li>Segoe UI en escritorio</li><li>Atajos visibles</li><li>Responsive en la web</li></ul></article>
+      </div>
+    </section>
+
+    <section id="analisis" class="section analyses-section">
+      <div class="section-heading reveal"><div><p class="kicker">17 análisis y referencias</p><h2>Encuentra rápido lo que necesitas.</h2></div><p>Busca por nombre o filtra por área. La clasificación es de navegación; no cambia los cálculos ni la interpretación clínica.</p></div>
+      <div class="analysis-controls reveal">
+        <div class="search-box"><label for="analysis-search">Buscar</label><input id="analysis-search" type="search" placeholder="Ej. Steiner, vía aérea, cervical…" autocomplete="off"></div>
+        <div id="analysis-filters" class="filter-chips" aria-label="Filtrar análisis"></div>
+        <span id="analysis-count" class="result-count" aria-live="polite">17 disponibles</span>
+      </div>
+      <div id="analysis-grid" class="analysis-grid"></div>
+    </section>
+
+    <section id="evidencia" class="section evidence-section">
+      <div class="section-heading reveal"><div><p class="kicker">Interpretación responsable</p><h2>La referencia correcta depende del método y la población.</h2></div><p>v0.15.5/v0.15.6 separan mejor el valor calculado de la referencia usada para contextualizarlo.</p></div>
+      <div class="evidence-grid">
+        <article class="evidence-card sample reveal"><div class="evidence-label">Referencia de muestra</div><h3>Lordosis C1–C7</h3><p>La geometría se conserva. Se retiró 35–45° como normalidad universal automática y se muestran grupos publicados compatibles.</p><dl><div><dt>6–19 años</dt><dd>50.7 ± 10.5°</dd></div><div><dt>20–50 años</dt><dd>45.6 ± 10.4°</dd></div></dl><small>Sin tabla anual 4–30; no se interpolan edades.</small></article>
+        <article class="evidence-card age reveal"><div class="evidence-label">Edad publicada</div><h3>Vía aérea McNamara</h3><p>Se incorporaron valores pediátricos compatibles a edades específicas.</p><dl><div><dt>6 años · superior</dt><dd>7.500 ± 1.827 mm</dd></div><div><dt>12 años · superior</dt><dd>11.416 ± 2.261 mm</dd></div></dl><small>Hay datos a 6, 8, 10 y 12 años; no se inventan 7, 9 u 11.</small></article>
+        <article class="evidence-card historical reveal"><div class="evidence-label">Referencia histórica</div><h3>Cráneo-cervical</h3><p>Los valores de Solow–Tallgren se contextualizan según la cohorte original y dejan de presentarse como norma universal infantil o femenina.</p><dl><div><dt>Fuente histórica</dt><dd>Varones 22–30</dd></div><div><dt>Contexto pediátrico</dt><dd>9–16 años</dd></div></dl><small>Sin cortes anuales inventados para SN-OPT, SN-CVT u OPT-CVT.</small></article>
+      </div>
+      <div class="evidence-action reveal"><a class="button ghost" href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/blob/main/docs/revision-edad-sexo-lordosis-via-aerea-craneocervical-2026.md">Leer revisión por edad y sexo <span aria-hidden="true">→</span></a></div>
+    </section>
+
+    <section id="investigacion" class="research-band">
+      <div class="research-inner">
+        <div class="research-copy reveal"><p class="kicker">Investigación reproducible</p><h2>Del protocolo al dataset sin perder trazabilidad.</h2><p>Yornis conserva protocolos, landmarks, resultados, versiones y auditoría. Los respaldos usan snapshots consistentes de SQLite y las exportaciones pseudonimizadas evitan exponer rutas locales.</p><div class="research-pills"><span>Protocolos versionados</span><span>QC técnico</span><span>SPSS</span><span>Backups</span><span>Hasta 1000 casos</span></div></div>
+        <div class="research-metric reveal"><div><b>1000</b><span>casos por estudio</span></div><div><b>102</b><span>mediciones automáticas</span></div><div><b>17</b><span>tablas de referencia</span></div><div><b>0</b><span>suscripciones requeridas</span></div></div>
+      </div>
+    </section>
+
+    <section id="auditoria" class="section">
+      <div class="section-heading reveal"><div><p class="kicker">Transparencia</p><h2>Qué se prueba y qué sigue siendo una limitación.</h2></div><p>Una compilación correcta no equivale a validación clínica. Yornis diferencia pruebas de software, fuentes cefalométricas y validación externa.</p></div>
+      <div class="audit-grid">
+        <article class="audit-card ok reveal"><span>✓</span><h3>Geometría y regresión</h3><p>Suite automatizada sobre las 102 mediciones y pruebas específicas para Wits, CVM, HP, vía aérea y resultados cervicales.</p></article>
+        <article class="audit-card ok reveal"><span>✓</span><h3>Datos y exportación</h3><p>Pruebas para SQLite/WAL, historial de outcomes, backups/restauración, privacidad JSON y sintaxis SPSS.</p></article>
+        <article class="audit-card ok reveal"><span>✓</span><h3>Windows y HiDPI</h3><p>PerMonitorV2, Segoe UI, build PyInstaller, arranque en frío, instalador y SHA-256.</p></article>
+        <article class="audit-card caution reveal"><span>!</span><h3>Límite explícito</h3><p>La validación clínica externa requiere comparación con trazados de referencia y reproducibilidad intra/interobservador.</p></article>
+      </div>
+      <div class="doc-links reveal">
+        <a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/blob/main/docs/auditoria-software-2026-09-15.md">Auditoría de software</a>
+        <a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/blob/main/docs/auditoria-cefalometrica-fuentes-primarias-2026.md">Fuentes primarias</a>
+        <a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/blob/main/docs/revision-edad-sexo-lordosis-via-aerea-craneocervical-2026.md">Edad y sexo</a>
+        <a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos">Repositorio</a>
+      </div>
+    </section>
+
+    <section id="descargar" class="section download-section">
+      <div class="download-card reveal">
+        <div class="download-copy"><p class="kicker">v0.15.6 · Windows x64</p><h2>Descarga Yornis.</h2><p>La versión Quality & UX conserva la geometría auditada y eleva la consistencia de interfaz, ayuda de referencias, navegación, accesibilidad y presentación de evidencia.</p><div class="download-actions"><a class="button primary large" href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/releases/latest">Abrir última versión y descargas <span aria-hidden="true">→</span></a><a class="button ghost large" href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos/releases/latest">Ver notas de versión</a></div><p class="small-note">Herramienta educativa y de investigación. No se presenta como dispositivo médico ni sustituye el diagnóstico clínico.</p></div>
+        <div class="download-meta" aria-label="Contenido de la descarga"><span>Instalador</span><span>Portable ZIP</span><span>SHA-256</span><span>Arranque en frío verificado</span></div>
+      </div>
+    </section>
+
+    <section class="section faq">
+      <div class="section-heading reveal"><div><p class="kicker">Preguntas frecuentes</p><h2>Lo esencial antes de empezar.</h2></div></div>
+      <details class="reveal"><summary>¿Los valores “normales” son universales?</summary><p>No. Yornis distingue referencias históricas, referencias de muestra y valores por edad/sexo cuando la evidencia es geométricamente compatible. Si no existe una referencia válida, no interpola una.</p></details>
+      <details class="reveal"><summary>¿Necesita internet para analizar radiografías?</summary><p>No. La aplicación de escritorio funciona localmente. Internet sólo es necesario para descargar nuevas versiones.</p></details>
+      <details class="reveal"><summary>¿Yornis es gratis?</summary><p>Sí. La descarga no requiere suscripción y la versión estable se distribuye desde GitHub Releases.</p></details>
+      <details class="reveal"><summary>¿Es un dispositivo médico?</summary><p>No. Yornis se identifica como herramienta educativa y de investigación. La validación de software no sustituye la validación clínica externa.</p></details>
+    </section>
   </main>
-  <footer><div class="footer-inner"><div class="footer-brand"><img src="assets/yornis-logo.png" alt=""><div><b>Yornis</b><span>Yom Dental Análisis · v0.15.5</span></div></div><p>Evidence by Age/Sex · 15 de septiembre de 2026.</p><div class="footer-links"><a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos">GitHub</a><a href="#auditoria">Auditoría</a><a href="#descargar">Descargar</a></div></div></footer>
+
+  <footer>
+    <div class="footer-inner"><div class="footer-brand"><img src="assets/yornis-logo.png" alt=""><div><b>Yornis</b><span>Yom Dental Análisis · v0.15.6</span></div></div><p>Quality & UX · evidencia contextualizada · datos locales</p><div class="footer-links"><a href="https://github.com/yomismtz/Investigacio-analisis-cefalometricos">GitHub</a><a href="#auditoria">Auditoría</a><a href="#descargar">Descargar</a></div></div>
+  </footer>
   <script src="app.js" defer></script>
 </body>
 </html>

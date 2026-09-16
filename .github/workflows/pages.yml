@@ -59,11 +59,13 @@ jobs:
           test -f docs/assets/yornis-logo.png
           test -f docs/revision-edad-sexo-lordosis-via-aerea-craneocervical-2026.md
           grep -q "Yornis" docs/index.html
-          grep -q "v0.15.5" docs/index.html
-          grep -q "Evidencia por edad y sexo" docs/index.html
+          grep -q "v0.15.6" docs/index.html
+          grep -q "Quality & UX" docs/index.html
           grep -q "releases/latest" docs/index.html
           grep -q "Lordosis C1–C7" docs/app.js
           grep -q "sin corte universal 35–45" docs/app.js
+          grep -q "filter-chip" docs/app.js
+          grep -q "focus-visible" docs/styles.css
           grep -q "IntersectionObserver" docs/app.js
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4

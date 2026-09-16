@@ -1,0 +1,3 @@
+Yornis v0.15.6 · Quality & UX
+Release marker for the reproducible Windows build.
+Preserves the audited 102-measurement geometry and v0.15.5 evidence layer while upgrading launcher, desktop visual consistency, reference help, accessibility and the public website.
