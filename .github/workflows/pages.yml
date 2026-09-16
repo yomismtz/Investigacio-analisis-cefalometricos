@@ -29,7 +29,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Build corrected web branding
+      - name: Build high-definition web branding
         shell: bash
         run: |
           python -m pip install pillow
@@ -42,13 +42,14 @@ jobs:
           source = base64.b64decode(''.join(p.read_text(encoding='utf-8').strip() for p in parts), validate=True)
           assert hashlib.sha256(source).hexdigest() == '076f10e95b384ef8da2caf98006d8c84ea43a3108275553516e0a2657bba68b9'
           original = Image.open(io.BytesIO(source)).convert('RGBA')
-          canvas = Image.new('RGBA', (256, 256), (255, 255, 255, 255))
-          inner = original.resize((210, 210), Image.Resampling.LANCZOS)
-          canvas.alpha_composite(inner, (23, 10))
+          canvas = Image.new('RGBA', (512, 512), (255, 255, 255, 255))
+          inner = original.resize((420, 420), Image.Resampling.LANCZOS)
+          canvas.alpha_composite(inner, (46, 20))
           out = Path('docs/assets/yornis-logo.png')
           out.parent.mkdir(parents=True, exist_ok=True)
-          canvas.save(out)
-          print('web logo built:', out, out.stat().st_size)
+          canvas.save(out, optimize=True)
+          assert Image.open(out).size == (512, 512)
+          print('web logo built at 512px:', out, out.stat().st_size)
           PY
       - name: Validate static site
         shell: bash
@@ -58,12 +59,18 @@ jobs:
           test -f docs/app.js
           test -f docs/assets/yornis-logo.png
           test -f docs/revision-edad-sexo-lordosis-via-aerea-craneocervical-2026.md
+          test -f docs/yornis-v0157-bird-assistant.md
           grep -q "Yornis" docs/index.html
-          grep -q "v0.15.6" docs/index.html
-          grep -q "Quality & UX" docs/index.html
-          grep -q "releases/latest" docs/index.html
+          grep -q "v0.15.7" docs/index.html
+          grep -q "Bird Assistant" docs/index.html
+          grep -q "8 asistentes-ave" docs/index.html
+          grep -q "Ctrl+K" docs/index.html
+          grep -q "Yornis_Setup_v0.15.7_Bird_Assistant_HiDPI.exe" docs/index.html
           grep -q "Lordosis C1–C7" docs/app.js
           grep -q "sin corte universal 35–45" docs/app.js
+          grep -q "palette-card" docs/index.html
+          grep -q "Agaporni" docs/app.js
+          grep -q "Guacamaya Azul" docs/app.js
           grep -q "filter-chip" docs/app.js
           grep -q "focus-visible" docs/styles.css
           grep -q "IntersectionObserver" docs/app.js
