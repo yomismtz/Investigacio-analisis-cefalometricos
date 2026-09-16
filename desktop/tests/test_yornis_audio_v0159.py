@@ -19,7 +19,9 @@ class StartupAudioV0159Tests(unittest.TestCase):
         frames = audio.synthesize_chorus("Quetzal", 35)
         expected = int(audio.DURATION * audio.SAMPLE_RATE) * 2
         self.assertEqual(len(frames), expected)
-        self.assertNotEqual(frames[:5000], b"\x00" * min(5000, len(frames)))
+        # The file intentionally begins with a very short silent lead-in to avoid clicks.
+        audible = frames[int(0.10 * audio.SAMPLE_RATE) * 2 : int(0.35 * audio.SAMPLE_RATE) * 2]
+        self.assertTrue(any(audible))
 
     def test_all_bird_palettes_have_signature(self):
         import yornis_theme
