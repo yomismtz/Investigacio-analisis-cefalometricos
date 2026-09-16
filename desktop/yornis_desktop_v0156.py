@@ -129,8 +129,11 @@ class Launcher(previous.Launcher):
         quality.apply_window(self, context="launcher")
 
     def refresh_text(self):
-        if not hasattr(self, "question"):
-            return
+        # The inherited launcher calls refresh_text() while its own widgets are
+        # still being constructed. Delegate that early call to the previous
+        # implementation; only use v0.15.6 controls after our rebuild exists.
+        if not hasattr(self, "question_sub"):
+            return previous.Launcher.refresh_text(self)
         tr = self.tr
         self.title_lbl.configure(text="Yornis")
         self.ver_lbl.configure(text=f"Yom Dental Análisis · v{APP_VERSION}")
