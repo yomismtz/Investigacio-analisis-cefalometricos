@@ -138,6 +138,7 @@ jobs:
           pyinstaller --noconfirm --clean --onedir --windowed --name Yornis
           --icon desktop/assets/yornis.ico
           --manifest desktop/yornis_windows.manifest
+          --version-file desktop/yornis_version_info_v0157.txt
           --paths desktop
           --hidden-import classic_engine --hidden-import yomceph_desktop_v130_classic
           --hidden-import research_db --hidden-import research_protocol --hidden-import research_ui --hidden-import research_ui_compat --hidden-import research_enhancements
@@ -151,20 +152,36 @@ jobs:
           --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;."
           desktop/yornis_desktop_v0157.py
 
-      - name: Optional Authenticode sign application
+      - name: Authenticode sign application
         shell: pwsh
         env:
           CERT_B64: ${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}
           CERT_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          STABLE_RELEASE: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: |
-          if ([string]::IsNullOrWhiteSpace($env:CERT_B64)) { Write-Host 'No code-signing certificate configured; leaving EXE unsigned.'; exit 0 }
+          $stable = $env:STABLE_RELEASE -eq 'true'
+          if ([string]::IsNullOrWhiteSpace($env:CERT_B64) -or [string]::IsNullOrWhiteSpace($env:CERT_PASSWORD)) {
+            if ($stable) { throw 'Stable Yornis releases require WINDOWS_CERTIFICATE_BASE64 and WINDOWS_CERTIFICATE_PASSWORD. Refusing to publish an unsigned release.' }
+            Write-Host 'PR/manual validation build: no signing certificate configured; signing check skipped.'
+            exit 0
+          }
           $pfx = Join-Path $env:RUNNER_TEMP 'yornis-codesign.pfx'
-          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CERT_B64))
-          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Filter signtool.exe -Recurse | Sort-Object FullName -Descending | Select-Object -First 1
-          if (-not $signtool) { throw 'signtool.exe not found' }
-          & $signtool.FullName sign /fd SHA256 /f $pfx /p $env:CERT_PASSWORD /tr http://timestamp.digicert.com /td SHA256 dist\Yornis\Yornis.exe
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Remove-Item $pfx -Force
+          try {
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CERT_B64))
+            $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Filter signtool.exe -Recurse | Sort-Object FullName -Descending | Select-Object -First 1
+            if (-not $signtool) { throw 'signtool.exe not found' }
+            $target = 'dist\Yornis\Yornis.exe'
+            & $signtool.FullName sign /fd SHA256 /f $pfx /p $env:CERT_PASSWORD /tr https://timestamp.digicert.com /td SHA256 $target
+            if ($LASTEXITCODE -ne 0) { throw 'Authenticode signing failed for Yornis.exe' }
+            & $signtool.FullName verify /pa /v $target
+            if ($LASTEXITCODE -ne 0) { throw 'Authenticode verification failed for Yornis.exe' }
+            $signature = Get-AuthenticodeSignature $target
+            if ($signature.Status -ne 'Valid') { throw "Yornis.exe signature status is $($signature.Status), expected Valid" }
+            Write-Host "Yornis.exe signed by: $($signature.SignerCertificate.Subject)"
+          }
+          finally {
+            if (Test-Path $pfx) { Remove-Item $pfx -Force }
+          }
 
       - name: Cold start
         shell: pwsh
@@ -189,20 +206,58 @@ jobs:
           if($bytes[0]-ne 0x4D -or $bytes[1]-ne 0x5A){throw 'Installer missing MZ'}
           Compress-Archive -Path dist\Yornis\* -DestinationPath dist-installer-yornis\Yornis_v0.15.7_Bird_Assistant_HiDPI_Portable.zip -Force
 
-      - name: Optional Authenticode sign installer
+      - name: Authenticode sign installer
         shell: pwsh
         env:
           CERT_B64: ${{ secrets.WINDOWS_CERTIFICATE_BASE64 }}
           CERT_PASSWORD: ${{ secrets.WINDOWS_CERTIFICATE_PASSWORD }}
+          STABLE_RELEASE: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         run: |
-          if ([string]::IsNullOrWhiteSpace($env:CERT_B64)) { exit 0 }
+          $stable = $env:STABLE_RELEASE -eq 'true'
+          if ([string]::IsNullOrWhiteSpace($env:CERT_B64) -or [string]::IsNullOrWhiteSpace($env:CERT_PASSWORD)) {
+            if ($stable) { throw 'Stable Yornis releases require a trusted code-signing certificate. Refusing to publish an unsigned installer.' }
+            Write-Host 'PR/manual validation build: installer signing check skipped.'
+            exit 0
+          }
           $pfx = Join-Path $env:RUNNER_TEMP 'yornis-codesign.pfx'
-          [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CERT_B64))
-          $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Filter signtool.exe -Recurse | Sort-Object FullName -Descending | Select-Object -First 1
-          if (-not $signtool) { throw 'signtool.exe not found' }
-          & $signtool.FullName sign /fd SHA256 /f $pfx /p $env:CERT_PASSWORD /tr http://timestamp.digicert.com /td SHA256 dist-installer-yornis\Yornis_Setup_v0.15.7_Bird_Assistant_HiDPI.exe
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-          Remove-Item $pfx -Force
+          try {
+            [IO.File]::WriteAllBytes($pfx, [Convert]::FromBase64String($env:CERT_B64))
+            $signtool = Get-ChildItem "${env:ProgramFiles(x86)}\Windows Kits\10\bin" -Filter signtool.exe -Recurse | Sort-Object FullName -Descending | Select-Object -First 1
+            if (-not $signtool) { throw 'signtool.exe not found' }
+            $target = 'dist-installer-yornis\Yornis_Setup_v0.15.7_Bird_Assistant_HiDPI.exe'
+            & $signtool.FullName sign /fd SHA256 /f $pfx /p $env:CERT_PASSWORD /tr https://timestamp.digicert.com /td SHA256 $target
+            if ($LASTEXITCODE -ne 0) { throw 'Authenticode signing failed for installer' }
+            & $signtool.FullName verify /pa /v $target
+            if ($LASTEXITCODE -ne 0) { throw 'Authenticode verification failed for installer' }
+            $signature = Get-AuthenticodeSignature $target
+            if ($signature.Status -ne 'Valid') { throw "Installer signature status is $($signature.Status), expected Valid" }
+            Write-Host "Installer signed by: $($signature.SignerCertificate.Subject)"
+          }
+          finally {
+            if (Test-Path $pfx) { Remove-Item $pfx -Force }
+          }
+
+      - name: Stable release signature gate
+        shell: pwsh
+        env:
+          STABLE_RELEASE: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: |
+          if ($env:STABLE_RELEASE -ne 'true') {
+            Write-Host 'Not a stable release event; trusted-signature gate is informational only.'
+            exit 0
+          }
+          $files = @(
+            'dist\Yornis\Yornis.exe',
+            'dist-installer-yornis\Yornis_Setup_v0.15.7_Bird_Assistant_HiDPI.exe'
+          )
+          foreach ($file in $files) {
+            $signature = Get-AuthenticodeSignature $file
+            if ($signature.Status -ne 'Valid') { throw "$file is not trusted-signed. Status: $($signature.Status)" }
+            if (-not $signature.SignerCertificate) { throw "$file has no signer certificate" }
+            Write-Host "Trusted signature OK: $file"
+            Write-Host "Publisher: $($signature.SignerCertificate.Subject)"
+            Write-Host "Issuer: $($signature.SignerCertificate.Issuer)"
+          }
 
       - name: Checksums
         shell: pwsh
@@ -235,6 +290,8 @@ jobs:
             Cada una de las ocho paletas de aves se convierte en un asistente virtual local de Yornis. El asistente explica cómo realizar tareas, busca dentro de guías, 17 tablas de referencia y 102 mediciones, y abre referencias directamente.
 
             La selección de paleta ahora usa tarjetas con muestras de color y aplica cambios visuales más notorios a botones, pestañas, tablas y estados. Los avatares se generan con supersampling para conservar definición en pantallas HiDPI.
+
+            Las publicaciones estables están protegidas por una compuerta de firma Authenticode: el ejecutable y el instalador deben tener una firma válida y verificable antes de poder publicarse.
 
             Se mantiene la geometría clínica auditada y las referencias por edad/sexo de v0.15.5/v0.15.6, sin interpolar edades no publicadas ni restaurar el corte universal 35–45° para C1–C7.
 
