@@ -1,0 +1,2 @@
+Yornis v0.15.7 · Bird Assistant + Internal Search + HiDPI
+Release marker. The Windows release workflow publishes v0.15.7 only when this marker reaches main.
