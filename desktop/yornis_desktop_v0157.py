@@ -12,7 +12,6 @@ import yornis_reference_help_v0156 as reference_help
 import yornis_virtual_assistant_v0157 as assistant
 
 APP_VERSION = "0.15.7 Research Suite · Bird Assistant"
-previous.APP_VERSION = APP_VERSION
 previous.previous.legacy.APP_VERSION = APP_VERSION
 
 
