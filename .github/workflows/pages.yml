@@ -7,6 +7,11 @@ on:
       - 'docs/**'
       - 'desktop/assets/yornis_logo_chunk_*.b64'
       - '.github/workflows/pages.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/pages.yml'
   workflow_dispatch:
 
 permissions:
@@ -15,7 +20,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -59,25 +64,29 @@ jobs:
           test -f docs/app.js
           test -f docs/assets/yornis-logo.png
           test -f docs/revision-edad-sexo-lordosis-via-aerea-craneocervical-2026.md
-          test -f docs/yornis-v0157-bird-assistant.md
+          test -f docs/yornis-v01592-scroll-bird-sounds.md
           grep -q "Yornis" docs/index.html
-          grep -q "v0.15.7" docs/index.html
-          grep -q "Bird Assistant" docs/index.html
-          grep -q "8 asistentes-ave" docs/index.html
-          grep -q "Ctrl+K" docs/index.html
-          grep -q "Yornis_Setup_v0.15.7_Bird_Assistant_HiDPI.exe" docs/index.html
+          grep -q "v0.15.9.2" docs/index.html
+          grep -q "Scroll + Bird Sounds" docs/index.html
+          grep -q "8 firmas sonoras" docs/index.html
+          grep -q "Scroll vertical" docs/index.html
+          grep -q "43 pruebas" docs/index.html
+          grep -q "releases/latest" docs/index.html
           grep -q "Lordosis C1–C7" docs/app.js
           grep -q "sin corte universal 35–45" docs/app.js
-          grep -q "palette-card" docs/index.html
-          grep -q "Agaporni" docs/app.js
+          grep -q "birdSignatures" docs/app.js
+          grep -q "playBirdSignature" docs/app.js
           grep -q "Guacamaya Azul" docs/app.js
           grep -q "filter-chip" docs/app.js
           grep -q "focus-visible" docs/styles.css
           grep -q "IntersectionObserver" docs/app.js
       - uses: actions/configure-pages@v5
+        if: github.event_name != 'pull_request'
       - uses: actions/upload-pages-artifact@v4
+        if: github.event_name != 'pull_request'
         with:
           path: docs
       - name: Deploy to GitHub Pages
         id: deployment
+        if: github.event_name != 'pull_request'
         uses: actions/deploy-pages@v4
