@@ -4,7 +4,6 @@ from tkinter import ttk
 
 import yornis_desktop_v01591 as previous
 import yornis_bird_calls_v01592 as bird_calls
-import yornis_theme
 
 APP_VERSION = "0.15.9.2 Scroll + Bird Calls · Bird Chorus"
 
@@ -20,6 +19,9 @@ class Launcher(previous.Launcher):
         self._scroll_content_height = 1.0
         self._launcher_scrollbar = None
         self._scroll_root_bind = None
+        self._scroll_mouse_bind = None
+        self._scroll_prior_bind = None
+        self._scroll_next_bind = None
         super().__init__()
         self.title("Yornis · Yom Dental Análisis")
         self.after_idle(self._sync_launcher_scroll)
@@ -60,15 +62,24 @@ class Launcher(previous.Launcher):
         # Reserve a narrow strip for the scrollbar so it never overlays cards.
         main.place(x=0, y=-int(self._scroll_offset), relwidth=1.0, width=-20)
 
-        if self._scroll_root_bind:
-            try:
-                self.unbind("<Configure>", self._scroll_root_bind)
-            except Exception:
-                pass
+        for sequence, attr in (
+            ("<Configure>", "_scroll_root_bind"),
+            ("<MouseWheel>", "_scroll_mouse_bind"),
+            ("<Prior>", "_scroll_prior_bind"),
+            ("<Next>", "_scroll_next_bind"),
+        ):
+            bind_id = getattr(self, attr, None)
+            if bind_id:
+                try:
+                    self.unbind(sequence, bind_id)
+                except Exception:
+                    pass
+                setattr(self, attr, None)
+
         self._scroll_root_bind = self.bind("<Configure>", self._schedule_scroll_sync, add="+")
-        self.bind("<MouseWheel>", self._on_launcher_mousewheel, add="+")
-        self.bind("<Prior>", lambda _e: self._scroll_by(-0.82 * max(1, self.winfo_height())), add="+")
-        self.bind("<Next>", lambda _e: self._scroll_by(0.82 * max(1, self.winfo_height())), add="+")
+        self._scroll_mouse_bind = self.bind("<MouseWheel>", self._on_launcher_mousewheel, add="+")
+        self._scroll_prior_bind = self.bind("<Prior>", lambda _e: self._scroll_by(-0.82 * max(1, self.winfo_height())), add="+")
+        self._scroll_next_bind = self.bind("<Next>", lambda _e: self._scroll_by(0.82 * max(1, self.winfo_height())), add="+")
         main.bind("<Configure>", self._schedule_scroll_sync, add="+")
         self.after_idle(self._sync_launcher_scroll)
 
