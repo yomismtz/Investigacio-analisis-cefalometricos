@@ -1,0 +1,3 @@
+Yornis v0.15.9.2 · Scroll + Bird Calls
+
+Release marker for the stable Windows build. Changing this file on main triggers the v0.15.9.2 release workflow.
