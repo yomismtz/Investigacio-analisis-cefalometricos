@@ -1,0 +1,148 @@
+name: Build Yornis v0.15.9.1 Layout Hotfix
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/build-yornis-v01591.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Dependencies
+        shell: pwsh
+        run: python -m pip install pillow pymupdf reportlab openpyxl pyinstaller pyzipper
+
+      - name: Rebuild 512px branding
+        shell: pwsh
+        run: |
+          @'
+          from pathlib import Path
+          from PIL import Image
+          import base64, hashlib, io
+          parts = sorted(Path('desktop/assets').glob('yornis_logo_chunk_*.b64'))
+          assert len(parts) == 12
+          source = base64.b64decode(''.join(p.read_text(encoding='utf-8').strip() for p in parts), validate=True)
+          assert hashlib.sha256(source).hexdigest() == '076f10e95b384ef8da2caf98006d8c84ea43a3108275553516e0a2657bba68b9'
+          original = Image.open(io.BytesIO(source)).convert('RGBA')
+          canvas = Image.new('RGBA', (512, 512), (255,255,255,255))
+          canvas.alpha_composite(original.resize((420,420), Image.Resampling.LANCZOS), (46,20))
+          canvas.save('desktop/assets/yornis_logo.png')
+          canvas.save('desktop/assets/yomceph_logo.png')
+          canvas.save('desktop/assets/yornis.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
+          '@ | python -
+
+      - name: Compile all desktop modules
+        shell: pwsh
+        run: Get-ChildItem desktop\*.py | ForEach-Object { python -m py_compile $_.FullName; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } }
+
+      - name: Unit and regression tests
+        shell: pwsh
+        run: python -m unittest discover -s desktop/tests -p "test_*.py" -v
+
+      - name: v0.15.9.1 layout regression audit
+        shell: pwsh
+        run: |
+          @'
+          import sys
+          sys.path.insert(0, 'desktop')
+          import yornis_desktop_v01591 as app
+          import yornis_virtual_assistant_v0157 as assistant
+          import yornis_reference_help_v0156 as refs
+          import classic_engine as engine
+          assert app.APP_VERSION.startswith('0.15.9.1')
+          assert len(engine.MEASUREMENTS) == 102
+          assert len(refs.TABLES) == 17
+          l = app.Launcher(); l.withdraw()
+          refs.attach_help_button(l, compact=True)
+          assistant.attach_assistant_button(l, compact=True)
+          l.update()
+          for attr in l._FLOATING_ATTRS:
+              w = getattr(l, attr, None)
+              assert w is None or not w.winfo_exists(), attr
+          assert len(l.palette_cards) == 8
+          l.destroy()
+          print('YORNIS v0.15.9.1 LAYOUT HOTFIX AUDIT OK')
+          '@ | python -
+
+      - name: GUI HiDPI smoke test
+        shell: pwsh
+        run: |
+          @'
+          import sys
+          sys.path.insert(0, 'desktop')
+          from yornis_desktop_v01591 import Launcher
+          l=Launcher(); l.withdraw(); l.update()
+          assert float(l.tk.call('tk','scaling')) > 0
+          assert hasattr(l, 'startup_sound_var')
+          assert hasattr(l, 'startup_volume_var')
+          l.destroy()
+          print('YORNIS v0.15.9.1 GUI OK')
+          '@ | python -
+
+      - name: Build application
+        shell: pwsh
+        run: >-
+          pyinstaller --noconfirm --clean --onedir --windowed --name Yornis
+          --icon desktop/assets/yornis.ico
+          --manifest desktop/yornis_windows.manifest
+          --version-file desktop/yornis_version_info_v01591.txt
+          --paths desktop
+          --hidden-import classic_engine --hidden-import yomceph_desktop_v130_classic
+          --hidden-import research_db --hidden-import research_protocol --hidden-import research_ui --hidden-import research_ui_compat --hidden-import research_enhancements
+          --hidden-import research_stability_db_v0141 --hidden-import research_stability_ui_core_v0141 --hidden-import research_stability_ui_perf_v0141 --hidden-import research_stability_export_ui_v0141
+          --hidden-import yornis_theme --hidden-import yornis_storage_v015 --hidden-import yornis_import_v015 --hidden-import yornis_background_import_v015 --hidden-import yornis_research_controls_v015 --hidden-import yornis_ui_theme_v015
+          --hidden-import yornis_spss_v015 --hidden-import yornis_visual_report_v015 --hidden-import yornis_export_ui_v015 --hidden-import yornis_backup_v015 --hidden-import yornis_backup_ui_v015
+          --hidden-import yornis_clinical_audit_v0151 --hidden-import yornis_cervical_v0152 --hidden-import yornis_alignment_v0152 --hidden-import yornis_display_v0152 --hidden-import yornis_ceph_quality_v0153 --hidden-import yornis_audit_hardening_v0154
+          --hidden-import yornis_reference_help_v0154 --hidden-import yornis_reference_help_v0154_all --hidden-import yornis_evidence_v0155 --hidden-import yornis_quality_ui_v0156 --hidden-import yornis_reference_help_v0156
+          --hidden-import yornis_quality_ui_v0157 --hidden-import yornis_virtual_assistant_v0157 --hidden-import yornis_quality_ui_v0158 --hidden-import yornis_startup_audio_v0159 --hidden-import yornis_desktop_v0159
+          --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --collect-all pyzipper
+          --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;."
+          desktop/yornis_desktop_v01591.py
+
+      - name: Cold start
+        shell: pwsh
+        run: |
+          $p=Start-Process -FilePath (Resolve-Path 'dist/Yornis/Yornis.exe') -PassThru
+          Start-Sleep 8
+          if($p.HasExited){throw 'Yornis exited during cold start'}
+          Stop-Process -Id $p.Id -Force
+          $bytes=[IO.File]::ReadAllBytes((Resolve-Path 'dist/Yornis/Yornis.exe'))
+          if($bytes[0]-ne 0x4D -or $bytes[1]-ne 0x5A){throw 'Missing MZ'}
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          choco install innosetup --no-progress -y
+          New-Item -ItemType Directory -Force -Path dist-installer-yornis | Out-Null
+          & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' desktop\Yornis_v01591.iss
+          $setup='dist-installer-yornis/Yornis_Setup_v0.15.9.1_Layout_Hotfix_Bird_Chorus_HiDPI.exe'
+          if(!(Test-Path $setup)){throw 'Installer missing'}
+          Compress-Archive -Path dist\Yornis\* -DestinationPath dist-installer-yornis\Yornis_v0.15.9.1_Layout_Hotfix_Bird_Chorus_HiDPI_Portable.zip -Force
+
+      - name: Checksums
+        shell: pwsh
+        run: |
+          $a=Get-FileHash dist-installer-yornis\Yornis_Setup_v0.15.9.1_Layout_Hotfix_Bird_Chorus_HiDPI.exe -Algorithm SHA256
+          $b=Get-FileHash dist-installer-yornis\Yornis_v0.15.9.1_Layout_Hotfix_Bird_Chorus_HiDPI_Portable.zip -Algorithm SHA256
+          "$($a.Hash.ToLower())  Yornis_Setup_v0.15.9.1_Layout_Hotfix_Bird_Chorus_HiDPI.exe" | Out-File dist-installer-yornis\SHA256SUMS.txt -Encoding ascii
+          "$($b.Hash.ToLower())  Yornis_v0.15.9.1_Layout_Hotfix_Bird_Chorus_HiDPI_Portable.zip" | Out-File dist-installer-yornis\SHA256SUMS.txt -Encoding ascii -Append
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Yornis-v0.15.9.1-Layout-Hotfix-Windows-x64
+          path: |
+            dist-installer-yornis/Yornis_Setup_v0.15.9.1_Layout_Hotfix_Bird_Chorus_HiDPI.exe
+            dist-installer-yornis/Yornis_v0.15.9.1_Layout_Hotfix_Bird_Chorus_HiDPI_Portable.zip
+            dist-installer-yornis/SHA256SUMS.txt
