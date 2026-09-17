@@ -29,6 +29,17 @@ const palettes = [
   {name:"Guacamaya Azul",glyph:"G",desc:"Cobalto, cyan y dorado. Fresca, técnica y muy visible.",primary:"#176BB4",dark:"#0A3C70",soft:"#B9D8F2",secondary:"#1AA6C7",accent:"#F2C54D",bg:"#F1F7FD"},
 ];
 
+const birdSignatures = {
+  "Agaporni":[920,1180,1020,1320],
+  "Tucán":[520,680,480,760],
+  "Pavorreal":[410,540,660,510],
+  "Ninfa":[1260,1480,1370,1580],
+  "Faisán":[460,590,720,610],
+  "Quetzal":[840,1120,1460,1210],
+  "Guacamaya Roja":[620,930,740,1090],
+  "Guacamaya Azul":[700,1040,1360,970],
+};
+
 const assistantHints = [
   {keys:["via aérea","vía aérea","airway","mcnamara"],text:"El asistente puede localizar la tabla de vía aérea, mostrar referencias de McNamara y recordarte que las edades pediátricas publicadas son 6, 8, 10 y 12 años sin interpolación."},
   {keys:["cvm","c2","c3","c4","maduración"],text:"Puede explicarte cómo revisar CVM C2–C4, localizar la guía de maduración cervical y abrir la referencia correspondiente."},
@@ -39,6 +50,46 @@ const assistantHints = [
   {keys:["exportar","spss","csv","excel","pdf"],text:"Puede guiarte hacia las exportaciones científicas, incluyendo CSV, sintaxis SPSS, Excel/PDF y salidas pseudonimizadas."},
   {keys:["respaldo","backup","restaurar"],text:"Puede mostrarte el flujo de respaldo/restauración y explicar cómo conservar la base de investigación de forma consistente."},
 ];
+
+let audioContext = null;
+
+function playBirdSignature(name) {
+  const signature = birdSignatures[name];
+  const status = document.querySelector('#sound-status');
+  const pulse = document.querySelector('#sound-pulse');
+  if (!signature || !(window.AudioContext || window.webkitAudioContext)) {
+    if (status) status.textContent = `${name} seleccionado. Tu navegador no habilitó la demostración de audio.`;
+    return;
+  }
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    audioContext ||= new AudioCtx();
+    if (audioContext.state === 'suspended') audioContext.resume();
+    const start = audioContext.currentTime + 0.015;
+    signature.forEach((frequency,index) => {
+      const oscillator = audioContext.createOscillator();
+      const gain = audioContext.createGain();
+      const t = start + index * 0.105;
+      oscillator.type = index % 2 ? 'sine' : 'triangle';
+      oscillator.frequency.setValueAtTime(frequency, t);
+      oscillator.frequency.exponentialRampToValueAtTime(Math.max(180, frequency * 1.08), t + 0.07);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.055, t + 0.012);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.085);
+      oscillator.connect(gain).connect(audioContext.destination);
+      oscillator.start(t);
+      oscillator.stop(t + 0.09);
+    });
+    if (status) status.textContent = `${name}: firma sonora reproducida.`;
+    if (pulse) {
+      pulse.classList.remove('playing');
+      void pulse.offsetWidth;
+      pulse.classList.add('playing');
+    }
+  } catch (_) {
+    if (status) status.textContent = `${name} seleccionado. No fue posible reproducir audio en este navegador.`;
+  }
+}
 
 function setPalette(palette) {
   const root = document.documentElement;
@@ -65,11 +116,12 @@ function setPalette(palette) {
 function renderPalettes() {
   const host = document.querySelector('#palette-grid');
   if (!host) return;
-  host.innerHTML = palettes.map((p,index) => `<button type="button" class="palette-card ${index===0?'active':''}" data-palette="${p.name}" aria-pressed="${index===0}"><strong>${p.name}</strong><small>${p.desc}</small><span class="swatches" aria-hidden="true"><i style="background:${p.primary}"></i><i style="background:${p.secondary}"></i><i style="background:${p.accent}"></i><i style="background:${p.dark}"></i></span></button>`).join('');
+  host.innerHTML = palettes.map((p,index) => `<button type="button" class="palette-card ${index===0?'active':''}" data-palette="${p.name}" aria-pressed="${index===0}" aria-label="Seleccionar ${p.name} y reproducir su firma sonora"><strong>${p.name}</strong><small>${p.desc}</small><span class="swatches" aria-hidden="true"><i style="background:${p.primary}"></i><i style="background:${p.secondary}"></i><i style="background:${p.accent}"></i><i style="background:${p.dark}"></i></span></button>`).join('');
   host.querySelectorAll('.palette-card').forEach(card => card.addEventListener('click', () => {
     const palette = palettes.find(p => p.name === card.dataset.palette) || palettes[0];
     host.querySelectorAll('.palette-card').forEach(b => b.setAttribute('aria-pressed', String(b === card)));
     setPalette(palette);
+    playBirdSignature(palette.name);
   }));
 }
 
@@ -78,10 +130,7 @@ function assistantDemoSearch() {
   const answer = document.querySelector('#assistant-demo-answer');
   if (!input || !answer) return;
   const q = input.value.trim().toLocaleLowerCase('es');
-  if (!q) {
-    answer.textContent = 'Escribe un tema para ver qué tipo de ayuda encontrará tu ave dentro de Yornis.';
-    return;
-  }
+  if (!q) { answer.textContent = 'Escribe un tema para ver qué tipo de ayuda encontrará tu ave dentro de Yornis.'; return; }
   const hint = assistantHints.find(item => item.keys.some(key => q.includes(key)));
   const analysis = analyses.find(item => `${item.name} ${item.category} ${item.tag} ${item.desc}`.toLocaleLowerCase('es').includes(q));
   if (hint) answer.textContent = hint.text;
@@ -125,6 +174,7 @@ function render() {
   grid.innerHTML = items.length ? items.map(item => `<article class="analysis-card reveal visible"><span class="tag">${item.tag}</span><h3>${item.name}</h3><p>${item.desc}</p></article>`).join('') : '<div class="empty-state" role="status"><strong>No encontramos coincidencias.</strong><br>Prueba otro término o cambia el filtro.</div>';
   count.textContent = `${items.length} ${items.length === 1 ? 'disponible' : 'disponibles'}`;
 }
+
 renderFilters();
 render();
 search?.addEventListener('input', render);
