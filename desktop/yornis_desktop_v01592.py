@@ -15,12 +15,14 @@ class Launcher(previous.Launcher):
         self._scroll_offset = 0
         self._scroll_max = 0
         self._pending_scroll_fraction = 0.0
+        self._scroll_refreshing = False
         super().__init__()
         self.title("Yornis · Yom Dental Análisis")
         self.bind("<Prior>", lambda _e: self._scroll_by(-1, pages=True), add="+")
         self.bind("<Next>", lambda _e: self._scroll_by(1, pages=True), add="+")
         self.bind("<Home>", lambda _e: self._set_scroll_offset(0), add="+")
         self.bind("<End>", lambda _e: self._set_scroll_offset(self._scroll_max), add="+")
+        self.bind("<Configure>", self._schedule_scroll_refresh, add="+")
         self.bind_all("<MouseWheel>", self._on_mousewheel, add="+")
         self.after_idle(self._refresh_scroll_metrics)
 
@@ -31,12 +33,7 @@ class Launcher(previous.Launcher):
             self.ver_lbl.configure(text=f"v{APP_VERSION}")
 
     def _install_scroll_navigation(self):
-        """Turn the existing polished root frame into a vertically scrollable surface.
-
-        The visual hierarchy remains unchanged: the main frame is simply moved
-        vertically inside the toplevel while a real scrollbar on the right
-        controls its offset. This avoids re-parenting legacy Tk widgets.
-        """
+        """Move the polished root frame vertically under a real right scrollbar."""
         old = getattr(self, "_launcher_scrollbar", None)
         if old is not None:
             try:
@@ -56,12 +53,11 @@ class Launcher(previous.Launcher):
             self._launcher_scrollbar.lift()
         except Exception:
             pass
-
-        self.bind("<Configure>", self._schedule_scroll_refresh, add="+")
-        self.main.bind("<Configure>", self._schedule_scroll_refresh, add="+")
         self.after_idle(self._restore_scroll_after_rebuild)
 
     def _schedule_scroll_refresh(self, _event=None):
+        if getattr(self, "_scroll_refreshing", False):
+            return
         try:
             self.after_idle(self._refresh_scroll_metrics)
         except Exception:
@@ -73,10 +69,10 @@ class Launcher(previous.Launcher):
         self._set_scroll_offset(int(round(fraction * self._scroll_max)))
 
     def _refresh_scroll_metrics(self):
-        if not hasattr(self, "main"):
+        if not hasattr(self, "main") or getattr(self, "_scroll_refreshing", False):
             return
+        self._scroll_refreshing = True
         try:
-            self.update_idletasks()
             viewport = max(1, int(self.winfo_height()))
             content = max(1, int(self.main.winfo_reqheight()))
             self._scroll_max = max(0, content - viewport)
@@ -87,6 +83,8 @@ class Launcher(previous.Launcher):
             self._launcher_scrollbar.set(first, last)
         except Exception:
             return
+        finally:
+            self._scroll_refreshing = False
 
     def _set_scroll_offset(self, value: int):
         self._scroll_offset = max(0, min(int(value), int(getattr(self, "_scroll_max", 0))))
@@ -118,13 +116,13 @@ class Launcher(previous.Launcher):
         if not delta:
             return None
         steps = -1 if delta > 0 else 1
-        # High-resolution wheels/trackpads may report multiples of 120.
         magnitude = max(1, abs(int(delta)) // 120)
         return self._scroll_by(steps * magnitude)
 
     def _theme_quality(self, name):
+        import yornis_theme
         # Clicking the active bird also previews its signature.
-        if name == __import__("yornis_theme").current_theme_name():
+        if name == yornis_theme.current_theme_name():
             bird_signatures.play_signature(name, self)
             return
         if self._scroll_max > 0:
