@@ -1,4 +1,4 @@
-name: Build Yornis v0.15.9.2 Scroll + Bird Signatures
+name: Build Yornis v0.15.9.2 Scroll + Bird Sounds
 
 on:
   workflow_dispatch:
@@ -55,23 +55,25 @@ jobs:
         shell: pwsh
         run: |
           @'
-          import sys
+          import hashlib, sys
           sys.path.insert(0, 'desktop')
           import yornis_desktop_v01592 as app
-          import yornis_bird_signatures_v01592 as sounds
+          import yornis_bird_signature_v01592 as sounds
           import yornis_theme
           import yornis_reference_help_v0156 as refs
           import classic_engine as engine
           assert app.APP_VERSION.startswith('0.15.9.2')
           assert len(engine.MEASUREMENTS) == 102
           assert len(refs.TABLES) == 17
-          assert set(yornis_theme.theme_names()) == set(sounds.BIRD_SIGNATURES)
-          assert len({tuple(v) for v in sounds.BIRD_SIGNATURES.values()}) == 8
+          assert set(yornis_theme.theme_names()) == set(sounds._SIGNATURES)
+          digests=[]
           for name in yornis_theme.theme_names():
               frames = sounds.synthesize_signature(name, 35)
               assert len(frames) == int(sounds.SIGNATURE_DURATION * sounds.SAMPLE_RATE) * 2
               assert any(frames)
-          print('YORNIS v0.15.9.2 SOUND AUDIT OK')
+              digests.append(hashlib.sha256(frames).hexdigest())
+          assert len(set(digests)) == 8
+          print('YORNIS v0.15.9.2 SOUND + CLINICAL AUDIT OK')
           '@ | python -
 
       - name: GUI scrollbar + HiDPI smoke test
@@ -83,12 +85,15 @@ jobs:
           from yornis_desktop_v01592 import Launcher
           l=Launcher(); l.geometry('1000x620'); l.update()
           assert float(l.tk.call('tk','scaling')) > 0
-          assert hasattr(l, '_launcher_scrollbar') and l._launcher_scrollbar.winfo_exists()
-          l._refresh_scroll_metrics()
-          assert l._scroll_max > 0
-          before=l._scroll_offset
-          l._scroll_by(1)
-          assert l._scroll_offset > before
+          assert hasattr(l, '_scrollbar') and l._scrollbar.winfo_exists()
+          assert hasattr(l, '_scroll_canvas') and l._scroll_canvas.winfo_exists()
+          l.update_idletasks()
+          bbox=l._scroll_canvas.bbox('all')
+          assert bbox and (bbox[3]-bbox[1]) > l._scroll_canvas.winfo_height()
+          before=l._scroll_canvas.yview()[0]
+          l._scroll_canvas.yview_scroll(8, 'units'); l.update_idletasks()
+          after=l._scroll_canvas.yview()[0]
+          assert after > before
           assert hasattr(l, 'startup_sound_var')
           assert hasattr(l, 'startup_volume_var')
           assert len(l.palette_cards) == 8
@@ -111,7 +116,7 @@ jobs:
           --hidden-import yornis_spss_v015 --hidden-import yornis_visual_report_v015 --hidden-import yornis_export_ui_v015 --hidden-import yornis_backup_v015 --hidden-import yornis_backup_ui_v015
           --hidden-import yornis_clinical_audit_v0151 --hidden-import yornis_cervical_v0152 --hidden-import yornis_alignment_v0152 --hidden-import yornis_display_v0152 --hidden-import yornis_ceph_quality_v0153 --hidden-import yornis_audit_hardening_v0154
           --hidden-import yornis_reference_help_v0154 --hidden-import yornis_reference_help_v0154_all --hidden-import yornis_evidence_v0155 --hidden-import yornis_quality_ui_v0156 --hidden-import yornis_reference_help_v0156
-          --hidden-import yornis_quality_ui_v0157 --hidden-import yornis_virtual_assistant_v0157 --hidden-import yornis_quality_ui_v0158 --hidden-import yornis_startup_audio_v0159 --hidden-import yornis_desktop_v0159 --hidden-import yornis_desktop_v01591 --hidden-import yornis_bird_signatures_v01592
+          --hidden-import yornis_quality_ui_v0157 --hidden-import yornis_virtual_assistant_v0157 --hidden-import yornis_quality_ui_v0158 --hidden-import yornis_startup_audio_v0159 --hidden-import yornis_desktop_v0159 --hidden-import yornis_desktop_v01591 --hidden-import yornis_bird_signature_v01592
           --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --collect-all pyzipper
           --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;."
           desktop/yornis_desktop_v01592.py
@@ -146,7 +151,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Yornis-v0.15.9.2-Scroll-Bird-Signatures-Windows-x64
+          name: Yornis-v0.15.9.2-Scroll-Bird-Sounds-Windows-x64
           path: |
             dist-installer-yornis/Yornis_Setup_v0.15.9.2_Scroll_Bird_Signatures_HiDPI.exe
             dist-installer-yornis/Yornis_v0.15.9.2_Scroll_Bird_Signatures_HiDPI_Portable.zip
