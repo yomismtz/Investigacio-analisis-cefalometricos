@@ -33,8 +33,32 @@ class Launcher(previous.Launcher):
         t = yornis_theme.THEMES[theme_name]
         profile = assistant.current_profile()
 
-        self.main = ttk.Frame(self, padding=(38, 28))
-        self.main.pack(fill="both", expand=True)
+        # The launcher is taller than many notebook/desktop viewports. Keep the
+        # content in a real scrollable canvas with a permanent vertical bar.
+        self._scroll_shell = ttk.Frame(self)
+        self._scroll_shell.pack(fill="both", expand=True)
+        self._scroll_canvas = tk.Canvas(
+            self._scroll_shell,
+            bd=0,
+            highlightthickness=0,
+            bg=t.get("bg", t.get("panel_alt", "#ffffff")),
+        )
+        self._scrollbar = ttk.Scrollbar(self._scroll_shell, orient="vertical", command=self._scroll_canvas.yview)
+        self._scroll_canvas.configure(yscrollcommand=self._scrollbar.set)
+        self._scrollbar.pack(side="right", fill="y")
+        self._scroll_canvas.pack(side="left", fill="both", expand=True)
+
+        self.main = ttk.Frame(self._scroll_canvas, padding=(38, 28))
+        self._scroll_window = self._scroll_canvas.create_window((0, 0), window=self.main, anchor="nw")
+        self.main.bind("<Configure>", self._update_launcher_scrollregion)
+        self._scroll_canvas.bind("<Configure>", self._resize_launcher_scroll_window)
+        # Toplevel bindings are present in the bindtags of child widgets, so the
+        # mouse wheel works even while the pointer is over cards/buttons.
+        self.bind("<MouseWheel>", self._on_launcher_mousewheel)
+        self.bind("<Prior>", lambda _e: self._scroll_canvas.yview_scroll(-1, "pages"))
+        self.bind("<Next>", lambda _e: self._scroll_canvas.yview_scroll(1, "pages"))
+        self.bind("<Home>", lambda _e: self._scroll_canvas.yview_moveto(0.0))
+        self.bind("<End>", lambda _e: self._scroll_canvas.yview_moveto(1.0))
 
         topbar = ttk.Frame(self.main)
         topbar.pack(fill="x")
@@ -140,7 +164,7 @@ class Launcher(previous.Launcher):
         palette_header = ttk.Frame(self.main)
         palette_header.pack(fill="x", pady=(18, 6))
         ttk.Label(palette_header, text="Elige tu ave y paleta", style="Heading.TLabel").pack(side="left")
-        ttk.Label(palette_header, text="La selección cambia el aspecto completo de Yornis", style="Caption.TLabel").pack(side="right")
+        ttk.Label(palette_header, text="La selección cambia el aspecto completo de Yornis · cada ave tiene su canto", style="Caption.TLabel").pack(side="right")
 
         palette_host = ttk.Frame(self.main)
         palette_host.pack(fill="x")
@@ -163,7 +187,7 @@ class Launcher(previous.Launcher):
             title_box.pack(side="left", fill="x", expand=True)
             title = tk.Label(title_box, text=("✓ " if selected else "") + name, bg=th["panel"], fg=th["primary_dark"], font=("Segoe UI Semibold", 9), anchor="w", cursor="hand2")
             title.pack(fill="x")
-            subtitle = tk.Label(title_box, text=("Activa" if selected else "Seleccionar"), bg=th["panel"], fg=th["muted"], font=("Segoe UI", 8), anchor="w", cursor="hand2")
+            subtitle = tk.Label(title_box, text=("Activa · ♪" if selected else "Seleccionar · ♪"), bg=th["panel"], fg=th["muted"], font=("Segoe UI", 8), anchor="w", cursor="hand2")
             subtitle.pack(fill="x")
 
             swatches = tk.Frame(card, bg=th["panel"], cursor="hand2")
@@ -181,14 +205,61 @@ class Launcher(previous.Launcher):
         self.note.pack(side="left", fill="x", expand=True)
         ttk.Label(footer, text="FINAL POLISH · 0.15.8", style="AccentPill.TLabel").pack(side="right", padx=(12, 0))
         self.refresh_text()
+        self.after_idle(self._update_launcher_scrollregion)
+
+    def _update_launcher_scrollregion(self, _event=None):
+        canvas = getattr(self, "_scroll_canvas", None)
+        if canvas is None:
+            return
+        try:
+            bbox = canvas.bbox("all")
+            if bbox:
+                canvas.configure(scrollregion=bbox)
+        except Exception:
+            pass
+
+    def _resize_launcher_scroll_window(self, event):
+        try:
+            self._scroll_canvas.itemconfigure(self._scroll_window, width=max(1, event.width))
+            self._update_launcher_scrollregion()
+        except Exception:
+            pass
+
+    def _on_launcher_mousewheel(self, event):
+        canvas = getattr(self, "_scroll_canvas", None)
+        if canvas is None:
+            return
+        try:
+            first, last = canvas.yview()
+            if first <= 0.0 and last >= 1.0:
+                return
+            steps = max(1, abs(int(event.delta / 120))) if event.delta else 1
+            canvas.yview_scroll(-steps if event.delta > 0 else steps, "units")
+        except Exception:
+            pass
 
     def _theme_quality(self, name):
+        # Always play the selected bird's own short signature, even if the user
+        # clicks the palette that is already active.
+        try:
+            import yornis_bird_signature_v01592 as bird_audio
+            bird_audio.play_bird_signature(name, self)
+        except Exception:
+            pass
         if name == yornis_theme.current_theme_name():
             return
+        try:
+            position = self._scroll_canvas.yview()[0]
+        except Exception:
+            position = 0.0
         yornis_theme.apply_theme(name)
         self._rebuild_quality_launcher()
         quality.apply_window(self, context="launcher")
         assistant.attach_assistant_button(self, compact=True)
+        try:
+            self.after_idle(lambda p=position: self._scroll_canvas.yview_moveto(p))
+        except Exception:
+            pass
 
     def refresh_text(self):
         if not hasattr(self, "hero_title"):
