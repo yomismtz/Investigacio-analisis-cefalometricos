@@ -2,7 +2,7 @@ name: Publish Yornis website
 
 on:
   push:
-    branches: [main]
+    branches: [main, fix/individual-study-selector-2026-09-17]
     paths:
       - 'docs/**'
       - 'desktop/assets/yornis_logo_chunk_*.b64'
@@ -62,12 +62,16 @@ jobs:
           test -f docs/assets/yornis-logo.png
           test -f docs/revision-edad-sexo-lordosis-via-aerea-craneocervical-2026.md
           test -f docs/yornis-v01592-scroll-bird-sounds.md
+          test -f docs/yornis-individual-flow-interface-2026-09-17.md
           grep -q "Yornis" docs/index.html
           grep -q "v0.15.9.2" docs/index.html
-          grep -q "Scroll + Bird Sounds" docs/index.html
+          grep -q "Individual Flow" docs/index.html
           grep -q "8 firmas sonoras" docs/index.html
           grep -q "Scroll vertical" docs/index.html
-          grep -q "43 pruebas" docs/index.html
+          grep -q "Caso individual" docs/index.html
+          grep -q "análisis → medidas/ángulos → puntos" docs/index.html
+          grep -q "Yomira Salgado Martínez" docs/index.html
+          grep -q "Individual Flow" docs/index.html
           grep -q "releases/latest" docs/index.html
           grep -q "Lordosis C1–C7" docs/app.js
           grep -q "sin corte universal 35–45" docs/app.js

@@ -12,11 +12,11 @@ VSVersionInfo(
   kids=[
     StringFileInfo([
       StringTable('040904B0', [
-        StringStruct('CompanyName', 'Yom Dental Análisis'),
+        StringStruct('CompanyName', 'Yomira Salgado Martínez'),
         StringStruct('FileDescription', 'Yornis · Scroll + Bird Signatures · Yom Dental Análisis'),
         StringStruct('FileVersion', '0.15.9.2'),
         StringStruct('InternalName', 'Yornis'),
-        StringStruct('LegalCopyright', '© 2026 Yom Dental Análisis'),
+        StringStruct('LegalCopyright', '© 2026 Yomira Salgado Martínez'),
         StringStruct('OriginalFilename', 'Yornis.exe'),
         StringStruct('ProductName', 'Yornis'),
         StringStruct('ProductVersion', '0.15.9.2')
