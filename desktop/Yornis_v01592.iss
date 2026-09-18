@@ -1,7 +1,7 @@
 #define MyAppName "Yornis"
 #define MyAppVersion "0.15.9.2"
 #define MyAppExeName "Yornis.exe"
-#define MyAppPublisher "Yom Dental Análisis"
+#define MyAppPublisher "Yomira Salgado Martínez"
 #define MyAppURL "https://yomismtz.github.io/Investigacio-analisis-cefalometricos/"
 #define MyAppSupportURL "https://github.com/yomismtz/Investigacio-analisis-cefalometricos/issues"
 #define MyAppUpdatesURL "https://github.com/yomismtz/Investigacio-analisis-cefalometricos/releases/latest"
@@ -38,7 +38,7 @@ VersionInfoDescription=Instalador de Yornis · Scroll + Bird Signatures · Yom D
 VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
 VersionInfoVersion=0.15.9.2
-VersionInfoCopyright=© 2026 Yom Dental Análisis
+VersionInfoCopyright=© 2026 Yomira Salgado Martínez
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
