@@ -41,6 +41,7 @@ const birdSignatures = {
 };
 
 const assistantHints = [
+  {keys:["individual","caso individual","medidas","ángulos","angulos","puntos"],text:"En Caso individual el flujo es análisis → medidas/ángulos → puntos. Yornis calcula los landmarks mínimos necesarios y conserva sólo los resultados que seleccionaste."},
   {keys:["via aérea","vía aérea","airway","mcnamara"],text:"El asistente puede localizar la tabla de vía aérea, mostrar referencias de McNamara y recordarte que las edades pediátricas publicadas son 6, 8, 10 y 12 años sin interpolación."},
   {keys:["cvm","c2","c3","c4","maduración"],text:"Puede explicarte cómo revisar CVM C2–C4, localizar la guía de maduración cervical y abrir la referencia correspondiente."},
   {keys:["lordosis","c1","c7","cervical"],text:"Puede llevarte a C1–C7, mostrar el contexto por edad/sexo disponible y recordar que Yornis no usa 35–45° como normalidad universal."},
