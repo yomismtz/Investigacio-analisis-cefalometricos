@@ -10,6 +10,7 @@ import yornis_theme
 import yornis_quality_ui_v0158 as quality
 import yornis_reference_help_v0156 as reference_help
 import yornis_virtual_assistant_v0157 as assistant
+import yornis_individual_flow_v016 as individual_flow
 
 APP_VERSION = "0.15.8 Final Polish · Bird Assistant"
 
@@ -305,6 +306,7 @@ def main():
         previous.previous.quality.install_individual(classic.YomCephClassic)
         previous.quality.install_individual(classic.YomCephClassic)
         quality.install_individual(classic.YomCephClassic)
+        individual_flow.install(classic.YomCephClassic)
         previous.previous.previous.evidence.install()
         app = classic.YomCephClassic()
         app.title(f"Yornis · Yom Dental Análisis · v{APP_VERSION} · Individual")
