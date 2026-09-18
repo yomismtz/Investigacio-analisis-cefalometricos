@@ -65,7 +65,7 @@ jobs:
           test -f docs/yornis-individual-flow-interface-2026-09-17.md
           grep -q "Yornis" docs/index.html
           grep -q "v0.15.9.2" docs/index.html
-          grep -q "Scroll + Bird Sounds" docs/index.html
+          grep -q "Individual Flow" docs/index.html
           grep -q "8 firmas sonoras" docs/index.html
           grep -q "Scroll vertical" docs/index.html
           grep -q "Caso individual" docs/index.html
