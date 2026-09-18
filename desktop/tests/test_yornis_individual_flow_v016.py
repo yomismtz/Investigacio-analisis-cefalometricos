@@ -78,6 +78,37 @@ class IndividualSelectorFlowTests(unittest.TestCase):
         self.assertEqual(obj.active_study_name, "")
         self.assertIsNone(obj.study_protocol)
 
+    def test_real_classic_individual_click_opens_selector_dialog(self):
+        import tkinter as tk
+        import yomceph_desktop_v130_classic as classic
+
+        flow.install(classic.YomCephClassic)
+        app = classic.YomCephClassic()
+        app.withdraw()
+        try:
+            app.start_individual()
+            app.update_idletasks()
+            dialogs = [
+                child
+                for child in app.winfo_children()
+                if isinstance(child, tk.Toplevel)
+            ]
+            self.assertTrue(dialogs, "Caso individual debe abrir un selector antes del trazado")
+            self.assertTrue(
+                any(
+                    "Selección" in child.title() or "Selection" in child.title()
+                    for child in dialogs
+                )
+            )
+        finally:
+            for child in list(app.winfo_children()):
+                if isinstance(child, tk.Toplevel):
+                    try:
+                        child.destroy()
+                    except Exception:
+                        pass
+            app.destroy()
+
 
 if __name__ == "__main__":
     unittest.main()
