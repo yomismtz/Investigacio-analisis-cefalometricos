@@ -92,30 +92,44 @@ def _open_individual_selector(self) -> None:
 
     dialog = tk.Toplevel(self)
     dialog.title(_tr(self, "Yornis · Caso individual · Selección", "Yornis · Individual case · Selection"))
-    dialog.geometry("980x760")
-    dialog.minsize(860, 650)
+    dialog.geometry("1040x790")
+    dialog.minsize(900, 680)
     dialog.transient(self)
     dialog.grab_set()
 
     root = ttk.Frame(dialog, padding=(20, 18))
     root.pack(fill="both", expand=True)
 
+    header = ttk.Frame(root)
+    header.pack(fill="x")
     ttk.Label(
-        root,
-        text=_tr(self, "1 · Elige análisis y medidas/ángulos", "1 · Choose analyses and measurements/angles"),
-        style="Title.TLabel",
+        header,
+        text=_tr(self, "Caso individual", "Individual case"),
+        style="Eyebrow.TLabel",
     ).pack(anchor="w")
+    ttk.Label(
+        header,
+        text=_tr(self, "Elige análisis y medidas/ángulos", "Choose analyses and measurements/angles"),
+        style="Title.TLabel",
+    ).pack(anchor="w", pady=(2, 0))
     ttk.Label(
         root,
         text=_tr(
             self,
-            "Puedes seleccionar uno o varios análisis. Después elige exactamente qué ángulos o medidas quieres obtener. Yornis pedirá sólo los puntos necesarios.",
-            "Select one or more analyses, then choose the exact angles or measurements you want. Yornis will request only the required landmarks.",
+            "Selecciona uno o varios análisis y define exactamente qué medidas o ángulos quieres obtener. Yornis construirá una lista mínima de landmarks para el trazado.",
+            "Select one or more analyses and define the exact measurements or angles you want. Yornis will build the minimum landmark list for tracing.",
         ),
-        style="Subtitle.TLabel",
-        wraplength=900,
+        style="Caption.TLabel",
+        wraplength=940,
         justify="left",
-    ).pack(anchor="w", pady=(5, 14))
+    ).pack(anchor="w", pady=(6, 10))
+    steps = ttk.Frame(root)
+    steps.pack(fill="x", pady=(0, 14))
+    ttk.Label(steps, text=_tr(self, "1  Análisis", "1  Analyses"), style="IndividualStep.TLabel").pack(side="left")
+    ttk.Label(steps, text="→", style="Caption.TLabel").pack(side="left", padx=8)
+    ttk.Label(steps, text=_tr(self, "2  Medidas / ángulos", "2  Measurements / angles"), style="IndividualStep.TLabel").pack(side="left")
+    ttk.Label(steps, text="→", style="Caption.TLabel").pack(side="left", padx=8)
+    ttk.Label(steps, text=_tr(self, "3  Puntos", "3  Landmarks"), style="IndividualStep.TLabel").pack(side="left")
 
     body = ttk.Frame(root)
     body.pack(fill="both", expand=True)
@@ -144,22 +158,25 @@ def _open_individual_selector(self) -> None:
         choices = workflow.measure_choices(analysis)
         popup = tk.Toplevel(dialog)
         popup.title(analysis + " · " + _tr(self, "Medidas / ángulos", "Measurements / angles"))
-        popup.geometry("760x650")
+        popup.geometry("820x680")
         popup.transient(dialog)
         popup.grab_set()
 
         outer = ttk.Frame(popup, padding=16)
         outer.pack(fill="both", expand=True)
-        ttk.Label(outer, text=analysis, style="Section.TLabel").pack(anchor="w")
+        ttk.Label(outer, text=_tr(self, "Medidas y ángulos", "Measurements and angles"), style="Eyebrow.TLabel").pack(anchor="w")
+        ttk.Label(outer, text=analysis, style="Title.TLabel").pack(anchor="w", pady=(2, 0))
         ttk.Label(
             outer,
             text=_tr(
                 self,
-                "Marca únicamente las medidas o ángulos que deseas calcular.",
-                "Select only the measurements or angles you want to calculate.",
+                "Marca sólo lo que quieras calcular. Los puntos del trazado se reducirán a los indispensables para esta selección.",
+                "Select only what you want to calculate. The tracing landmarks will be reduced to those required for this selection.",
             ),
-            style="Subtitle.TLabel",
-        ).pack(anchor="w", pady=(2, 10))
+            style="Caption.TLabel",
+            wraplength=740,
+            justify="left",
+        ).pack(anchor="w", pady=(5, 12))
 
         area = ttk.Frame(outer)
         area.pack(fill="both", expand=True)
@@ -178,9 +195,9 @@ def _open_individual_selector(self) -> None:
             for name in choices
         }
         for name in choices:
-            ttk.Checkbutton(checks, text=name, variable=variables[name]).pack(
-                anchor="w", fill="x", padx=4, pady=2
-            )
+            item = ttk.Frame(checks, style="IndividualCard.TFrame", padding=(12, 8))
+            item.pack(fill="x", padx=4, pady=4)
+            ttk.Checkbutton(item, text=name, variable=variables[name]).pack(anchor="w", fill="x")
 
         actions = ttk.Frame(outer)
         actions.pack(fill="x", pady=(12, 0))
@@ -207,21 +224,32 @@ def _open_individual_selector(self) -> None:
             refresh_count(analysis)
             popup.destroy()
 
-        ttk.Button(actions, text=_tr(self, "Seleccionar todo", "Select all"), command=lambda: mark_all(True)).pack(side="left")
-        ttk.Button(actions, text=_tr(self, "Limpiar", "Clear"), command=lambda: mark_all(False)).pack(side="left", padx=6)
-        ttk.Button(actions, text=_tr(self, "Aceptar", "Accept"), style="Accent.TButton", command=accept).pack(side="right")
+        ttk.Button(actions, text=_tr(self, "Seleccionar todo", "Select all"), style="IndividualGhost.TButton", command=lambda: mark_all(True)).pack(side="left")
+        ttk.Button(actions, text=_tr(self, "Limpiar", "Clear"), style="IndividualGhost.TButton", command=lambda: mark_all(False)).pack(side="left", padx=6)
+        ttk.Button(actions, text=_tr(self, "Guardar selección", "Save selection"), style="IndividualPrimary.TButton", command=accept).pack(side="right")
 
     for row_index, analysis in enumerate(analyses):
-        row = ttk.Frame(inner, padding=(8, 7))
-        row.grid(row=row_index, column=0, sticky="ew", pady=2)
+        card = ttk.Frame(inner, style="IndividualCard.TFrame", padding=(16, 13))
+        card.grid(row=row_index, column=0, sticky="ew", pady=5)
         inner.grid_columnconfigure(0, weight=1)
-        ttk.Checkbutton(row, text=analysis, variable=analysis_vars[analysis]).pack(side="left")
-        ttk.Label(row, textvariable=count_vars[analysis], style="Muted.TLabel").pack(side="left", padx=(14, 8))
+
+        left = ttk.Frame(card, style="Panel.TFrame")
+        left.pack(side="left", fill="x", expand=True)
+        title_row = ttk.Frame(left, style="Panel.TFrame")
+        title_row.pack(fill="x")
+        ttk.Checkbutton(title_row, variable=analysis_vars[analysis]).pack(side="left", padx=(0, 6))
+        ttk.Label(title_row, text=analysis, style="IndividualTitle.TLabel").pack(side="left")
+        ttk.Label(left, text=_tr(self, "Selecciona el análisis y después define sus resultados.", "Select the analysis, then define its outcomes."), style="IndividualBody.TLabel").pack(anchor="w", pady=(4, 0))
+
+        right = ttk.Frame(card, style="Panel.TFrame")
+        right.pack(side="right", padx=(14, 0))
+        ttk.Label(right, textvariable=count_vars[analysis], style="IndividualCount.TLabel").pack(anchor="e", pady=(0, 7))
         ttk.Button(
-            row,
-            text=_tr(self, "Elegir medidas / ángulos…", "Choose measurements / angles…"),
+            right,
+            text=_tr(self, "Medidas / ángulos  →", "Measurements / angles  →"),
+            style="IndividualGhost.TButton",
             command=lambda a=analysis: choose_measurements(a),
-        ).pack(side="right")
+        ).pack(anchor="e")
         refresh_count(analysis)
 
     footer = ttk.Frame(root)
@@ -261,7 +289,7 @@ def _open_individual_selector(self) -> None:
         dialog.destroy()
         _start_workspace(self)
 
-    ttk.Button(footer, text=_tr(self, "Cancelar", "Cancel"), command=cancel).pack(side="left")
+    ttk.Button(footer, text=_tr(self, "Cancelar", "Cancel"), style="IndividualGhost.TButton", command=cancel).pack(side="left")
     ttk.Label(
         footer,
         text=_tr(
@@ -274,7 +302,7 @@ def _open_individual_selector(self) -> None:
     ttk.Button(
         footer,
         text=_tr(self, "Continuar a puntos  →", "Continue to landmarks  →"),
-        style="Accent.TButton",
+        style="IndividualPrimary.TButton",
         command=continue_to_points,
     ).pack(side="right")
 
