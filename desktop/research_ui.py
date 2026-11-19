@@ -183,6 +183,7 @@ class ResearchWorkspace(tk.Tk):
         self.landmark_list=tk.Listbox(left,exportselection=False); self.landmark_list.pack(fill="both",expand=True); self.landmark_list.bind("<<ListboxSelect>>",self.pick_landmark)
         self.landmark_help=ttk.Label(left,text="",wraplength=230); self.landmark_help.pack(fill="x",pady=5)
         row=ttk.Frame(left); row.pack(fill="x"); ttk.Button(row,text="←",command=lambda:self.step_landmark(-1)).pack(side="left",expand=True,fill="x"); ttk.Button(row,text="→",command=lambda:self.step_landmark(1)).pack(side="left",expand=True,fill="x")
+        zoombar=ttk.Frame(center); zoombar.pack(fill="x",pady=(0,3)); ttk.Button(zoombar,text="−",width=3,command=lambda:self.zoom_center(1/1.15)).pack(side="left"); ttk.Button(zoombar,text="+",width=3,command=lambda:self.zoom_center(1.15)).pack(side="left",padx=2); ttk.Button(zoombar,text="100%",command=lambda:self.zoom_center(1/self.zoom) if self.zoom else None).pack(side="left",padx=2); ttk.Button(zoombar,text=self.T("Ajustar","Fit"),command=self.fit_image).pack(side="left",padx=2); ttk.Label(zoombar,text=self.T("Zoom con rueda · mover con botón derecho","Wheel zoom · pan with right mouse")).pack(side="left",padx=8)
         self.canvas=tk.Canvas(center,bg=SEMANTIC["radiograph_canvas"],highlightthickness=0,cursor="crosshair"); self.canvas.pack(fill="both",expand=True)
         self.canvas.bind("<Button-1>",self.canvas_click); self.canvas.bind("<B1-Motion>",self.canvas_drag); self.canvas.bind("<ButtonRelease-1>",self.canvas_release); self.canvas.bind("<Button-3>",self.pan_begin); self.canvas.bind("<B3-Motion>",self.pan_move); self.canvas.bind("<MouseWheel>",self.zoom_wheel); self.canvas.bind("<Motion>",self.update_magnifier); self.canvas.bind("<Configure>",lambda e:self.redraw())
         self.pan_state=None
@@ -442,7 +443,7 @@ class ResearchWorkspace(tk.Tk):
         if self.calibration_mode:
             self.calibration_clicks.append(p)
             if len(self.calibration_clicks)==2:
-                d=math.dist(*self.calibration_clicks);self.mm_per_px=self.pending_mm/d if d>0 else None;self.calibration_mode=False;self.calibration_clicks=[];self.calib_label.config(text=f"{self.mm_per_px:.6f} mm/px" if self.mm_per_px else self.T("Sin calibrar","Not calibrated"));self.autosave()
+                d=math.dist(*self.calibration_clicks);self.mm_per_px=self.pending_mm/d if d>0 else None;self.calibration_mode=False;self.calibration_clicks=[];self.calib_label.config(text=f"{self.mm_per_px:.6f} mm/px" if self.mm_per_px else self.T("Sin calibrar","Not calibrated"));\n                if self.mm_per_px and self.case_id:self.db.update_case_calibration(self.case_id,self.mm_per_px)\n                self.autosave()
             self.redraw();return
         near=self.nearest_point(e.x,e.y);k=near or self.current_landmark()
         if not k:return
