@@ -395,7 +395,7 @@ class ResearchWorkspace(tk.Tk):
             self.db.attach_image(cid,p); c=self.db.case(cid)
         try:self.image=self.load_pil(c["image_path"]); self.image_path=c["image_path"]
         except Exception as e:messagebox.showerror("YomCeph",str(e));return
-        self.case_id=cid; self.landmarks=minimum_landmarks(self.protocol["selected_variables"]); self.points=self.load_autosave(cid) or self.db.latest_landmarks(cid,self.protocol["version"]); self.landmark_index=0; self.undo_stack=[]; self.redo_stack=[]
+        self.case_id=cid; self.landmarks=minimum_landmarks(self.protocol["selected_variables"]); self.landmark_notes={}; self.points=self.load_autosave(cid) or self.db.latest_landmarks(cid,self.protocol["version"]); self.landmark_index=0; self.undo_stack=[]; self.redo_stack=[]
         s=self.db.study(self.study_id); self.mm_per_px=c["case_mm_per_px"] or s["study_mm_per_px"]
         self.db.mark_in_progress(cid); self.landmark_list.delete(0,"end")
         for p in self.landmarks:self.landmark_list.insert("end",p)
