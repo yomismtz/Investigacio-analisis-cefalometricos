@@ -443,7 +443,9 @@ class ResearchWorkspace(tk.Tk):
         if self.calibration_mode:
             self.calibration_clicks.append(p)
             if len(self.calibration_clicks)==2:
-                d=math.dist(*self.calibration_clicks);self.mm_per_px=self.pending_mm/d if d>0 else None;self.calibration_mode=False;self.calibration_clicks=[];self.calib_label.config(text=f"{self.mm_per_px:.6f} mm/px" if self.mm_per_px else self.T("Sin calibrar","Not calibrated"));\n                if self.mm_per_px and self.case_id:self.db.update_case_calibration(self.case_id,self.mm_per_px)\n                self.autosave()
+                d=math.dist(*self.calibration_clicks);self.mm_per_px=self.pending_mm/d if d>0 else None;self.calibration_mode=False;self.calibration_clicks=[];self.calib_label.config(text=f"{self.mm_per_px:.6f} mm/px" if self.mm_per_px else self.T("Sin calibrar","Not calibrated"));
+                if self.mm_per_px and self.case_id:self.db.update_case_calibration(self.case_id,self.mm_per_px)
+                self.autosave()
             self.redraw();return
         near=self.nearest_point(e.x,e.y);k=near or self.current_landmark()
         if not k:return
