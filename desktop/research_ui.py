@@ -75,7 +75,7 @@ class ResearchWorkspace(tk.Tk):
         self.image = None; self.photo = None; self.image_path = ""
         self.zoom = 1.0; self.offx = 0.0; self.offy = 0.0
         self.points: dict[str, tuple[float,float]] = {}; self.undo_stack=[]; self.redo_stack=[]
-        self.landmarks: list[str] = []; self.landmark_index = 0; self.dragging = None; self.landmark_notes: dict[str,str] = {}
+        self.landmarks: list[str] = []; self.landmark_index = 0; self.dragging = None; self.landmark_notes: dict[str,str] = {}; self.landmark_confidence: dict[str,str] = {}
         self.calibration_mode = False; self.calibration_clicks=[]; self.pending_mm=0.0
         self.mm_per_px: float | None = None
         self.thumbnail_photo = None; self.magnifier_photo = None
@@ -189,7 +189,7 @@ class ResearchWorkspace(tk.Tk):
         self.pan_state=None
         self.magnifier=tk.Canvas(right,width=260,height=190,bg=PALETTE["canvas_dark"],highlightthickness=1,highlightbackground=SEMANTIC["border"]); self.magnifier.pack(fill="x",pady=3)
         ttk.Button(right,text=self.T("Ajustar imagen","Fit image"),command=self.fit_image).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Calibrar caso","Calibrate case"),command=self.start_calibration).pack(fill="x",pady=2); self.calib_label=ttk.Label(right,text=self.T("Sin calibrar","Not calibrated")); self.calib_label.pack(fill="x",pady=4)
-        ttk.Separator(right).pack(fill="x",pady=5); ttk.Button(right,text=self.T("Deshacer Ctrl+Z","Undo Ctrl+Z"),command=self.undo).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Rehacer Ctrl+Y","Redo Ctrl+Y"),command=self.redo).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Revisar puntos","Review points"),command=self.start_review).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Control de calidad","Quality control"),command=self.show_qc).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Calcular y guardar","Calculate & save"),command=self.calculate_and_save,style="Primary.TButton").pack(fill="x",pady=4); ttk.Button(right,text=self.T("Excluir caso…","Exclude case…"),command=self.exclude_current).pack(fill="x",pady=2)
+        ttk.Separator(right).pack(fill="x",pady=5); ttk.Button(right,text=self.T("Deshacer Ctrl+Z","Undo Ctrl+Z"),command=self.undo).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Rehacer Ctrl+Y","Redo Ctrl+Y"),command=self.redo).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Revisar puntos","Review points"),command=self.start_review).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Confianza del punto","Landmark confidence"),command=self.edit_landmark_confidence).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Control de calidad","Quality control"),command=self.show_qc).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Calcular y guardar","Calculate & save"),command=self.calculate_and_save,style="Primary.TButton").pack(fill="x",pady=4); ttk.Button(right,text=self.T("Excluir caso…","Exclude case…"),command=self.exclude_current).pack(fill="x",pady=2)
         self.trace_progress=ttk.Label(right,text=""); self.trace_progress.pack(fill="x",pady=5)
         self.results_tree=ttk.Treeview(right,columns=("value","unit"),show="tree headings",height=12); self.results_tree.heading("#0",text=self.T("Resultado","Result")); self.results_tree.heading("value",text=self.T("Valor","Value")); self.results_tree.heading("unit",text=self.T("Unidad","Unit")); self.results_tree.column("#0",width=180); self.results_tree.column("value",width=70); self.results_tree.column("unit",width=50); self.results_tree.pack(fill="both",expand=True)
 
@@ -395,7 +395,7 @@ class ResearchWorkspace(tk.Tk):
             self.db.attach_image(cid,p); c=self.db.case(cid)
         try:self.image=self.load_pil(c["image_path"]); self.image_path=c["image_path"]
         except Exception as e:messagebox.showerror("YomCeph",str(e));return
-        self.case_id=cid; self.landmarks=minimum_landmarks(self.protocol["selected_variables"]); self.landmark_notes={}; self.points=self.load_autosave(cid) or self.db.latest_landmarks(cid,self.protocol["version"]); self.landmark_index=0; self.undo_stack=[]; self.redo_stack=[]
+        self.case_id=cid; self.landmarks=minimum_landmarks(self.protocol["selected_variables"]); self.landmark_notes={}; self.landmark_confidence={}; self.points=self.load_autosave(cid) or self.db.latest_landmarks(cid,self.protocol["version"]); self.landmark_index=0; self.undo_stack=[]; self.redo_stack=[]
         s=self.db.study(self.study_id); self.mm_per_px=c["case_mm_per_px"] or s["study_mm_per_px"]
         self.db.mark_in_progress(cid); self.landmark_list.delete(0,"end")
         for p in self.landmarks:self.landmark_list.insert("end",p)
@@ -429,7 +429,7 @@ class ResearchWorkspace(tk.Tk):
         self.landmark_index=max(0,min(len(self.landmarks)-1,self.landmark_index+delta));self.landmark_list.selection_clear(0,"end");self.landmark_list.selection_set(self.landmark_index);self.landmark_list.see(self.landmark_index);self.update_trace_progress();self.redraw();self.center_on_current()
     def update_trace_progress(self):
         if not self.landmarks:return
-        k=self.current_landmark();self.landmark_help.config(text=self.landmark_notes.get(k) or LANDMARK_HELP.get(k,k));placed=sum(x in self.points for x in self.landmarks);self.trace_progress.config(text=f"{placed}/{len(self.landmarks)} · {k}")
+        k=self.current_landmark();self.landmark_help.config(text=self.landmark_notes.get(k) or LANDMARK_HELP.get(k,k));placed=sum(x in self.points for x in self.landmarks);confidence=self.landmark_confidence.get(k,"Pendiente");self.trace_progress.config(text=f"{placed}/{len(self.landmarks)} · {k} · {self.T(chr(67)+'onfianza: '+confidence,'Confidence: '+confidence)}
     def edit_landmark_description(self):
         k=self.current_landmark()
         if not k:return
@@ -438,6 +438,20 @@ class ResearchWorkspace(tk.Tk):
         if value is None:return
         self.landmark_notes[k]=value.strip()
         self.autosave();self.update_trace_progress()
+    def edit_landmark_confidence(self):
+        k=self.current_landmark()
+        if not k:return
+        current=self.landmark_confidence.get(k,"Pendiente")
+        prompt=self.T("Confianza para el punto "+k+" (Alta, Media, Baja o Pendiente):","Confidence for landmark "+k+" (High, Medium, Low or Pending):")
+        value=simpledialog.askstring(self.T("Confianza del punto","Landmark confidence"),prompt,initialvalue=current,parent=self)
+        if value is None:return
+        options={"alta":"Alta","media":"Media","baja":"Baja","pendiente":"Pendiente","high":"Alta","medium":"Media","low":"Baja","pending":"Pendiente"}
+        normalized=options.get(value.strip().lower())
+        if not normalized:
+            messagebox.showwarning("YomCeph",self.T("Usa Alta, Media, Baja o Pendiente.","Use High, Medium, Low or Pending."));return
+        self.landmark_confidence[k]=normalized
+        self.autosave();self.update_trace_progress()
+        messagebox.showinfo("YomCeph",self.T("Confianza guardada: "+normalized,"Confidence saved: "+normalized))
     def nearest_point(self,x,y):
         best=None;bd=14
         for k,p in self.points.items():
@@ -497,14 +511,14 @@ class ResearchWorkspace(tk.Tk):
         p=RESEARCH_DIR/f"study_{self.study_id:04d}"/"autosave";p.mkdir(parents=True,exist_ok=True);return p/f"case_{cid:04d}.json"
     def autosave(self):
         if not self.case_id:return
-        data={"case_id":self.case_id,"protocol_version":self.protocol.get("version"),"points":self.points,"mm_per_px":self.mm_per_px,"landmark_index":self.landmark_index,"landmark_notes":self.landmark_notes};self.autosave_path(self.case_id).write_text(json.dumps(data,ensure_ascii=False),encoding="utf-8")
+        data={"case_id":self.case_id,"protocol_version":self.protocol.get("version"),"points":self.points,"mm_per_px":self.mm_per_px,"landmark_index":self.landmark_index,"landmark_notes":self.landmark_notes,"landmark_confidence":self.landmark_confidence};self.autosave_path(self.case_id).write_text(json.dumps(data,ensure_ascii=False),encoding="utf-8")
     def load_autosave(self,cid):
         p=self.autosave_path(cid)
         if not p.exists():return {}
         try:
             d=json.loads(p.read_text(encoding="utf-8"));
             if d.get("protocol_version")!=self.protocol.get("version"):return {}
-            self.mm_per_px=d.get("mm_per_px") or self.mm_per_px;self.landmark_notes={k:str(v) for k,v in d.get("landmark_notes",{}).items()};return {k:tuple(v) for k,v in d.get("points",{}).items()}
+            self.mm_per_px=d.get("mm_per_px") or self.mm_per_px;self.landmark_notes={k:str(v) for k,v in d.get("landmark_notes",{}).items()};self.landmark_confidence={k:str(v) for k,v in d.get("landmark_confidence",{}).items()};return {k:tuple(v) for k,v in d.get("points",{}).items()}
         except Exception:return {}
     def calculate_preview(self):
         self.results_tree.delete(*self.results_tree.get_children())
