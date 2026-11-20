@@ -429,7 +429,7 @@ class ResearchWorkspace(tk.Tk):
         self.landmark_index=max(0,min(len(self.landmarks)-1,self.landmark_index+delta));self.landmark_list.selection_clear(0,"end");self.landmark_list.selection_set(self.landmark_index);self.landmark_list.see(self.landmark_index);self.update_trace_progress();self.redraw();self.center_on_current()
     def update_trace_progress(self):
         if not self.landmarks:return
-        k=self.current_landmark();self.landmark_help.config(text=self.landmark_notes.get(k) or LANDMARK_HELP.get(k,k));placed=sum(x in self.points for x in self.landmarks);confidence=self.landmark_confidence.get(k,"Pendiente");self.trace_progress.config(text=f"{placed}/{len(self.landmarks)} · {k} · {self.T(chr(67)+'onfianza: '+confidence,'Confidence: '+confidence)}
+        k=self.current_landmark();self.landmark_help.config(text=self.landmark_notes.get(k) or LANDMARK_HELP.get(k,k));placed=sum(x in self.points for x in self.landmarks);confidence=self.landmark_confidence.get(k,"Pendiente");self.trace_progress.config(text=f"{placed}/{len(self.landmarks)} · {k} · {self.T('Confianza: '+confidence,'Confidence: '+confidence)}")
     def edit_landmark_description(self):
         k=self.current_landmark()
         if not k:return
