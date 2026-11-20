@@ -75,7 +75,7 @@ class ResearchWorkspace(tk.Tk):
         self.image = None; self.photo = None; self.image_path = ""
         self.zoom = 1.0; self.offx = 0.0; self.offy = 0.0
         self.points: dict[str, tuple[float,float]] = {}; self.undo_stack=[]; self.redo_stack=[]
-        self.landmarks: list[str] = []; self.landmark_index = 0; self.dragging = None
+        self.landmarks: list[str] = []; self.landmark_index = 0; self.dragging = None; self.landmark_notes: dict[str,str] = {}
         self.calibration_mode = False; self.calibration_clicks=[]; self.pending_mm=0.0
         self.mm_per_px: float | None = None
         self.thumbnail_photo = None; self.magnifier_photo = None
@@ -181,8 +181,9 @@ class ResearchWorkspace(tk.Tk):
         self.trace_meta=ttk.Label(left,text="",wraplength=230); self.trace_meta.pack(fill="x",pady=4)
         ttk.Label(left,text=self.T("Landmarks requeridos","Required landmarks"),style="Heading.TLabel").pack(anchor="w",pady=(8,2))
         self.landmark_list=tk.Listbox(left,exportselection=False); self.landmark_list.pack(fill="both",expand=True); self.landmark_list.bind("<<ListboxSelect>>",self.pick_landmark)
-        self.landmark_help=ttk.Label(left,text="",wraplength=230); self.landmark_help.pack(fill="x",pady=5)
+        self.landmark_help=ttk.Label(left,text="",wraplength=230); self.landmark_help.pack(fill="x",pady=5); ttk.Button(left,text=self.T("Editar descripción del punto","Edit landmark description"),command=self.edit_landmark_description).pack(fill="x",pady=2)
         row=ttk.Frame(left); row.pack(fill="x"); ttk.Button(row,text="←",command=lambda:self.step_landmark(-1)).pack(side="left",expand=True,fill="x"); ttk.Button(row,text="→",command=lambda:self.step_landmark(1)).pack(side="left",expand=True,fill="x")
+        zoombar=ttk.Frame(center); zoombar.pack(fill="x",pady=(0,3)); ttk.Button(zoombar,text="−",width=3,command=lambda:self.zoom_center(1/1.15)).pack(side="left"); ttk.Button(zoombar,text="+",width=3,command=lambda:self.zoom_center(1.15)).pack(side="left",padx=2); ttk.Button(zoombar,text="100%",command=lambda:self.zoom_center(1/self.zoom) if self.zoom else None).pack(side="left",padx=2); ttk.Button(zoombar,text=self.T("Ajustar","Fit"),command=self.fit_image).pack(side="left",padx=2); ttk.Label(zoombar,text=self.T("Zoom con rueda · mover con botón derecho","Wheel zoom · pan with right mouse")).pack(side="left",padx=8)
         self.canvas=tk.Canvas(center,bg=SEMANTIC["radiograph_canvas"],highlightthickness=0,cursor="crosshair"); self.canvas.pack(fill="both",expand=True)
         self.canvas.bind("<Button-1>",self.canvas_click); self.canvas.bind("<B1-Motion>",self.canvas_drag); self.canvas.bind("<ButtonRelease-1>",self.canvas_release); self.canvas.bind("<Button-3>",self.pan_begin); self.canvas.bind("<B3-Motion>",self.pan_move); self.canvas.bind("<MouseWheel>",self.zoom_wheel); self.canvas.bind("<Motion>",self.update_magnifier); self.canvas.bind("<Configure>",lambda e:self.redraw())
         self.pan_state=None
@@ -394,7 +395,7 @@ class ResearchWorkspace(tk.Tk):
             self.db.attach_image(cid,p); c=self.db.case(cid)
         try:self.image=self.load_pil(c["image_path"]); self.image_path=c["image_path"]
         except Exception as e:messagebox.showerror("YomCeph",str(e));return
-        self.case_id=cid; self.landmarks=minimum_landmarks(self.protocol["selected_variables"]); self.points=self.load_autosave(cid) or self.db.latest_landmarks(cid,self.protocol["version"]); self.landmark_index=0; self.undo_stack=[]; self.redo_stack=[]
+        self.case_id=cid; self.landmarks=minimum_landmarks(self.protocol["selected_variables"]); self.landmark_notes={}; self.points=self.load_autosave(cid) or self.db.latest_landmarks(cid,self.protocol["version"]); self.landmark_index=0; self.undo_stack=[]; self.redo_stack=[]
         s=self.db.study(self.study_id); self.mm_per_px=c["case_mm_per_px"] or s["study_mm_per_px"]
         self.db.mark_in_progress(cid); self.landmark_list.delete(0,"end")
         for p in self.landmarks:self.landmark_list.insert("end",p)
@@ -428,7 +429,15 @@ class ResearchWorkspace(tk.Tk):
         self.landmark_index=max(0,min(len(self.landmarks)-1,self.landmark_index+delta));self.landmark_list.selection_clear(0,"end");self.landmark_list.selection_set(self.landmark_index);self.landmark_list.see(self.landmark_index);self.update_trace_progress();self.redraw();self.center_on_current()
     def update_trace_progress(self):
         if not self.landmarks:return
-        k=self.current_landmark();self.landmark_help.config(text=LANDMARK_HELP.get(k,k));placed=sum(x in self.points for x in self.landmarks);self.trace_progress.config(text=f"{placed}/{len(self.landmarks)} · {k}")
+        k=self.current_landmark();self.landmark_help.config(text=self.landmark_notes.get(k) or LANDMARK_HELP.get(k,k));placed=sum(x in self.points for x in self.landmarks);self.trace_progress.config(text=f"{placed}/{len(self.landmarks)} · {k}")
+    def edit_landmark_description(self):
+        k=self.current_landmark()
+        if not k:return
+        current=self.landmark_notes.get(k,LANDMARK_HELP.get(k,k))
+        value=simpledialog.askstring(self.T("Descripción del punto","Landmark description"),self.T(f"Descripción o nota para {k}:","Description or note for "+k+":"),initialvalue=current,parent=self)
+        if value is None:return
+        self.landmark_notes[k]=value.strip()
+        self.autosave();self.update_trace_progress()
     def nearest_point(self,x,y):
         best=None;bd=14
         for k,p in self.points.items():
@@ -442,7 +451,9 @@ class ResearchWorkspace(tk.Tk):
         if self.calibration_mode:
             self.calibration_clicks.append(p)
             if len(self.calibration_clicks)==2:
-                d=math.dist(*self.calibration_clicks);self.mm_per_px=self.pending_mm/d if d>0 else None;self.calibration_mode=False;self.calibration_clicks=[];self.calib_label.config(text=f"{self.mm_per_px:.6f} mm/px" if self.mm_per_px else self.T("Sin calibrar","Not calibrated"));self.autosave()
+                d=math.dist(*self.calibration_clicks);self.mm_per_px=self.pending_mm/d if d>0 else None;self.calibration_mode=False;self.calibration_clicks=[];self.calib_label.config(text=f"{self.mm_per_px:.6f} mm/px" if self.mm_per_px else self.T("Sin calibrar","Not calibrated"));
+                if self.mm_per_px and self.case_id:self.db.update_case_calibration(self.case_id,self.mm_per_px)
+                self.autosave()
             self.redraw();return
         near=self.nearest_point(e.x,e.y);k=near or self.current_landmark()
         if not k:return
@@ -486,14 +497,14 @@ class ResearchWorkspace(tk.Tk):
         p=RESEARCH_DIR/f"study_{self.study_id:04d}"/"autosave";p.mkdir(parents=True,exist_ok=True);return p/f"case_{cid:04d}.json"
     def autosave(self):
         if not self.case_id:return
-        data={"case_id":self.case_id,"protocol_version":self.protocol.get("version"),"points":self.points,"mm_per_px":self.mm_per_px,"landmark_index":self.landmark_index};self.autosave_path(self.case_id).write_text(json.dumps(data,ensure_ascii=False),encoding="utf-8")
+        data={"case_id":self.case_id,"protocol_version":self.protocol.get("version"),"points":self.points,"mm_per_px":self.mm_per_px,"landmark_index":self.landmark_index,"landmark_notes":self.landmark_notes};self.autosave_path(self.case_id).write_text(json.dumps(data,ensure_ascii=False),encoding="utf-8")
     def load_autosave(self,cid):
         p=self.autosave_path(cid)
         if not p.exists():return {}
         try:
             d=json.loads(p.read_text(encoding="utf-8"));
             if d.get("protocol_version")!=self.protocol.get("version"):return {}
-            self.mm_per_px=d.get("mm_per_px") or self.mm_per_px;return {k:tuple(v) for k,v in d.get("points",{}).items()}
+            self.mm_per_px=d.get("mm_per_px") or self.mm_per_px;self.landmark_notes={k:str(v) for k,v in d.get("landmark_notes",{}).items()};return {k:tuple(v) for k,v in d.get("points",{}).items()}
         except Exception:return {}
     def calculate_preview(self):
         self.results_tree.delete(*self.results_tree.get_children())

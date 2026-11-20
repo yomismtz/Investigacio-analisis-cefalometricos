@@ -363,6 +363,15 @@ class ResearchDB:
         with self.connect() as con:
             return con.execute("SELECT * FROM cases WHERE id=?", (case_id,)).fetchone()
 
+    def update_case_calibration(self, case_id: int, mm_per_px: float | None):
+        """Persist a case-specific radiograph calibration immediately."""
+        with self.connect() as con:
+            row = con.execute("SELECT study_id FROM cases WHERE id=?", (case_id,)).fetchone()
+            if row is None:
+                raise KeyError(case_id)
+            con.execute("UPDATE cases SET case_mm_per_px=?,updated_at=? WHERE id=?", (mm_per_px, now_iso(), case_id))
+        self.audit(row["study_id"], "case_calibration_changed", case_id=case_id, mm_per_px=mm_per_px)
+
     def case_by_number(self, study_id: int, case_number: int):
         with self.connect() as con:
             return con.execute("SELECT * FROM cases WHERE study_id=? AND case_number=?", (study_id, case_number)).fetchone()
