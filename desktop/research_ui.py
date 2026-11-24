@@ -396,9 +396,10 @@ class ResearchWorkspace(tk.Tk):
         try:self.image=self.load_pil(c["image_path"]); self.image_path=c["image_path"]
         except Exception as e:messagebox.showerror("YomCeph",str(e));return
         self.case_id=cid; self.landmarks=minimum_landmarks(self.protocol["selected_variables"]); self.landmark_notes={}; self.landmark_confidence={}
-        self.mm_per_px=c["case_mm_per_px"]
         self.points=self.load_autosave(cid) or self.db.latest_landmarks(cid,self.protocol["version"])
-        if c["case_mm_per_px"] is not None:self.mm_per_px=c["case_mm_per_px"]
+        # Only trust calibration explicitly stored for this radiograph; legacy autosaves
+        # may contain a study-wide scale that is not valid for every image.
+        self.mm_per_px=c["case_mm_per_px"]
         self.landmark_index=0; self.undo_stack=[]; self.redo_stack=[]
         s=self.db.study(self.study_id)
         self.db.mark_in_progress(cid); self.landmark_list.delete(0,"end")
