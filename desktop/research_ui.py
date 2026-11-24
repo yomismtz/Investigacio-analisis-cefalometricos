@@ -395,15 +395,21 @@ class ResearchWorkspace(tk.Tk):
             self.db.attach_image(cid,p); c=self.db.case(cid)
         try:self.image=self.load_pil(c["image_path"]); self.image_path=c["image_path"]
         except Exception as e:messagebox.showerror("YomCeph",str(e));return
-        self.case_id=cid; self.landmarks=minimum_landmarks(self.protocol["selected_variables"]); self.landmark_notes={}; self.landmark_confidence={}; self.points=self.load_autosave(cid) or self.db.latest_landmarks(cid,self.protocol["version"]); self.landmark_index=0; self.undo_stack=[]; self.redo_stack=[]
-        s=self.db.study(self.study_id); self.mm_per_px=c["case_mm_per_px"] or s["study_mm_per_px"]
+        self.case_id=cid; self.landmarks=minimum_landmarks(self.protocol["selected_variables"]); self.landmark_notes={}; self.landmark_confidence={}
+        self.mm_per_px=c["case_mm_per_px"]
+        self.points=self.load_autosave(cid) or self.db.latest_landmarks(cid,self.protocol["version"])
+        if c["case_mm_per_px"] is not None:self.mm_per_px=c["case_mm_per_px"]
+        self.landmark_index=0; self.undo_stack=[]; self.redo_stack=[]
+        s=self.db.study(self.study_id)
         self.db.mark_in_progress(cid); self.landmark_list.delete(0,"end")
         for p in self.landmarks:self.landmark_list.insert("end",p)
         if self.landmarks:self.landmark_list.selection_set(0)
         self.trace_case_title.config(text=f"#{c['case_number']} · {c['study_code']}")
         if bool(s["blind_mode"]):self.trace_meta.config(text=self.T("Modo ciego activo: edad/sexo ocultos","Blind mode active: age/sex hidden"))
         else:self.trace_meta.config(text=f"{self.T('Sexo','Sex')}: {c['sex'] or '—'} · {self.T('Edad','Age')}: {c['age'] if c['age'] is not None else '—'}")
-        self.calib_label.config(text=(f"{self.mm_per_px:.6f} mm/px" if self.mm_per_px else self.T("Sin calibrar","Not calibrated"))); self.tabs.select(self.trace_tab); self.fit_image(); self.update_trace_progress(); self.calculate_preview()
+        self.calib_label.config(text=(f"{self.mm_per_px:.6f} mm/px" if self.mm_per_px else self.T("Calibración obligatoria","Calibration required")))
+        self.tabs.select(self.trace_tab); self.fit_image(); self.update_trace_progress(); self.calculate_preview()
+        if not self.mm_per_px:self.after(180,self.start_calibration)
 
     def fit_image(self):
         if self.image is None:return
@@ -465,10 +471,21 @@ class ResearchWorkspace(tk.Tk):
         if self.calibration_mode:
             self.calibration_clicks.append(p)
             if len(self.calibration_clicks)==2:
-                d=math.dist(*self.calibration_clicks);self.mm_per_px=self.pending_mm/d if d>0 else None;self.calibration_mode=False;self.calibration_clicks=[];self.calib_label.config(text=f"{self.mm_per_px:.6f} mm/px" if self.mm_per_px else self.T("Sin calibrar","Not calibrated"));
-                if self.mm_per_px and self.case_id:self.db.update_case_calibration(self.case_id,self.mm_per_px)
+                d=math.dist(*self.calibration_clicks)
+                if d<=0:
+                    self.calibration_clicks=[];self.status.config(text=self.T("Los puntos coinciden. Marca dos extremos distintos.","The points overlap. Select two different endpoints."))
+                    self.redraw();return
+                self.mm_per_px=self.pending_mm/d
+                self.calibration_mode=False;self.calibration_clicks=[]
+                if self.case_id:self.db.update_case_calibration(self.case_id,self.mm_per_px)
+                self.calib_label.config(text=f"{self.mm_per_px:.6f} mm/px")
+                self.status.config(text=self.T("Calibración guardada. Ya puedes iniciar el trazado.","Calibration saved. You can now start tracing."))
                 self.autosave()
+            else:self.status.config(text=self.T("Primer punto marcado. Ahora marca el segundo extremo.","First point marked. Select the second endpoint."))
             self.redraw();return
+        if not self.mm_per_px:
+            self.status.config(text=self.T("Primero calibra la radiografía con dos puntos de distancia conocida.","Calibrate the radiograph with two points of known distance first."))
+            return
         near=self.nearest_point(e.x,e.y);k=near or self.current_landmark()
         if not k:return
         old=self.points.get(k);self.undo_stack.append((k,old,p));self.redo_stack.clear();self.points[k]=p;self.dragging=k
@@ -505,8 +522,15 @@ class ResearchWorkspace(tk.Tk):
         k,old,new=self.redo_stack.pop();self.undo_stack.append((k,old,new));self.points[k]=new;self.autosave();self.redraw();self.update_trace_progress()
     def start_calibration(self):
         if self.image is None:return
-        mm=simpledialog.askfloat("YomCeph",self.T("Distancia real entre los dos puntos (mm):","Real distance between the two points (mm):"),minvalue=.01,parent=self)
-        if mm:self.pending_mm=mm;self.calibration_mode=True;self.calibration_clicks=[];self.status.config(text=self.T("Marca los dos extremos de la referencia.","Click both ends of the reference."))
+        if self.mm_per_px and self.db.case(self.case_id)["case_mm_per_px"] is not None:
+            if not messagebox.askyesno(self.T("Recalibrar radiografía","Recalibrate radiograph"),self.T("Esta radiografía ya tiene una calibración guardada. ¿Deseas sustituirla?","This radiograph already has a saved calibration. Replace it?"),parent=self):return
+        mm=simpledialog.askfloat(self.T("Calibrar Yornis","Calibrate Yornis"),self.T("Introduce la distancia REAL en milímetros entre los dos puntos que marcarás en la radiografía:","Enter the REAL distance in millimeters between the two points you will mark on the radiograph:"),minvalue=.01,parent=self)
+        if mm is None:
+            if not self.mm_per_px:self.status.config(text=self.T("Calibración pendiente: no puedes colocar puntos todavía.","Calibration pending: you cannot place landmarks yet."))
+            return
+        self.pending_mm=float(mm);self.calibration_mode=True;self.calibration_clicks=[]
+        self.status.config(text=self.T("Marca el primer extremo de la referencia en la radiografía.","Select the first reference endpoint on the radiograph."))
+        self.redraw()
     def autosave_path(self,cid):
         p=RESEARCH_DIR/f"study_{self.study_id:04d}"/"autosave";p.mkdir(parents=True,exist_ok=True);return p/f"case_{cid:04d}.json"
     def autosave(self):
