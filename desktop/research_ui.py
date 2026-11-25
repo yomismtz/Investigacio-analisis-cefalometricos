@@ -398,9 +398,16 @@ class ResearchWorkspace(tk.Tk):
         try:self.image=self.load_pil(c["image_path"]); self.image_path=c["image_path"]
         except Exception as e:messagebox.showerror("Yornis",str(e));return
         self.case_id=cid; self.landmarks=minimum_landmarks(self.protocol["selected_variables"]); self.landmark_notes={}; self.landmark_confidence={}
-        self.points=self.load_autosave(cid) or self.db.latest_landmarks(cid,self.protocol["version"])
-        # Calibration is image-specific. Never inherit a study-wide scale or a legacy autosave scale.
+        # Calibration belongs to this exact image. Until it exists, discard any
+        # stale autosave coordinates and keep all analysis landmarks locked.
         self.mm_per_px=c["case_mm_per_px"]
+        self.calibration_mode=False; self.calibration_clicks=[]; self.pending_mm=0.0
+        if self.mm_per_px:
+            self.points=self.load_autosave(cid) or self.db.latest_landmarks(cid,self.protocol["version"])
+        else:
+            self.points={}
+            try:self.autosave_path(cid).unlink(missing_ok=True)
+            except Exception:pass
         self.landmark_index=0; self.undo_stack=[]; self.redo_stack=[]
         s=self.db.study(self.study_id)
         self.db.mark_in_progress(cid); self.landmark_list.delete(0,"end")
@@ -430,9 +437,15 @@ class ResearchWorkspace(tk.Tk):
             x,y=self.image_to_canvas(self.calibration_clicks[0]);self.canvas.create_oval(x-6,y-6,x+6,y+6,fill=PALETTE["mint_300"])
     def current_landmark(self):return self.landmarks[self.landmark_index] if self.landmarks else ""
     def pick_landmark(self,e=None):
+        if not self.mm_per_px:
+            self.status.config(text=self.T("Calibración obligatoria: coloca los dos puntos de referencia antes de seleccionar landmarks.","Calibration required: place both reference points before selecting landmarks."))
+            return
         s=self.landmark_list.curselection();
         if s:self.landmark_index=s[0];self.update_trace_progress();self.redraw();self.center_on_current()
     def step_landmark(self,delta):
+        if not self.mm_per_px:
+            self.status.config(text=self.T("Calibración obligatoria: coloca los dos puntos de referencia antes de recorrer o marcar landmarks.","Calibration required: place both reference points before navigating or placing landmarks."))
+            return
         if not self.landmarks:return
         self.landmark_index=max(0,min(len(self.landmarks)-1,self.landmark_index+delta));self.landmark_list.selection_clear(0,"end");self.landmark_list.selection_set(self.landmark_index);self.landmark_list.see(self.landmark_index);self.update_trace_progress();self.redraw();self.center_on_current()
     def update_trace_progress(self):
@@ -559,6 +572,9 @@ class ResearchWorkspace(tk.Tk):
     def calculate_preview(self):
         self.results_tree.delete(*self.results_tree.get_children())
         if not self.case_id:return []
+        if not self.mm_per_px:
+            self.status.config(text=self.T("No se puede analizar: primero completa la calibración con dos puntos.","Analysis blocked: complete the two-point calibration first."))
+            return []
         c=self.db.case(self.case_id);results=compute_selected(self.protocol.get("selected_variables",[]),self.points,self.mm_per_px,sex=c["sex"],age=c["age"])
         groups={}
         for r in results:
@@ -571,6 +587,10 @@ class ResearchWorkspace(tk.Tk):
         messagebox.showinfo(self.T("Control de calidad","Quality control"),"\n\n".join(("✓ " if x["level"]=="ok" else "◆ ")+x["message"] for x in issues))
     def calculate_and_save(self):
         if not self.case_id:return
+        if not self.mm_per_px:
+            messagebox.showwarning("Yornis",self.T("Calibración obligatoria. Marca los dos puntos de referencia y completa la distancia real en milímetros antes de calcular o guardar.","Calibration is required. Mark both reference points and enter their real distance in millimeters before calculating or saving."),parent=self)
+            self.start_calibration()
+            return
         results=self.calculate_preview();issues=trace_qc(self.protocol.get("selected_variables",[]),self.points,self.mm_per_px)
         issues.extend(calibration.confidence_quality_issues(self.landmarks,self.points,self.landmark_confidence))
         blocking=[x for x in issues if x["level"]!="ok"]
@@ -580,6 +600,10 @@ class ResearchWorkspace(tk.Tk):
         else:messagebox.showwarning("Yornis",self.T("El caso se guardó pero aún no cumple todos los resultados del protocolo.","The case was saved but does not yet contain every protocol outcome."))
     def start_review(self):
         if not self.case_id or not self.landmarks:return
+        if not self.mm_per_px:
+            self.status.config(text=self.T("La revisión está bloqueada hasta completar la calibración de dos puntos.","Review is locked until the two-point calibration is complete."))
+            self.start_calibration()
+            return
         self.landmark_index=0;self.step_landmark(0);self.status.config(text=self.T("Modo revisión: usa ←/→ para recorrer landmarks.","Review mode: use ←/→ to move through landmarks."))
     def exclude_current(self):
         if self.case_id:self.exclude_case_dialog(self.case_id)
