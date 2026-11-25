@@ -5,7 +5,7 @@ import yornis_modern_ui_v0160 as modern_ui
 
 modern_ui.install()
 
-APP_VERSION = "0.16.2 Paletas Búho + Colibrí + Audios Reales"
+APP_VERSION = "0.16.2 Paletas Búho + Colibrí + Sonido Offline"
 
 
 class Launcher(previous.Launcher):
