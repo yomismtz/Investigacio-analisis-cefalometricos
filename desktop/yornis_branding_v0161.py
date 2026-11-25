@@ -22,7 +22,11 @@ def rebrand_classic_source(source: str) -> str:
     """
     rewritten = []
     for token in tokenize.generate_tokens(io.StringIO(source).readline):
-        if token.type == tokenize.STRING:
+        string_token_types = {tokenize.STRING}
+        fstring_middle = getattr(tokenize, "FSTRING_MIDDLE", None)
+        if fstring_middle is not None:
+            string_token_types.add(fstring_middle)
+        if token.type in string_token_types:
             value = _BRAND_RE.sub(_brand_case, token.string)
             value = re.sub(r"(?i)\bcalibrar\s+mm\b", "Calibrar radiografía", value)
             value = re.sub(r"(?i)\bcalibrate\s+mm\b", "Calibrate radiograph", value)
