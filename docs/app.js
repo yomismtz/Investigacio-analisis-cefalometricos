@@ -74,9 +74,10 @@ function playBirdSignature(name) {
     }
     currentBirdAudio = new Audio(src);
     currentBirdAudio.preload = 'auto';
-    currentBirdAudio.volume = 0.85;
+    const volumeControl = document.querySelector('#bird-volume');
+    currentBirdAudio.volume = volumeControl ? Number(volumeControl.value) / 100 : 0.75;
     const playback = currentBirdAudio.play();
-    if (status) status.textContent = `Reproduciendo la grabación de ${name}.`;
+    if (status) status.textContent = `Reproduciendo el fragmento original de ${name}.`;
     if (pulse) {
       pulse.classList.remove('playing');
       void pulse.offsetWidth;
@@ -86,7 +87,7 @@ function playBirdSignature(name) {
       if (status) status.textContent = `El navegador bloqueó el audio de ${name}. Vuelve a pulsar la tarjeta.`;
     });
     currentBirdAudio.addEventListener('ended', () => {
-      if (status) status.textContent = `Grabación de ${name} terminada.`;
+      if (status) status.textContent = `Fragmento original de ${name} terminado.`;
     }, {once:true});
   } catch (_) {
     if (status) status.textContent = `No fue posible reproducir la grabación de ${name}.`;
@@ -148,6 +149,13 @@ document.querySelector('#assistant-demo-search')?.addEventListener('keydown', ev
   if (event.key === 'Escape') { event.currentTarget.value = ''; assistantDemoSearch(); }
 });
 
+const birdVolumeControl = document.querySelector('#bird-volume');
+const birdVolumeValue = document.querySelector('#bird-volume-value');
+birdVolumeControl?.addEventListener('input', () => {
+  const volume = Math.max(0, Math.min(100, Number(birdVolumeControl.value))) / 100;
+  if (currentBirdAudio) currentBirdAudio.volume = volume;
+  if (birdVolumeValue) birdVolumeValue.value = `${Math.round(volume * 100)}%`;
+});
 const grid = document.querySelector('#analysis-grid');
 const search = document.querySelector('#analysis-search');
 const count = document.querySelector('#analysis-count');
