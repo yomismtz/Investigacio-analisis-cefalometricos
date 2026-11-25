@@ -85,7 +85,7 @@ jobs:
               files = list(out.glob('*.wav'))
               assert len(files) == 50 and all(p.stat().st_size > 1000 for p in files)
               total += len(files)
-          assert total == 80
+          assert total == 100
           print('100 offline bird WAVs generated and validated before packaging')
           '@ | python -
 
@@ -277,7 +277,7 @@ jobs:
           - Sistema visual aplicado al lanzador, caso individual e investigación.
           - 102 mediciones y 17 tablas de referencia conservadas.
           - Calibración por radiografía y control de confianza de landmarks conservados.
-          - 8 mascotas y 100 WAV incluidos para ejecución offline.
+          - 10 identidades de aves y 100 WAV locales (perfiles de sonido generados) incluidos para ejecución offline.
           - Fórmulas, geometría, base de datos y lógica clínica sin cambios.
           '@ | Set-Content -Encoding utf8 release-notes.md
 
