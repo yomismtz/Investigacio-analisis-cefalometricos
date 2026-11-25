@@ -195,12 +195,7 @@ def compute_selected(variable_keys: list[str], points: dict[str, tuple[float, fl
     return results
 
 
-def trace_qc(
-    variable_keys: list[str],
-    points: dict[str, tuple[float, float]],
-    mm_per_px: float | None,
-    landmark_confidence: dict[str, str] | None = None,
-) -> list[dict[str, str]]:
+def trace_qc(variable_keys: list[str], points: dict[str, tuple[float, float]], mm_per_px: float | None) -> list[dict[str, str]]:
     issues: list[dict[str, str]] = []
     required = minimum_landmarks(variable_keys)
     missing = [p for p in required if p not in points]
@@ -209,15 +204,6 @@ def trace_qc(
     variables = selected_variables(variable_keys)
     if any(_is_linear(v) for v in variables) and not mm_per_px:
         issues.append({"level": "review", "code": "missing_calibration", "message": "El protocolo contiene variables lineales y no hay calibración mm/píxel."})
-    confidence = landmark_confidence or {}
-    for name in required:
-        if name not in points:
-            continue
-        value = str(confidence.get(name, "Pendiente")).strip().casefold()
-        if value in {"baja", "low"}:
-            issues.append({"level": "review", "code": "low_landmark_confidence", "message": f"{name}: confianza baja; revisar la identificación anatómica."})
-        elif value in {"pendiente", "pending", ""} or value not in {"alta", "high", "media", "medium", "baja", "low"}:
-            issues.append({"level": "review", "code": "pending_landmark_confidence", "message": f"{name}: confianza pendiente; registrar la revisión del punto."})
     placed = [(k, points[k]) for k in required if k in points]
     for i, (a, pa) in enumerate(placed):
         for b, pb in placed[i + 1:]:
@@ -228,7 +214,6 @@ def trace_qc(
     if not issues:
         issues.append({"level": "ok", "code": "basic_qc_ok", "message": "Sin alertas geométricas básicas. Esto no equivale a validación clínica."})
     return issues
-
 
 def serialize_catalog() -> dict:
     return {analysis: [asdict(v) | {"key": v.key} for v in variables] for analysis, variables in analysis_catalog().items()}
