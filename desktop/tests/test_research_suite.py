@@ -73,7 +73,12 @@ class ResearchSuiteTests(unittest.TestCase):
         self.assertIsNotNone(self.db.case(cid)["case_mm_per_px"])
         self.assertTrue(self.db.latest_landmarks(cid, version))
 
+        method = self.db.attach_image.__func__
+        print("DEBUG_ATTACH_IMAGE_METHOD", method.__module__, method.__code__.co_firstlineno, method.__code__.co_consts)
         self.db.attach_image(cid, str(second), copy_image=False)
+        with self.db.connect() as con:
+            raw_scale = con.execute("SELECT case_mm_per_px FROM cases WHERE id=?", (cid,)).fetchone()[0]
+        print("DEBUG_ATTACH_IMAGE_SCALE_AFTER", raw_scale, "DB", self.db.db_path)
 
         self.assertIsNone(self.db.case(cid)["case_mm_per_px"])
         self.assertEqual(self.db.latest_landmarks(cid, version), {})
