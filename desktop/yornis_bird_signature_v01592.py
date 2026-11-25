@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import os
+import sys
 import struct
 import threading
 import wave
@@ -121,10 +122,19 @@ def ensure_signature_wav(theme_name: str, volume: int | None = None) -> Path:
     return path
 
 
+def bundled_signature_path(theme_name: str, volume: int) -> Path:
+    safe = "".join(ch if ch.isalnum() else "_" for ch in theme_name)
+    root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+    return root / "assets" / "bird_audio" / f"{safe}_{int(volume)}.wav"
+
+
 def _play(theme_name: str, volume: int) -> None:
     try:
         import winsound
-        path = ensure_signature_wav(theme_name, volume)
+        path = bundled_signature_path(theme_name, volume)
+        if not path.is_file():
+            # Development fallback; packaged builds are expected to contain all WAVs.
+            path = ensure_signature_wav(theme_name, volume)
         winsound.PlaySound(str(path), winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_NODEFAULT)
     except Exception:
         return
