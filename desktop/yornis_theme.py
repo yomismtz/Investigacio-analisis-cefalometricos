@@ -66,9 +66,22 @@ THEMES = {
         'secondary': '#1AA6C7', 'secondary_dark': '#0C6D86', 'accent': '#F2C54D', 'accent_soft': '#FFF1BE',
         'tertiary': '#31468D', 'warning': '#DCA72F', 'danger': '#6C365F', 'canvas': '#07121E', 'border': '#B8D0E5',
     },
+    'Búho': {
+        'description_es': 'Ciruela nocturna, púrpura profundo, ámbar y crema.',
+        'bg': '#F8F4FA', 'panel': '#FFFCFF', 'panel_alt': '#EEE5F1', 'text': '#2C2130', 'muted': '#6B5C70',
+        'primary': '#493052', 'primary_dark': '#2E1C35', 'primary_soft': '#DDD0E3',
+        'secondary': '#76518A', 'secondary_dark': '#553865', 'accent': '#C49A45', 'accent_soft': '#F3E8D2',
+        'tertiary': '#987C54', 'warning': '#B28C43', 'danger': '#8C425B', 'canvas': '#130F17', 'border': '#D8CADC',
+    },
+    'Colibrí': {
+        'description_es': 'Verde esmeralda, turquesa, lima y menta.',
+        'bg': '#F1FAF7', 'panel': '#FCFFFD', 'panel_alt': '#DDF5E9', 'text': '#14342B', 'muted': '#526D64',
+        'primary': '#087D64', 'primary_dark': '#054D40', 'primary_soft': '#BCE8D7',
+        'secondary': '#16AFA5', 'secondary_dark': '#0C7E78', 'accent': '#A5D94D', 'accent_soft': '#E8F6C9',
+        'tertiary': '#31A8A0', 'warning': '#B28E2D', 'danger': '#A13A56', 'canvas': '#061A17', 'border': '#B9DDD0',
+    },
 }
-
-
+ 
 def load_settings() -> dict:
     try:
         return json.loads(SETTINGS_PATH.read_text(encoding='utf-8'))
