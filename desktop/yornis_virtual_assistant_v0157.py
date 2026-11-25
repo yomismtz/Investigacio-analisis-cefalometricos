@@ -285,11 +285,17 @@ def open_assistant(root, initial_query: str = "") -> None:
         if name == yornis_theme.current_theme_name():
             return
         yornis_theme.apply_theme(name)
-        try:
-            import yornis_quality_ui_v0157 as quality
-            quality.apply_window(root, context="app")
-        except Exception:
-            pass
+        if hasattr(root, "_rebuild_quality_launcher"):
+            try:
+                root._rebuild_quality_launcher()
+            except Exception:
+                pass
+        else:
+            try:
+                import yornis_quality_ui_v0157 as quality
+                quality.apply_window(root, context="app")
+            except Exception:
+                pass
         refresh_assistant_button(root)
         q = search_var.get()
         win.destroy()
