@@ -30,11 +30,11 @@ def attach_image(db,case_id,image_path,copy_image=True):
     if copy_image:
         target=db._study_folder(row['study_id'])/f"YC_{int(row['case_number']):04d}{src.suffix.lower() or '.img'}";shutil.copy2(src,target)
     with db.connect() as con:
-        # Explicitly archive old trace identities, including legacy blank hashes,
-        # before switching the case to the replacement radiograph.
-        for table in ('landmarks','results'):
-            con.execute(f"UPDATE {table} SET image_hash='historical:' || COALESCE(image_hash,'') WHERE case_id=?",(case_id,))
+        # Change the active image identity first, then archive all traces in
+        # the same transaction. Keep historical measurements for audit only.
         con.execute('UPDATE cases SET image_path=?,original_filename=?,file_hash=?,case_mm_per_px=NULL,updated_at=? WHERE id=?',(str(target),src.name,digest,now_iso(),case_id))
+        for table in ('landmarks','results'):
+            con.execute(f"UPDATE {table} SET image_hash='historical:' || COALESCE(NULLIF(image_hash,''),'legacy-unidentified') WHERE case_id=?",(case_id,))
     db.audit(row['study_id'],'image_attached',case_id=case_id,source_filename=src.name,stored_filename=Path(target).name,sha256=digest,anonymized=bool(copy_image),calibration_reset=True,prior_trace_preserved=True)
 
 def import_progress(db,study_id,paths,metadata=None,copy_images=True,callback=None,cancel_event=None):
