@@ -75,7 +75,10 @@ jobs:
           generated = 0
           for bird, source in sources.items():
               assert source.is_file(), f'Missing original recording for {bird}: {source}'
-              with wave.open(str(source), 'rb') as wav:
+              master = temp / f'{bird}_master.wav'
+              subprocess.run([ffmpeg, '-hide_banner', '-loglevel', 'error', '-y', '-i', str(source),
+                              '-ac', '1', '-ar', '22050', '-sample_fmt', 's16', str(master)], check=True)
+              with wave.open(str(master), 'rb') as wav:
                   assert wav.getnchannels() == 1 and wav.getsampwidth() == 2
                   rate = wav.getframerate()
                   frames = wav.readframes(wav.getnframes())
