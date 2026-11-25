@@ -28,6 +28,35 @@ def point_inside_image(point: Sequence[float], width: int, height: int) -> bool:
         return False
     return math.isfinite(x) and math.isfinite(y) and w > 0 and h > 0 and 0.0 <= x < w and 0.0 <= y < h
 
+def confidence_quality_issues(
+    required_landmarks: Sequence[str],
+    points: dict[str, object],
+    confidence: dict[str, object] | None = None,
+) -> list[dict[str, str]]:
+    """Return review alerts for placed landmarks with low or pending confidence."""
+    values = confidence or {}
+    issues: list[dict[str, str]] = []
+    for name in required_landmarks:
+        if name not in points:
+            continue
+        try:
+            level = normalize_landmark_confidence(values.get(name, "Pendiente"))
+        except ValueError:
+            level = "Pendiente"
+        if level == "Baja":
+            issues.append({
+                "level": "review",
+                "code": "low_landmark_confidence",
+                "message": f"{name}: confianza baja; revisar la identificación anatómica.",
+            })
+        elif level == "Pendiente":
+            issues.append({
+                "level": "review",
+                "code": "pending_landmark_confidence",
+                "message": f"{name}: confianza pendiente; registrar la revisión del punto.",
+            })
+    return issues
+
 
 def calculate_mm_per_px(first: Sequence[float], second: Sequence[float], real_distance_mm: float) -> float:
     """Compute the image-specific mm/pixel scale from two distinct image points."""
