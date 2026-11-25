@@ -65,7 +65,7 @@ def bundled_startup_path(theme_name: str, volume: int | None = None) -> Path:
         raise KeyError(f"Unknown Yornis bird palette: {theme_name}")
     if volume is None:
         _, volume = startup_audio.settings()
-    volume = max(0, min(100, int(volume)))
+    volume = _variant_volume(volume)
     return asset_root() / "bird_startup_audio" / f"{_safe_name(theme_name)}_{volume}.wav"
 
 
