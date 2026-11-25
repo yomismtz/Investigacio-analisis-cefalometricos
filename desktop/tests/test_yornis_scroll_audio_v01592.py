@@ -23,11 +23,11 @@ class YornisV01592Tests(unittest.TestCase):
             self.assertEqual(len(frames), int(sounds.SIGNATURE_DURATION * sounds.SAMPLE_RATE) * 2)
             self.assertTrue(any(frames))
             digests.append(hashlib.sha256(frames).hexdigest())
-        self.assertEqual(len(set(digests)), 8)
+        self.assertEqual(len(set(digests)), 10)
 
     def test_version(self):
         import yornis_desktop_v01592 as app
-        self.assertTrue(app.APP_VERSION.startswith("0.16.1"))
+        self.assertTrue(app.APP_VERSION.startswith("0.16.2"))
 
 
 if __name__ == "__main__":
