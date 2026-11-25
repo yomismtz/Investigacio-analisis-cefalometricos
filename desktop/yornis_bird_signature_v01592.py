@@ -30,6 +30,11 @@ def _safe_name(theme_name: str) -> str:
     return "".join(ch if ch.isalnum() else "_" for ch in theme_name)
 
 
+def _variant_volume(volume: int) -> int:
+    requested = max(0, min(100, int(volume)))
+    return min(VOLUME_LEVELS, key=lambda level: abs(level - requested))
+
+
 def asset_root() -> Path:
     """Assets root in source mode and in the PyInstaller bundle."""
     root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
@@ -50,7 +55,7 @@ def bundled_signature_path(theme_name: str, volume: int | None = None) -> Path:
         raise KeyError(f"Unknown Yornis bird palette: {theme_name}")
     if volume is None:
         _, volume = startup_audio.settings()
-    volume = max(0, min(100, int(volume)))
+    volume = _variant_volume(volume)
     return asset_root() / "bird_audio" / f"{_safe_name(theme_name)}_{volume}.wav"
 
 
