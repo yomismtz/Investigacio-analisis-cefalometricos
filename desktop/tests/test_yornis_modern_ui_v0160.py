@@ -9,7 +9,6 @@ DESKTOP = Path(__file__).resolve().parents[1]
 if str(DESKTOP) not in sys.path:
     sys.path.insert(0, str(DESKTOP))
 
-import ttkbootstrap
 import yornis_modern_ui_v0160 as modern_ui
 import yornis_theme
 
@@ -23,6 +22,7 @@ class ModernInterfaceV0160Tests(unittest.TestCase):
     def test_modern_ui_version_and_base_theme(self):
         self.assertEqual(modern_ui.MODERN_UI_VERSION, "0.16.0")
         self.assertEqual(modern_ui.BASE_THEME, "bootstrap-light")
+        self.assertIn(modern_ui.backend_name(), {"ttkbootstrap", "ttk-clam-fallback"})
 
     def test_all_bird_palettes_feed_the_modern_design_tokens(self):
         original = yornis_theme.current_theme_name()
