@@ -81,9 +81,11 @@ class IndividualSelectorFlowTests(unittest.TestCase):
     def test_real_classic_individual_click_opens_selector_dialog(self):
         import tkinter as tk
         import yomceph_desktop_v130_classic as classic
+        print("DEBUG_CLASS_METHODS", [name for name in dir(classic.YomCephClassic) if any(term in name.lower() for term in ("click", "image", "radiograph", "calibr", "point", "landmark", "load", "open"))])
 
         flow.install(classic.YomCephClassic)
         app = classic.YomCephClassic()
+        print("DEBUG_APP_ATTRS", sorted(name for name in vars(app) if any(term in name.lower() for term in ("image", "radiograph", "calibr", "point", "canvas", "scale"))))
         app.withdraw()
         try:
             app.start_individual()
