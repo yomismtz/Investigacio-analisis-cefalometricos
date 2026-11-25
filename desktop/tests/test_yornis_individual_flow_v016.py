@@ -84,6 +84,8 @@ class IndividualSelectorFlowTests(unittest.TestCase):
 
         flow.install(classic.YomCephClassic)
         app = classic.YomCephClassic()
+        print("DEBUG_CLASS_METHODS", [name for name in dir(classic.YomCephClassic) if any(term in name.lower() for term in ("click", "image", "radiograph", "calibr", "point", "landmark"))])
+        print("DEBUG_APP_ATTRS", sorted(name for name in vars(app) if any(term in name.lower() for term in ("image", "radiograph", "calibr", "point", "canvas", "scale"))))
         app.withdraw()
         try:
             app.start_individual()
