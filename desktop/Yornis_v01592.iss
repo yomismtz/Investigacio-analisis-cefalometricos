@@ -1,5 +1,5 @@
 #define MyAppName "Yornis"
-#define MyAppVersion "0.15.9.2"
+#define MyAppVersion "0.15.9.3"
 #define MyAppExeName "Yornis.exe"
 #define MyAppPublisher "Yomira Salgado Martínez"
 #define MyAppURL "https://yomismtz.github.io/Investigacio-analisis-cefalometricos/"
@@ -19,7 +19,7 @@ DefaultDirName={localappdata}\Programs\Yornis
 DefaultGroupName=Yornis
 DisableProgramGroupPage=yes
 OutputDir=..\dist-installer-yornis
-OutputBaseFilename=Yornis_Setup_v0.15.9.2_Scroll_Bird_Signatures_HiDPI
+OutputBaseFilename=Yornis_Setup_v0.15.9.3_Calibration_Birds_Offline
 SetupIconFile=assets\yornis.ico
 UninstallDisplayName={#MyAppName} {#MyAppVersion}
 UninstallDisplayIcon={app}\{#MyAppExeName}
@@ -34,10 +34,10 @@ CloseApplications=yes
 RestartApplications=no
 SetupLogging=yes
 VersionInfoCompany={#MyAppPublisher}
-VersionInfoDescription=Instalador de Yornis · Scroll + Bird Signatures · Yom Dental Análisis
+VersionInfoDescription=Instalador de Yornis · Calibración por radiografía y recursos de aves offline
 VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
-VersionInfoVersion=0.15.9.2
+VersionInfoVersion=0.15.9.3
 VersionInfoCopyright=© 2026 Yomira Salgado Martínez
 
 [Languages]
