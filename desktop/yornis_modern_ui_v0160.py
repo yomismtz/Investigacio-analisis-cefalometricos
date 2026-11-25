@@ -61,6 +61,7 @@ def apply_modern_styles(root) -> bool:
         # keeps its current Tk/Toplevel architecture and does not create a new root.
         style = ttkb.Style(master=root, theme=BASE_THEME)
         style.theme_use(BASE_THEME)
+        root._yornis_modern_style_v0160 = style
     except Exception:
         return False
 
@@ -237,6 +238,28 @@ def install() -> bool:
         return modern_backend_available()
     except Exception:
         return False
+
+
+def active_widget_theme(root) -> str:
+    """Return the actual ttk theme currently applied to a window."""
+    style = getattr(root, "_yornis_modern_style_v0160", None)
+    if style is None:
+        return ""
+    try:
+        return str(style.theme_use())
+    except Exception:
+        return ""
+
+
+def primary_action_color(root) -> str:
+    """Expose the current primary-button fill for GUI regression tests."""
+    style = getattr(root, "_yornis_modern_style_v0160", None)
+    if style is None:
+        return ""
+    try:
+        return str((style.configure("Primary.TButton") or {}).get("background", ""))
+    except Exception:
+        return ""
 
 
 def theme_palette() -> dict:
