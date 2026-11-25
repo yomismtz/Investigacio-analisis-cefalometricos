@@ -27,17 +27,21 @@ const palettes = [
   {name:"Quetzal",glyph:"Q",desc:"Esmeralda, turquesa profundo y rubí. Verde intenso con alto contraste.",primary:"#087D64",dark:"#06483D",soft:"#B9E6D8",secondary:"#0BA39B",accent:"#BB3545",bg:"#F2FAF7"},
   {name:"Guacamaya Roja",glyph:"R",desc:"Escarlata, amarillo y azul. La paleta más vibrante del conjunto.",primary:"#B52632",dark:"#70141D",soft:"#F2BBC0",secondary:"#185CB7",accent:"#F0B82E",bg:"#FFF6F4"},
   {name:"Guacamaya Azul",glyph:"G",desc:"Cobalto, cyan y dorado. Fresca, técnica y muy visible.",primary:"#176BB4",dark:"#0A3C70",soft:"#B9D8F2",secondary:"#1AA6C7",accent:"#F2C54D",bg:"#F1F7FD"},
+  {name:"Búho",glyph:"🦉",desc:"Ciruela nocturna, púrpura, ámbar y crema.",primary:"#493052",dark:"#2E1C35",soft:"#DDD0E3",secondary:"#76518A",accent:"#C49A45",bg:"#F8F4FA"},
+  {name:"Colibrí",glyph:"🐦",desc:"Verde esmeralda, turquesa, lima y menta.",primary:"#087D64",dark:"#054D40",soft:"#BCE8D7",secondary:"#16AFA5",accent:"#A5D94D",bg:"#F1FAF7"},
 ];
 
-const birdSignatures = {
-  "Agaporni":[920,1180,1020,1320],
-  "Tucán":[520,680,480,760],
-  "Pavorreal":[410,540,660,510],
-  "Ninfa":[1260,1480,1370,1580],
-  "Faisán":[460,590,720,610],
-  "Quetzal":[840,1120,1460,1210],
-  "Guacamaya Roja":[620,930,740,1090],
-  "Guacamaya Azul":[700,1040,1360,970],
+const birdAudioFiles = {
+  "Agaporni":"assets/bird-audio/Agaporni.mp3",
+  "Tucán":"assets/bird-audio/Tucan.mp3",
+  "Pavorreal":"assets/bird-audio/Pavorreal.mp3",
+  "Ninfa":"assets/bird-audio/Ninfa.mp3",
+  "Faisán":"assets/bird-audio/Faisan.mp3",
+  "Quetzal":"assets/bird-audio/Quetzal.mp3",
+  "Guacamaya Roja":"assets/bird-audio/Guacamaya_Roja.mp3",
+  "Guacamaya Azul":"assets/bird-audio/Guacamaya_Azul.mp3",
+  "Búho":"assets/bird-audio/Buho.mp3",
+  "Colibrí":"assets/bird-audio/Colibri.mp3",
 };
 
 const assistantHints = [
@@ -54,41 +58,39 @@ const assistantHints = [
 
 let audioContext = null;
 
+let currentBirdAudio = null;
 function playBirdSignature(name) {
-  const signature = birdSignatures[name];
   const status = document.querySelector('#sound-status');
   const pulse = document.querySelector('#sound-pulse');
-  if (!signature || !(window.AudioContext || window.webkitAudioContext)) {
-    if (status) status.textContent = `${name} seleccionado. Tu navegador no habilitó la demostración de audio.`;
+  const src = birdAudioFiles[name];
+  if (!src) {
+    if (status) status.textContent = `No hay grabación asignada para ${name}.`;
     return;
   }
   try {
-    const AudioCtx = window.AudioContext || window.webkitAudioContext;
-    audioContext ||= new AudioCtx();
-    if (audioContext.state === 'suspended') audioContext.resume();
-    const start = audioContext.currentTime + 0.015;
-    signature.forEach((frequency,index) => {
-      const oscillator = audioContext.createOscillator();
-      const gain = audioContext.createGain();
-      const t = start + index * 0.105;
-      oscillator.type = index % 2 ? 'sine' : 'triangle';
-      oscillator.frequency.setValueAtTime(frequency, t);
-      oscillator.frequency.exponentialRampToValueAtTime(Math.max(180, frequency * 1.08), t + 0.07);
-      gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(0.055, t + 0.012);
-      gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.085);
-      oscillator.connect(gain).connect(audioContext.destination);
-      oscillator.start(t);
-      oscillator.stop(t + 0.09);
-    });
-    if (status) status.textContent = `${name}: firma sonora reproducida.`;
+    if (currentBirdAudio) {
+      currentBirdAudio.pause();
+      currentBirdAudio.currentTime = 0;
+    }
+    currentBirdAudio = new Audio(src);
+    currentBirdAudio.preload = 'auto';
+    const volumeControl = document.querySelector('#bird-volume');
+    currentBirdAudio.volume = volumeControl ? Number(volumeControl.value) / 100 : 0.75;
+    const playback = currentBirdAudio.play();
+    if (status) status.textContent = `Reproduciendo el fragmento original de ${name}.`;
     if (pulse) {
       pulse.classList.remove('playing');
       void pulse.offsetWidth;
       pulse.classList.add('playing');
     }
+    playback?.catch(() => {
+      if (status) status.textContent = `El navegador bloqueó el audio de ${name}. Vuelve a pulsar la tarjeta.`;
+    });
+    currentBirdAudio.addEventListener('ended', () => {
+      if (status) status.textContent = `Fragmento original de ${name} terminado.`;
+    }, {once:true});
   } catch (_) {
-    if (status) status.textContent = `${name} seleccionado. No fue posible reproducir audio en este navegador.`;
+    if (status) status.textContent = `No fue posible reproducir la grabación de ${name}.`;
   }
 }
 
@@ -147,6 +149,13 @@ document.querySelector('#assistant-demo-search')?.addEventListener('keydown', ev
   if (event.key === 'Escape') { event.currentTarget.value = ''; assistantDemoSearch(); }
 });
 
+const birdVolumeControl = document.querySelector('#bird-volume');
+const birdVolumeValue = document.querySelector('#bird-volume-value');
+birdVolumeControl?.addEventListener('input', () => {
+  const volume = Math.max(0, Math.min(100, Number(birdVolumeControl.value))) / 100;
+  if (currentBirdAudio) currentBirdAudio.volume = volume;
+  if (birdVolumeValue) birdVolumeValue.value = `${Math.round(volume * 100)}%`;
+});
 const grid = document.querySelector('#analysis-grid');
 const search = document.querySelector('#analysis-search');
 const count = document.querySelector('#analysis-count');
