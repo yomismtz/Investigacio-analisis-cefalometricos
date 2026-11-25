@@ -103,8 +103,8 @@ class IndividualSelectorFlowTests(unittest.TestCase):
 
             def start_calibration(self):
                 self.start_count += 1
-                self.calibration_real_mm = 12.0
-                self.calibration_mode = True
+                self.calibration_real_mm = None if getattr(self, "cancel_calibration", False) else 12.0
+                self.calibration_mode = self.calibration_real_mm is not None
 
             def finish_calibration(self):
                 self.mm_per_px = 0.2
@@ -121,10 +121,11 @@ class IndividualSelectorFlowTests(unittest.TestCase):
             self.assertEqual(app.start_count, 1)
             self.assertEqual(str(app.canvas.cget("state")), "normal")
 
-            app.calibration_real_mm = None
+            app.cancel_calibration = True
             app.start_calibration()
             self.assertEqual(str(app.canvas.cget("state")), "disabled")
 
+            app.cancel_calibration = False
             app.start_calibration()
             app.finish_calibration()
             self.assertEqual(str(app.canvas.cget("state")), "normal")
