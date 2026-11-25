@@ -83,6 +83,11 @@ class ResearchSuiteTests(unittest.TestCase):
         self.assertIsNone(self.db.case(cid)["case_mm_per_px"])
         self.assertEqual(self.db.latest_landmarks(cid, version), {})
         self.assertEqual(self.db.latest_results(cid, version), [])
+        # The old image's measurements remain in history, but are no longer
+        # considered current for the replacement image.
+        with self.db.connect() as con:
+            self.assertEqual(con.execute("SELECT COUNT(*) FROM landmarks WHERE case_id=?", (cid,)).fetchone()[0], len(points))
+            self.assertEqual(con.execute("SELECT COUNT(*) FROM results WHERE case_id=?", (cid,)).fetchone()[0], 1)
         events = self.db.audit_rows(self.study)
         self.assertTrue(any(row["event"] == "image_attached" for row in events))
 
