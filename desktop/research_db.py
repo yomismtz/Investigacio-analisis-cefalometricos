@@ -623,22 +623,58 @@ class ResearchDB:
 
     def latest_landmarks(self, case_id: int, protocol_version: int) -> dict[str, tuple[float, float]]:
         case = self.case(case_id)
+        if not case:
+            return {}
         image_hash = self._active_image_hash(case)
+        stored_hash = str(case["file_hash"] or "")
+        # A trace is current only when it matches BOTH the file on disk and
+        # the case's persisted image identity. The database identity changes
+        # atomically when attach_image replaces a radiograph.
+        if not image_hash or not stored_hash or image_hash != stored_hash:
+            return {}
         with self.connect() as con:
-            v = con.execute("SELECT MAX(version) FROM landmarks WHERE case_id=? AND protocol_version=? AND image_hash=?", (case_id, protocol_version, image_hash)).fetchone()[0]
+            v = con.execute(
+                "SELECT MAX(l.version) FROM landmarks l JOIN cases c ON c.id=l.case_id "
+                "WHERE l.case_id=? AND l.protocol_version=? AND l.image_hash=? AND l.image_hash=c.file_hash",
+                (case_id, protocol_version, image_hash),
+            ).fetchone()[0]
             if v is None:
                 return {}
-            rows = con.execute("SELECT name,x,y FROM landmarks WHERE case_id=? AND protocol_version=? AND version=? AND image_hash=?", (case_id, protocol_version, v, image_hash)).fetchall()
+            rows = con.execute(
+                "SELECT l.name,l.x,l.y FROM landmarks l JOIN cases c ON c.id=l.case_id "
+                "WHERE l.case_id=? AND l.protocol_version=? AND l.version=? "
+                "AND l.image_hash=? AND l.image_hash=c.file_hash",
+                (case_id, protocol_version, v, image_hash),
+            ).fetchall()
         return {r["name"]: (float(r["x"]), float(r["y"])) for r in rows}
 
     def latest_results(self, case_id: int, protocol_version: int):
         case = self.case(case_id)
+        if not case:
+            return []
         image_hash = self._active_image_hash(case)
+        stored_hash = str(case["file_hash"] or "")
+        # Never expose measurements unless the on-disk image and the case
+        # record agree. This prevents stale results surviving image swaps,
+        # even if an old trace row was not archived by a compatibility path.
+        if not image_hash or not stored_hash or image_hash != stored_hash:
+            return []
         with self.connect() as con:
-            v = con.execute("SELECT MAX(version) FROM results WHERE case_id=? AND protocol_version=? AND image_hash=?", (case_id, protocol_version, image_hash)).fetchone()[0]
+            v = con.execute(
+                "SELECT MAX(r.version) FROM results r JOIN cases c ON c.id=r.case_id "
+                "WHERE r.case_id=? AND r.protocol_version=? AND r.image_hash=? "
+                "AND r.image_hash=c.file_hash",
+                (case_id, protocol_version, image_hash),
+            ).fetchone()[0]
             if v is None:
                 return []
-            return con.execute("SELECT * FROM results WHERE case_id=? AND protocol_version=? AND version=? AND image_hash=? ORDER BY analysis,measurement", (case_id, protocol_version, v, image_hash)).fetchall()
+            return con.execute(
+                "SELECT r.* FROM results r JOIN cases c ON c.id=r.case_id "
+                "WHERE r.case_id=? AND r.protocol_version=? AND r.version=? "
+                "AND r.image_hash=? AND r.image_hash=c.file_hash "
+                "ORDER BY r.analysis,r.measurement",
+                (case_id, protocol_version, v, image_hash),
+            ).fetchall()
 
     def mark_in_progress(self, case_id: int):
         row = self.case(case_id)
