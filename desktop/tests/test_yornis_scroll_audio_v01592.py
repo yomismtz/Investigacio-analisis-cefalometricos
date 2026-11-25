@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import sys
 import unittest
 from pathlib import Path
@@ -14,20 +13,20 @@ import yornis_theme
 
 
 class YornisV01592Tests(unittest.TestCase):
-    def test_all_palettes_have_distinct_signature(self):
+    def test_all_palettes_have_their_own_uploaded_recording(self):
         names = yornis_theme.theme_names()
-        self.assertEqual(set(names), set(sounds._SIGNATURES))
-        digests = []
+        self.assertEqual(set(names), set(sounds.BIRD_AUDIO_FILES))
+        source_names = [sounds.BIRD_AUDIO_FILES[name] for name in names]
+        self.assertEqual(len(set(source_names)), 10)
         for name in names:
-            frames = sounds.synthesize_signature(name, 35)
-            self.assertEqual(len(frames), int(sounds.SIGNATURE_DURATION * sounds.SAMPLE_RATE) * 2)
-            self.assertTrue(any(frames))
-            digests.append(hashlib.sha256(frames).hexdigest())
-        self.assertEqual(len(set(digests)), 10)
+            self.assertTrue(sounds.source_audio_path(name).is_file())
+            for volume in sounds.VOLUME_LEVELS:
+                self.assertTrue(sounds.bundled_signature_path(name, volume).is_file())
+                self.assertTrue(sounds.bundled_startup_path(name, volume).is_file())
 
     def test_version(self):
         import yornis_desktop_v01592 as app
-        self.assertTrue(app.APP_VERSION.startswith("0.16.2"))
+        self.assertTrue(app.APP_VERSION.startswith("0.16.3"))
 
 
 if __name__ == "__main__":
