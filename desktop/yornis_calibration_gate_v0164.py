@@ -62,9 +62,13 @@ def install_individual(classic_class) -> None:
         def start_calibration(self, *args, **kwargs):
             # The image canvas is enabled only for the two calibration clicks.
             _set_classic_canvas_state(self, "normal")
+            # The distance dialog is modal and must close before the user can
+            # click the radiograph. Do not infer calibration readiness from a
+            # private attribute name: the legacy engine stores this value in
+            # its own state. Keep the image canvas enabled for the two clicks;
+            # finish_calibration() will decide whether tracing can continue.
             result = original_start(self, *args, **kwargs)
-            if not getattr(self, "calibration_real_mm", None):
-                _set_classic_canvas_state(self, "disabled")
+            _set_classic_canvas_state(self, "normal")
             return result
         classic_class.start_calibration = start_calibration
 
