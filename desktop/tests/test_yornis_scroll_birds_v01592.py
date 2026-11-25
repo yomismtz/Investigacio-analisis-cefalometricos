@@ -51,7 +51,7 @@ class ScrollBirdSoundsV01592Tests(unittest.TestCase):
             original = yornis_theme.current_theme_name()
             try:
                 for bird, tokens in yornis_theme.THEMES.items():
-                    yornis_theme.apply_theme(bird, persist=False)
+                    yornis_theme.apply_theme(bird, persist=True)
                     modern_ui.apply_modern_styles(launcher)
                     self.assertEqual(modern_ui.primary_action_color(launcher), tokens["primary"])
             finally:
