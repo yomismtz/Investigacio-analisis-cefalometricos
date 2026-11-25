@@ -59,8 +59,8 @@ def _backup_study_consistent(self: ResearchDB, study_id: int, target_zip: str | 
     """Create an SQLite-consistent snapshot even while WAL/autosave is active."""
     target_zip = str(target_zip)
     study_folder = RESEARCH_DIR / f"study_{study_id:04d}"
-    with tempfile.TemporaryDirectory(prefix="yomceph_backup_") as td:
-        snapshot = Path(td) / "yomceph_research.sqlite3"
+    with tempfile.TemporaryDirectory(prefix="yornis_backup_") as td:
+        snapshot = Path(td) / "yornis_research.sqlite3"
         src = sqlite3.connect(self.db_path)
         dst = sqlite3.connect(snapshot)
         try:
@@ -70,7 +70,7 @@ def _backup_study_consistent(self: ResearchDB, study_id: int, target_zip: str | 
             dst.close()
             src.close()
         with zipfile.ZipFile(target_zip, "w", zipfile.ZIP_DEFLATED) as z:
-            z.write(snapshot, arcname="database/yomceph_research.sqlite3")
+            z.write(snapshot, arcname="database/yornis_research.sqlite3")
             if study_folder.exists():
                 for p in study_folder.rglob("*"):
                     if p.is_file():
@@ -159,7 +159,7 @@ def export_excel_with_landmarks(db: ResearchDB, study_id: int, protocol: dict, p
 def _case_checklist_dialog(self):
     cid = self.selected_case_id() if hasattr(self, "selected_case_id") else None
     if not cid:
-        messagebox.showinfo("YomCeph", self.T("Selecciona un caso primero.", "Select a case first."), parent=self)
+        messagebox.showinfo("Yornis", self.T("Selecciona un caso primero.", "Select a case first."), parent=self)
         return
     criteria = list(self.db.criteria(self.study_id))
     existing = self.db.case_criteria_values(cid)
@@ -221,7 +221,7 @@ def _export_xlsx_enhanced(self):
     p = filedialog.asksaveasfilename(defaultextension=".xlsx", filetypes=[("Excel", "*.xlsx")])
     if p:
         export_excel_with_landmarks(self.db, self.study_id, self.protocol_for_export(), p)
-        messagebox.showinfo("YomCeph", self.T("Excel completo exportado, incluyendo landmarks X/Y.", "Complete Excel exported, including X/Y landmarks."), parent=self)
+        messagebox.showinfo("Yornis", self.T("Excel completo exportado, incluyendo landmarks X/Y.", "Complete Excel exported, including X/Y landmarks."), parent=self)
 
 
 def install(workspace_class=None):
