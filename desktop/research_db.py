@@ -487,8 +487,14 @@ class ResearchDB:
             target = self._study_folder(row["study_id"]) / f"{row['case_number']:04d}_{src.name}"
             shutil.copy2(src, target)
         with self.connect() as con:
-            # Preserve the old trace for audit. Its image_hash will no longer
-            # match the replacement radiograph, so it cannot be loaded as current.
+            # Explicitly archive every prior trace identity before changing the
+            # image. This also handles legacy rows whose image_hash is blank.
+            for table in ("landmarks", "results"):
+                con.execute(
+                    f"UPDATE {table} SET image_hash='historical:' || COALESCE(image_hash,'') "
+                    "WHERE case_id=? AND (image_hash=? OR image_hash='')",
+                    (case_id, str(row["file_hash"] or "")),
+                )
             con.execute("UPDATE cases SET image_path=?,original_filename=?,file_hash=?,case_mm_per_px=NULL,updated_at=? WHERE id=?", (str(target), src.name, digest, now_iso(), case_id))
         self.audit(row["study_id"], "image_attached", case_id=case_id, filename=src.name, sha256=digest, calibration_reset=True, prior_trace_preserved=True)
 
