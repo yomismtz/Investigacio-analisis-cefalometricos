@@ -31,6 +31,10 @@ def modern_backend_available() -> bool:
     return ttkb is not None
 
 
+def backend_name() -> str:
+    return "ttkbootstrap" if ttkb is not None else "ttk-clam-fallback"
+
+
 def _tokens() -> dict:
     return yornis_theme.THEMES[yornis_theme.current_theme_name()]
 
@@ -59,9 +63,17 @@ def apply_modern_styles(root) -> bool:
     try:
         # ttkbootstrap attaches to the existing Tk interpreter; the application
         # keeps its current Tk/Toplevel architecture and does not create a new root.
-        style = ttkb.Style(master=root, theme=BASE_THEME)
-        style.theme_use(BASE_THEME)
+        if ttkb is not None:
+            style = ttkb.Style(master=root, theme=BASE_THEME)
+            style.theme_use(BASE_THEME)
+            active_theme = BASE_THEME
+        else:
+            style = ttk.Style(root)
+            if "clam" in style.theme_names():
+                style.theme_use("clam")
+            active_theme = "clam"
         root._yornis_modern_style_v0160 = style
+        root._yornis_modern_theme_v0160 = active_theme
     except Exception:
         return False
 
@@ -235,7 +247,7 @@ def install() -> bool:
 
         quality.apply_styles = modern_apply_styles
         _INSTALLED = True
-        return modern_backend_available()
+        return True
     except Exception:
         return False
 
@@ -246,7 +258,7 @@ def active_widget_theme(root) -> str:
     if style is None:
         return ""
     try:
-        return str(style.theme_use())
+        return str(getattr(root, "_yornis_modern_theme_v0160", style.theme_use()))
     except Exception:
         return ""
 
