@@ -566,7 +566,7 @@ class ResearchWorkspace(tk.Tk):
         issues=trace_qc(self.protocol.get("selected_variables",[]),self.points,self.mm_per_px,self.landmark_confidence);messagebox.showinfo(self.T("Control de calidad","Quality control"),"\n\n".join(("✓ " if x["level"]=="ok" else "◆ ")+x["message"] for x in issues))
     def calculate_and_save(self):
         if not self.case_id:return
-        results=self.calculate_preview();issues=trace_qc(self.protocol.get("selected_variables",[]),self.points,self.mm_per_px)
+        results=self.calculate_preview();issues=trace_qc(self.protocol.get("selected_variables",[]),self.points,self.mm_per_px,self.landmark_confidence)
         blocking=[x for x in issues if x["level"]!="ok"]
         self.db.save_trace(self.case_id,self.protocol["version"],self.points,results,[k.split("::",1)[1] for k in self.protocol.get("selected_variables",[])],self.mm_per_px)
         status=self.db.case(self.case_id)["status"];self.refresh_cases();self.refresh_dashboard();self.autosave()
