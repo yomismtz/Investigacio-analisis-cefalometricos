@@ -27,6 +27,11 @@ class Launcher(previous.Launcher):
         except Exception:
             pass
         modern_ui.apply_modern_styles(self)
+        # Keep the existing startup sound controls in the rebuilt launcher.
+        # The v0.15.9 audio controls are attached by its rebuild hook; restore
+        # them here because the modern launcher rebuild path is inherited.
+        import yornis_startup_audio_v0159 as startup_audio
+        startup_audio.attach_sound_controls(self)
         if hasattr(self, "ver_lbl"):
             self.ver_lbl.configure(text=f"v{APP_VERSION}")
 
