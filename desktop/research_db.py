@@ -492,7 +492,7 @@ class ResearchDB:
             for table in ("landmarks", "results"):
                 con.execute(
                     f"UPDATE {table} SET image_hash='historical:' || COALESCE(image_hash,'') "
-                    "WHERE case_id=? AND (image_hash=? OR image_hash='')",
+                    "WHERE case_id=?",
                     (case_id, str(row["file_hash"] or "")),
                 )
             con.execute("UPDATE cases SET image_path=?,original_filename=?,file_hash=?,case_mm_per_px=NULL,updated_at=? WHERE id=?", (str(target), src.name, digest, now_iso(), case_id))
