@@ -234,7 +234,7 @@ def update_db_counter(self):
     except Exception:pass
 
 def export_research_csv(self):
-    f=filedialog.asksaveasfilename(defaultextension='.csv',initialfile='YomCeph_investigacion.csv',filetypes=[('CSV','*.csv')])
+    f=filedialog.asksaveasfilename(defaultextension='.csv',initialfile='Yornis_investigacion.csv',filetypes=[('CSV','*.csv')])
     if not f:return
     con=sqlite3.connect(HOST['DB_PATH']);cases=con.execute('SELECT case_id,metadata_json,eligibility,eligibility_reasons_json,updated_at FROM cases WHERE research_study_id=? ORDER BY id',(self.active_study_id,)).fetchall();meas=con.execute('SELECT case_id,name,display_value FROM measurements').fetchall();con.close();md={}
     for c,n,v in meas:md.setdefault(c,{})[n]=v
