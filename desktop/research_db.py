@@ -595,9 +595,28 @@ class ResearchDB:
         self.refresh_case_status(case_id, selected_measurements)
         self.audit(case["study_id"], "trace_saved", case_id=case_id, landmark_version=lv, result_version=rv, landmark_count=len(points), result_count=len(results))
 
+    @staticmethod
+    def _active_image_hash(case) -> str:
+        """Resolve the identity of the image currently attached to a case.
+
+        Prefer hashing the actual current file so legacy import wrappers or
+        stale database metadata cannot make traces from a replaced image
+        appear current. Fall back to the stored digest when the source file
+        is temporarily unavailable (for example, an offline archived case).
+        """
+        if not case:
+            return ""
+        image_path = str(case["image_path"] or "")
+        if image_path and Path(image_path).is_file():
+            try:
+                return sha256_file(image_path)
+            except OSError:
+                pass
+        return str(case["file_hash"] or "")
+
     def latest_landmarks(self, case_id: int, protocol_version: int) -> dict[str, tuple[float, float]]:
         case = self.case(case_id)
-        image_hash = str(case["file_hash"] or "") if case else ""
+        image_hash = self._active_image_hash(case)
         with self.connect() as con:
             v = con.execute("SELECT MAX(version) FROM landmarks WHERE case_id=? AND protocol_version=? AND image_hash=?", (case_id, protocol_version, image_hash)).fetchone()[0]
             if v is None:
@@ -607,7 +626,7 @@ class ResearchDB:
 
     def latest_results(self, case_id: int, protocol_version: int):
         case = self.case(case_id)
-        image_hash = str(case["file_hash"] or "") if case else ""
+        image_hash = self._active_image_hash(case)
         with self.connect() as con:
             v = con.execute("SELECT MAX(version) FROM results WHERE case_id=? AND protocol_version=? AND image_hash=?", (case_id, protocol_version, image_hash)).fetchone()[0]
             if v is None:
