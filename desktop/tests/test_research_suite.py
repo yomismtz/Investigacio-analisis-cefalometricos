@@ -47,6 +47,40 @@ class ResearchSuiteTests(unittest.TestCase):
         self.db.save_trace(cid, version, points, [{"analysis": v.analysis, "measurement": v.name, "value": 1.0, "unit": v.unit, "reference": "", "interpretation": ""}], [v.name], 0.1)
         self.assertEqual(self.db.case(cid)["status"], "complete")
 
+    def test_replacing_radiograph_resets_calibration_and_invalidates_old_trace(self):
+        first = Path(self.tmp.name) / "first.png"
+        second = Path(self.tmp.name) / "second.png"
+        first.write_bytes(b"first radiograph")
+        second.write_bytes(b"replacement radiograph")
+        cid = self.db.add_case(self.study, "001", image_path=str(first), copy_image=False)
+        cat = analysis_catalog()
+        analysis = next(iter(cat))
+        variable = cat[analysis][0]
+        version = self.db.save_protocol(
+            self.study,
+            {"selected_variables": [variable.key], "required_landmarks": list(variable.points)},
+        )
+        points = {name: (float(i + 1), float(i + 2)) for i, name in enumerate(variable.points)}
+        self.db.update_case_calibration(cid, 0.25)
+        self.db.save_trace(
+            cid,
+            version,
+            points,
+            [{"analysis": variable.analysis, "measurement": variable.name, "value": 1.0, "unit": variable.unit, "reference": "", "interpretation": ""}],
+            [variable.name],
+            0.25,
+        )
+        self.assertIsNotNone(self.db.case(cid)["case_mm_per_px"])
+        self.assertTrue(self.db.latest_landmarks(cid, version))
+
+        self.db.attach_image(cid, str(second), copy_image=False)
+
+        self.assertIsNone(self.db.case(cid)["case_mm_per_px"])
+        self.assertEqual(self.db.latest_landmarks(cid, version), {})
+        self.assertEqual(self.db.latest_results(cid, version), [])
+        events = self.db.audit_rows(self.study)
+        self.assertTrue(any(row["event"] == "image_attached" for row in events))
+
     def test_landmark_minimization(self):
         cat = analysis_catalog(); keys = []
         for _, variables in list(cat.items())[:3]:
