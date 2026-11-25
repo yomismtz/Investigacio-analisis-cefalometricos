@@ -1,5 +1,5 @@
 #define MyAppName "Yornis"
-#define MyAppVersion "0.16.2"
+#define MyAppVersion "0.16.3"
 #define MyAppExeName "Yornis.exe"
 #define MyAppPublisher "Yomira Salgado Martínez"
 #define MyAppURL "https://yomismtz.github.io/Investigacio-analisis-cefalometricos/"
@@ -19,7 +19,7 @@ DefaultDirName={localappdata}\Programs\Yornis
 DefaultGroupName=Yornis
 DisableProgramGroupPage=yes
 OutputDir=..\dist-installer-yornis
-OutputBaseFilename=Yornis_Setup_v0.16.2_Modern_Interface_Offline
+OutputBaseFilename=Yornis_Setup_v0.16.3_Modern_Interface_Offline
 SetupIconFile=assets\yornis.ico
 UninstallDisplayName={#MyAppName} {#MyAppVersion}
 UninstallDisplayIcon={app}\{#MyAppExeName}
@@ -37,7 +37,7 @@ VersionInfoCompany={#MyAppPublisher}
 VersionInfoDescription=Yornis · Interfaz moderna y análisis clínico offline
 VersionInfoProductName={#MyAppName}
 VersionInfoProductVersion={#MyAppVersion}
-VersionInfoVersion=0.16.2
+VersionInfoVersion=0.16.3
 VersionInfoCopyright=© 2026 Yomira Salgado Martínez
 
 [Languages]
