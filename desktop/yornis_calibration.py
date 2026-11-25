@@ -58,6 +58,32 @@ def confidence_quality_issues(
     return issues
 
 
+
+def calibration_guidance(language: str = "es") -> str:
+    """Explain the two-point, known-distance calibration before the user clicks."""
+    if str(language or "es").lower().startswith("en"):
+        return (
+            "To calibrate this radiograph:\\n"
+            "1. Identify two visible reference points whose REAL distance is known.\\n"
+            "2. Enter the real distance between those points in millimeters.\\n"
+            "3. Click the first endpoint and then the second endpoint on the radiograph.\\n\\n"
+            "Both clicks must match the reference distance. Do not estimate the distance."
+        )
+    return (
+        "Para calibrar esta radiografía:\\n"
+        "1. Identifica dos puntos de referencia visibles cuya distancia REAL conozcas.\\n"
+        "2. Indica cuántos milímetros hay realmente entre esos dos puntos.\\n"
+        "3. Después marca el primer extremo y el segundo extremo sobre la radiografía.\\n\\n"
+        "Los dos clics deben corresponder a la distancia que indicaste. No la estimes."
+    )
+
+
+def calibration_distance_prompt(language: str = "es") -> str:
+    if str(language or "es").lower().startswith("en"):
+        return "How many REAL millimeters are there between the two points you are going to mark?"
+    return "¿A cuántos milímetros REALES equivalen los dos puntos que vas a marcar?"
+
+
 def calculate_mm_per_px(first: Sequence[float], second: Sequence[float], real_distance_mm: float) -> float:
     """Compute the image-specific mm/pixel scale from two distinct image points."""
     try:
