@@ -5,11 +5,11 @@ import yornis_modern_ui_v0160 as modern_ui
 
 modern_ui.install()
 
-APP_VERSION = "0.16.0 Interfaz Moderna + Mascotas Offline"
+APP_VERSION = "0.16.1 Identidad Yornis + Calibración Guiada"
 
 
 class Launcher(previous.Launcher):
-    """v0.16.0: modern themed interface with the existing offline clinical workflows."""
+    """v0.16.1: modern themed interface with the existing offline clinical workflows."""
 
     def __init__(self):
         super().__init__()
