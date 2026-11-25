@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import yornis_desktop_v01591 as previous
 
-APP_VERSION = "0.15.9.2 Scroll + Bird Sounds · Bird Chorus"
+APP_VERSION = "0.15.9.3 Calibración + Mascotas Offline"
 
 
 class Launcher(previous.Launcher):
