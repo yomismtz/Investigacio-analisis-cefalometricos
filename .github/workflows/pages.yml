@@ -53,6 +53,37 @@ jobs:
           assert Image.open(out).size == (512, 512)
           print('web logo built at 512px:', out, out.stat().st_size)
           PY
+      - name: Prepare original bird audio samples
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64
+          import hashlib
+          import io
+          import zipfile
+
+          parts = [Path(f'ci/website-bird-samples-part{i:02}.b64') for i in range(1, 7)]
+          assert all(p.is_file() for p in parts), 'Missing encoded bird audio chunks'
+          encoded = ''.join(p.read_text(encoding='utf-8').strip() for p in parts)
+          archive_bytes = base64.b64decode(encoded, validate=True)
+          assert hashlib.sha256(archive_bytes).hexdigest() == '46cef919738e703ce3266cf2f2d5e45d08f4b51b4fbecd442d1ecebe08123ee4'
+          expected = {
+              'Agaporni.mp3', 'Tucan.mp3', 'Pavorreal.mp3', 'Ninfa.mp3', 'Faisan.mp3',
+              'Quetzal.mp3', 'Guacamaya_Roja.mp3', 'Guacamaya_Azul.mp3', 'Buho.mp3', 'Colibri.mp3'
+          }
+          output = Path('docs/assets/bird-audio')
+          output.mkdir(parents=True, exist_ok=True)
+          with zipfile.ZipFile(io.BytesIO(archive_bytes)) as zf:
+              assert set(zf.namelist()) == expected, f'Unexpected bird audio files: {zf.namelist()}'
+              for name in sorted(expected):
+                  data = zf.read(name)
+                  assert len(data) > 1000 and data[:3] == b'ID3', f'Invalid MP3: {name}'
+                  (output / name).write_bytes(data)
+          assert len(list(output.glob('*.mp3'))) == 10
+          print('Prepared ten original bird recording excerpts for the website')
+          PY
+
       - name: Validate static site
         shell: bash
         run: |
@@ -75,12 +106,25 @@ jobs:
           grep -q "releases/latest" docs/index.html
           grep -q "Lordosis C1–C7" docs/app.js
           grep -q "sin corte universal 35–45" docs/app.js
-          grep -q "birdSignatures" docs/app.js
+          grep -q "birdAudioFiles" docs/app.js
+          ! grep -q "createOscillator\|AudioContext" docs/app.js
+          test -f docs/assets/bird-audio/Agaporni.mp3
+          test -f docs/assets/bird-audio/Tucan.mp3
+          test -f docs/assets/bird-audio/Pavorreal.mp3
+          test -f docs/assets/bird-audio/Ninfa.mp3
+          test -f docs/assets/bird-audio/Faisan.mp3
+          test -f docs/assets/bird-audio/Quetzal.mp3
+          test -f docs/assets/bird-audio/Guacamaya_Roja.mp3
+          test -f docs/assets/bird-audio/Guacamaya_Azul.mp3
+          test -f docs/assets/bird-audio/Buho.mp3
+          test -f docs/assets/bird-audio/Colibri.mp3
           grep -q "playBirdSignature" docs/app.js
           grep -q "Guacamaya Azul" docs/app.js
           grep -q "Búho" docs/app.js
           grep -q "Colibrí" docs/app.js
           grep -q "bird-audio/Buho.mp3" docs/app.js
+          grep -q "bird-audio/Colibri.mp3" docs/app.js
+          grep -q "bird-volume" docs/index.html
           grep -q "bird-audio/Colibri.mp3" docs/app.js
           grep -q "filter-chip" docs/app.js
           grep -q "focus-visible" docs/styles.css
@@ -119,6 +163,37 @@ jobs:
           canvas.save(out, optimize=True)
           assert Image.open(out).size == (512, 512)
           PY
+      - name: Prepare original bird audio samples
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64
+          import hashlib
+          import io
+          import zipfile
+
+          parts = [Path(f'ci/website-bird-samples-part{i:02}.b64') for i in range(1, 7)]
+          assert all(p.is_file() for p in parts), 'Missing encoded bird audio chunks'
+          encoded = ''.join(p.read_text(encoding='utf-8').strip() for p in parts)
+          archive_bytes = base64.b64decode(encoded, validate=True)
+          assert hashlib.sha256(archive_bytes).hexdigest() == '46cef919738e703ce3266cf2f2d5e45d08f4b51b4fbecd442d1ecebe08123ee4'
+          expected = {
+              'Agaporni.mp3', 'Tucan.mp3', 'Pavorreal.mp3', 'Ninfa.mp3', 'Faisan.mp3',
+              'Quetzal.mp3', 'Guacamaya_Roja.mp3', 'Guacamaya_Azul.mp3', 'Buho.mp3', 'Colibri.mp3'
+          }
+          output = Path('docs/assets/bird-audio')
+          output.mkdir(parents=True, exist_ok=True)
+          with zipfile.ZipFile(io.BytesIO(archive_bytes)) as zf:
+              assert set(zf.namelist()) == expected, f'Unexpected bird audio files: {zf.namelist()}'
+              for name in sorted(expected):
+                  data = zf.read(name)
+                  assert len(data) > 1000 and data[:3] == b'ID3', f'Invalid MP3: {name}'
+                  (output / name).write_bytes(data)
+          assert len(list(output.glob('*.mp3'))) == 10
+          print('Prepared ten original bird recording excerpts for the website')
+          PY
+
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v4
         with:
