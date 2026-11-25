@@ -21,7 +21,7 @@ class ScrollBirdSoundsV01592Tests(unittest.TestCase):
             hashlib.sha256(sounds.synthesize_signature(name, 35)).hexdigest()
             for name in yornis_theme.theme_names()
         }
-        self.assertEqual(len(digests), 8)
+        self.assertEqual(len(digests), 10
 
     def test_signature_pcm_shape(self):
         frames = sounds.synthesize_signature("Tucán", 35)
