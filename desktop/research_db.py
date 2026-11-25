@@ -493,7 +493,7 @@ class ResearchDB:
                 con.execute(
                     f"UPDATE {table} SET image_hash='historical:' || COALESCE(image_hash,'') "
                     "WHERE case_id=?",
-                    (case_id, str(row["file_hash"] or "")),
+                    (case_id,),
                 )
             con.execute("UPDATE cases SET image_path=?,original_filename=?,file_hash=?,case_mm_per_px=NULL,updated_at=? WHERE id=?", (str(target), src.name, digest, now_iso(), case_id))
         self.audit(row["study_id"], "image_attached", case_id=case_id, filename=src.name, sha256=digest, calibration_reset=True, prior_trace_preserved=True)
