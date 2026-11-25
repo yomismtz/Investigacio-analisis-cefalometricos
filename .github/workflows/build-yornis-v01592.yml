@@ -215,7 +215,7 @@ jobs:
           import yornis_modern_ui_v0160 as modern_ui
           import yornis_reference_help_v0156 as refs
           import classic_engine as engine
-          assert app.APP_VERSION.startswith('0.16.2')
+          assert app.APP_VERSION.startswith('0.16.3')
           assert research_db.APP_DIR.name == 'Yornis'
           assert research_db.DB_PATH.name == 'yornis_research.sqlite3'
           check_source = "class YomCephClassic: pass\nlabel = 'YOMCEPH'"
