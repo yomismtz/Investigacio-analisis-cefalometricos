@@ -1,4 +1,4 @@
-name: Build Yornis v0.15.9.3 Calibration + Birds Offline
+name: Build Yornis v0.16.0 Modern Interface + Offline
 
 on:
   push:
@@ -27,7 +27,7 @@ jobs:
 
       - name: Dependencies
         shell: pwsh
-        run: python -m pip install pillow pymupdf reportlab openpyxl pyinstaller pyzipper
+        run: python -m pip install pillow pymupdf reportlab openpyxl pyinstaller pyzipper ttkbootstrap==2.2.7
 
       - name: Render versioned SVG bird mascots to transparent PNGs
         shell: pwsh
@@ -116,7 +116,7 @@ jobs:
         shell: pwsh
         run: python -m unittest discover -s desktop/tests -p "test_*.py" -v
 
-      - name: v0.15.9.3 offline audio and clinical audit
+      - name: v0.16.0 modern interface and clinical audit
         shell: pwsh
         run: |
           @'
@@ -126,11 +126,13 @@ jobs:
           import yornis_bird_signature_v01592 as sounds
           import yornis_startup_audio_v0159 as startup_sounds
           import yornis_theme
+          import yornis_modern_ui_v0160 as modern_ui
           import yornis_reference_help_v0156 as refs
           import classic_engine as engine
-          assert app.APP_VERSION.startswith('0.15.9.3')
+          assert app.APP_VERSION.startswith('0.16.0')
           assert len(engine.MEASUREMENTS) == 102
           assert len(refs.TABLES) == 17
+          assert modern_ui.modern_backend_available()
           assert set(yornis_theme.theme_names()) == set(sounds._SIGNATURES)
           digests=[]
           for name in yornis_theme.theme_names():
@@ -143,7 +145,7 @@ jobs:
           assert len(set(digests)) == 8
           assert len(list(__import__('pathlib').Path('desktop/assets/bird_audio').glob('*.wav'))) == 40
           assert len(list(__import__('pathlib').Path('desktop/assets/bird_startup_audio').glob('*.wav'))) == 40
-          print('YORNIS v0.15.9.3 OFFLINE AUDIO + CLINICAL AUDIT OK')
+          print('YORNIS v0.16.0 MODERN UI + OFFLINE AUDIO + CLINICAL AUDIT OK')
           '@ | python -
 
       - name: GUI scrollbar + HiDPI smoke test
@@ -153,7 +155,16 @@ jobs:
           import sys
           sys.path.insert(0, 'desktop')
           from yornis_desktop_v01592 import Launcher
+          import yornis_modern_ui_v0160 as modern_ui
+          import yornis_theme
           l=Launcher(); l.geometry('1000x620'); l.update()
+          assert modern_ui.active_widget_theme(l) in ('bootstrap-light', 'clam')
+          for bird, palette in yornis_theme.THEMES.items():
+              yornis_theme.apply_theme(bird, persist=False)
+              modern_ui.apply_modern_styles(l)
+              assert modern_ui.primary_action_color(l) == palette['primary']
+          yornis_theme.apply_theme('Agaporni', persist=False)
+          modern_ui.apply_modern_styles(l)
           assert float(l.tk.call('tk','scaling')) > 0
           assert hasattr(l, '_scrollbar') and l._scrollbar.winfo_exists()
           assert hasattr(l, '_scroll_canvas') and l._scroll_canvas.winfo_exists()
@@ -175,7 +186,7 @@ jobs:
               image = make_avatar_photo(l, 64, bird)
               assert image.width() > 0 and image.height() > 0
           l.destroy()
-          print('YORNIS v0.15.9.3 SCROLLBAR + OFFLINE GUI OK')
+          print('YORNIS v0.16.0 MODERN UI + OFFLINE GUI OK')
           '@ | python -
 
       - name: Build application
@@ -193,8 +204,8 @@ jobs:
           --hidden-import yornis_spss_v015 --hidden-import yornis_visual_report_v015 --hidden-import yornis_export_ui_v015 --hidden-import yornis_backup_v015 --hidden-import yornis_backup_ui_v015
           --hidden-import yornis_clinical_audit_v0151 --hidden-import yornis_cervical_v0152 --hidden-import yornis_alignment_v0152 --hidden-import yornis_display_v0152 --hidden-import yornis_ceph_quality_v0153 --hidden-import yornis_audit_hardening_v0154
           --hidden-import yornis_reference_help_v0154 --hidden-import yornis_reference_help_v0154_all --hidden-import yornis_evidence_v0155 --hidden-import yornis_quality_ui_v0156 --hidden-import yornis_reference_help_v0156
-          --hidden-import yornis_quality_ui_v0157 --hidden-import yornis_virtual_assistant_v0157 --hidden-import yornis_quality_ui_v0158 --hidden-import yornis_startup_audio_v0159 --hidden-import yornis_desktop_v0159 --hidden-import yornis_desktop_v01591 --hidden-import yornis_bird_signature_v01592
-          --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --collect-all pyzipper
+          --hidden-import yornis_quality_ui_v0157 --hidden-import yornis_virtual_assistant_v0157 --hidden-import yornis_quality_ui_v0158 --hidden-import yornis_startup_audio_v0159 --hidden-import yornis_desktop_v0159 --hidden-import yornis_desktop_v01591 --hidden-import yornis_bird_signature_v01592 --hidden-import yornis_modern_ui_v0160
+          --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --collect-all pyzipper --collect-all ttkbootstrap
           --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;." --add-data "desktop/assets/birds;assets/birds" --add-data "desktop/assets/bird_audio;assets/bird_audio" --add-data "desktop/assets/bird_startup_audio;assets/bird_startup_audio"
           desktop/yornis_desktop_v01592.py
 
@@ -221,24 +232,24 @@ jobs:
           choco install innosetup --no-progress -y
           New-Item -ItemType Directory -Force -Path dist-installer-yornis | Out-Null
           & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' desktop\Yornis_v01592.iss
-          $setup='dist-installer-yornis/Yornis_Setup_v0.15.9.3_Calibration_Birds_Offline.exe'
+          $setup='dist-installer-yornis/Yornis_Setup_v0.16.0_Modern_Interface_Offline.exe'
           if(!(Test-Path $setup)){throw 'Installer missing'}
-          Compress-Archive -Path dist\Yornis\* -DestinationPath dist-installer-yornis\Yornis_v0.15.9.3_Calibration_Birds_Offline_Portable.zip -Force
+          Compress-Archive -Path dist\Yornis\* -DestinationPath dist-installer-yornis\Yornis_v0.16.0_Modern_Interface_Offline_Portable.zip -Force
 
       - name: Checksums
         shell: pwsh
         run: |
-          $a=Get-FileHash dist-installer-yornis\Yornis_Setup_v0.15.9.3_Calibration_Birds_Offline.exe -Algorithm SHA256
-          $b=Get-FileHash dist-installer-yornis\Yornis_v0.15.9.3_Calibration_Birds_Offline_Portable.zip -Algorithm SHA256
-          "$($a.Hash.ToLower())  Yornis_Setup_v0.15.9.3_Calibration_Birds_Offline.exe" | Out-File dist-installer-yornis\SHA256SUMS.txt -Encoding ascii
-          "$($b.Hash.ToLower())  Yornis_v0.15.9.3_Calibration_Birds_Offline_Portable.zip" | Out-File dist-installer-yornis\SHA256SUMS.txt -Encoding ascii -Append
+          $a=Get-FileHash dist-installer-yornis\Yornis_Setup_v0.16.0_Modern_Interface_Offline.exe -Algorithm SHA256
+          $b=Get-FileHash dist-installer-yornis\Yornis_v0.16.0_Modern_Interface_Offline_Portable.zip -Algorithm SHA256
+          "$($a.Hash.ToLower())  Yornis_Setup_v0.16.0_Modern_Interface_Offline.exe" | Out-File dist-installer-yornis\SHA256SUMS.txt -Encoding ascii
+          "$($b.Hash.ToLower())  Yornis_v0.16.0_Modern_Interface_Offline_Portable.zip" | Out-File dist-installer-yornis\SHA256SUMS.txt -Encoding ascii -Append
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Yornis-v0.15.9.3-Calibration-Birds-Offline-Windows-x64
+          name: Yornis-v0.16.0-Modern-Interface-Offline-Windows-x64
           path: |
-            dist-installer-yornis/Yornis_Setup_v0.15.9.3_Calibration_Birds_Offline.exe
-            dist-installer-yornis/Yornis_v0.15.9.3_Calibration_Birds_Offline_Portable.zip
+            dist-installer-yornis/Yornis_Setup_v0.16.0_Modern_Interface_Offline.exe
+            dist-installer-yornis/Yornis_v0.16.0_Modern_Interface_Offline_Portable.zip
             dist-installer-yornis/SHA256SUMS.txt
 
 
@@ -249,27 +260,27 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           @'
-          Yornis v0.15.9.3 · Calibration + Bird Offline
+          Yornis v0.16.0 · Interfaz moderna
 
-          - Caso individual: análisis → medidas/ángulos → puntos.
-          - Interfaz refinada con tarjetas, chips y mejor jerarquía visual.
-          - Editor/Publisher: Yomira Salgado Martínez.
-          - 8 asistentes-ave y firmas sonoras.
-          - 102 mediciones y 17 tablas de referencia.
-          - Calibración individual por radiografía y confianza por landmark.
-          - Fórmulas, geometría y referencias clínicas preservadas.
-          - Recursos SVG y 80 archivos WAV incluidos para ejecución offline.
+          - Interfaz modernizada con ttkbootstrap 2.2.7.
+          - Botones, controles, tablas, pestañas y campos con estilo plano y espaciado moderno.
+          - Las ocho paletas de aves mantienen sus colores y actualizan los controles en tiempo real.
+          - Sistema visual aplicado al lanzador, caso individual e investigación.
+          - 102 mediciones y 17 tablas de referencia conservadas.
+          - Calibración por radiografía y control de confianza de landmarks conservados.
+          - 8 mascotas y 80 WAV incluidos para ejecución offline.
+          - Fórmulas, geometría, base de datos y lógica clínica sin cambios.
           '@ | Set-Content -Encoding utf8 release-notes.md
 
-          $tag='v0.15.9.3'
-          $setup='dist-installer-yornis/Yornis_Setup_v0.15.9.3_Calibration_Birds_Offline.exe'
-          $portable='dist-installer-yornis/Yornis_v0.15.9.3_Calibration_Birds_Offline_Portable.zip'
+          $tag='v0.16.0'
+          $setup='dist-installer-yornis/Yornis_Setup_v0.16.0_Modern_Interface_Offline.exe'
+          $portable='dist-installer-yornis/Yornis_v0.16.0_Modern_Interface_Offline_Portable.zip'
           $sums='dist-installer-yornis/SHA256SUMS.txt'
 
           gh release view $tag *> $null
           if ($LASTEXITCODE -eq 0) {
             gh release upload $tag $setup $portable $sums --clobber
-            gh release edit $tag --title "Yornis v0.15.9.3 · Calibration + Bird Offline" --notes-file release-notes.md --latest
+            gh release edit $tag --title "Yornis v0.16.0 · Interfaz moderna" --notes-file release-notes.md --latest
           } else {
-            gh release create $tag $setup $portable $sums --target $env:GITHUB_SHA --title "Yornis v0.15.9.3 · Calibration + Bird Offline" --notes-file release-notes.md --latest
+            gh release create $tag $setup $portable $sums --target $env:GITHUB_SHA --title "Yornis v0.16.0 · Interfaz moderna" --notes-file release-notes.md --latest
           }
