@@ -1,4 +1,4 @@
-name: Build Yornis v0.16.0 Modern Interface + Offline
+name: Build Yornis v0.16.1 · Clean Brand + Guided Calibration
 
 on:
   push:
@@ -89,7 +89,7 @@ jobs:
           print('80 offline bird WAVs generated and validated before packaging')
           '@ | python -
 
-      - name: Rebuild 512px branding
+      - name: Rebuild 512px Yornis branding
         shell: pwsh
         run: |
           @'
@@ -104,7 +104,6 @@ jobs:
           canvas = Image.new('RGBA', (512, 512), (255,255,255,255))
           canvas.alpha_composite(original.resize((420,420), Image.Resampling.LANCZOS), (46,20))
           canvas.save('desktop/assets/yornis_logo.png')
-          canvas.save('desktop/assets/yomceph_logo.png')
           canvas.save('desktop/assets/yornis.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
           '@ | python -
 
@@ -116,7 +115,7 @@ jobs:
         shell: pwsh
         run: python -m unittest discover -s desktop/tests -p "test_*.py" -v
 
-      - name: v0.16.0 modern interface and clinical audit
+      - name: v0.16.1 branding, guided calibration and clinical audit
         shell: pwsh
         run: |
           @'
@@ -126,10 +125,20 @@ jobs:
           import yornis_bird_signature_v01592 as sounds
           import yornis_startup_audio_v0159 as startup_sounds
           import yornis_theme
+          import yornis_branding_v0161 as branding
+          import research_db
           import yornis_modern_ui_v0160 as modern_ui
           import yornis_reference_help_v0156 as refs
           import classic_engine as engine
-          assert app.APP_VERSION.startswith('0.16.0')
+          assert app.APP_VERSION.startswith('0.16.1')
+          assert research_db.APP_DIR.name == 'Yornis'
+          assert research_db.DB_PATH.name == 'yornis_research.sqlite3'
+          check_source = "class YomCephClassic: pass\nlabel = 'YOMCEPH'"
+          branded_source = branding.rebrand_classic_source(check_source)
+          assert 'class YomCephClassic' in branded_source and "'YORNIS'" in branded_source
+          cal_title, cal_prompt = branding.calibration_dialog_copy('Calibrar mm', 'Distancia real entre puntos')
+          assert cal_title == 'Calibrar radiografía · Yornis'
+          assert 'MILÍMETROS REALES' in cal_prompt and 'primer extremo' in cal_prompt and 'segundo extremo' in cal_prompt
           assert len(engine.MEASUREMENTS) == 102
           assert len(refs.TABLES) == 17
           assert modern_ui.modern_backend_available()
@@ -145,7 +154,7 @@ jobs:
           assert len(set(digests)) == 8
           assert len(list(__import__('pathlib').Path('desktop/assets/bird_audio').glob('*.wav'))) == 40
           assert len(list(__import__('pathlib').Path('desktop/assets/bird_startup_audio').glob('*.wav'))) == 40
-          print('YORNIS v0.16.0 MODERN UI + OFFLINE AUDIO + CLINICAL AUDIT OK')
+          print('YORNIS v0.16.1 BRANDING + GUIDED CALIBRATION + OFFLINE OK')
           '@ | python -
 
       - name: GUI scrollbar + HiDPI smoke test
@@ -186,7 +195,7 @@ jobs:
               image = make_avatar_photo(l, 64, bird)
               assert image.width() > 0 and image.height() > 0
           l.destroy()
-          print('YORNIS v0.16.0 MODERN UI + OFFLINE GUI OK')
+          print('YORNIS v0.16.1 BRANDING + GUIDED CALIBRATION + OFFLINE GUI OK')
           '@ | python -
 
       - name: Build application
@@ -206,7 +215,7 @@ jobs:
           --hidden-import yornis_reference_help_v0154 --hidden-import yornis_reference_help_v0154_all --hidden-import yornis_evidence_v0155 --hidden-import yornis_quality_ui_v0156 --hidden-import yornis_reference_help_v0156
           --hidden-import yornis_quality_ui_v0157 --hidden-import yornis_virtual_assistant_v0157 --hidden-import yornis_quality_ui_v0158 --hidden-import yornis_startup_audio_v0159 --hidden-import yornis_desktop_v0159 --hidden-import yornis_desktop_v01591 --hidden-import yornis_bird_signature_v01592 --hidden-import yornis_modern_ui_v0160
           --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --collect-all pyzipper --collect-all ttkbootstrap
-          --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;." --add-data "desktop/assets/birds;assets/birds" --add-data "desktop/assets/bird_audio;assets/bird_audio" --add-data "desktop/assets/bird_startup_audio;assets/bird_startup_audio"
+          --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yornis.ico;." --add-data "desktop/assets/birds;assets/birds" --add-data "desktop/assets/bird_audio;assets/bird_audio" --add-data "desktop/assets/bird_startup_audio;assets/bird_startup_audio"
           desktop/yornis_desktop_v01592.py
 
       - name: Cold start with application outbound internet blocked
@@ -232,24 +241,24 @@ jobs:
           choco install innosetup --no-progress -y
           New-Item -ItemType Directory -Force -Path dist-installer-yornis | Out-Null
           & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' desktop\Yornis_v01592.iss
-          $setup='dist-installer-yornis/Yornis_Setup_v0.16.0_Modern_Interface_Offline.exe'
+          $setup='dist-installer-yornis/Yornis_Setup_v0.16.1_Modern_Interface_Offline.exe'
           if(!(Test-Path $setup)){throw 'Installer missing'}
-          Compress-Archive -Path dist\Yornis\* -DestinationPath dist-installer-yornis\Yornis_v0.16.0_Modern_Interface_Offline_Portable.zip -Force
+          Compress-Archive -Path dist\Yornis\* -DestinationPath dist-installer-yornis\Yornis_v0.16.1_Modern_Interface_Offline_Portable.zip -Force
 
       - name: Checksums
         shell: pwsh
         run: |
-          $a=Get-FileHash dist-installer-yornis\Yornis_Setup_v0.16.0_Modern_Interface_Offline.exe -Algorithm SHA256
-          $b=Get-FileHash dist-installer-yornis\Yornis_v0.16.0_Modern_Interface_Offline_Portable.zip -Algorithm SHA256
-          "$($a.Hash.ToLower())  Yornis_Setup_v0.16.0_Modern_Interface_Offline.exe" | Out-File dist-installer-yornis\SHA256SUMS.txt -Encoding ascii
-          "$($b.Hash.ToLower())  Yornis_v0.16.0_Modern_Interface_Offline_Portable.zip" | Out-File dist-installer-yornis\SHA256SUMS.txt -Encoding ascii -Append
+          $a=Get-FileHash dist-installer-yornis\Yornis_Setup_v0.16.1_Modern_Interface_Offline.exe -Algorithm SHA256
+          $b=Get-FileHash dist-installer-yornis\Yornis_v0.16.1_Modern_Interface_Offline_Portable.zip -Algorithm SHA256
+          "$($a.Hash.ToLower())  Yornis_Setup_v0.16.1_Modern_Interface_Offline.exe" | Out-File dist-installer-yornis\SHA256SUMS.txt -Encoding ascii
+          "$($b.Hash.ToLower())  Yornis_v0.16.1_Modern_Interface_Offline_Portable.zip" | Out-File dist-installer-yornis\SHA256SUMS.txt -Encoding ascii -Append
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Yornis-v0.16.0-Modern-Interface-Offline-Windows-x64
+          name: Yornis-v0.16.1-Modern-Interface-Offline-Windows-x64
           path: |
-            dist-installer-yornis/Yornis_Setup_v0.16.0_Modern_Interface_Offline.exe
-            dist-installer-yornis/Yornis_v0.16.0_Modern_Interface_Offline_Portable.zip
+            dist-installer-yornis/Yornis_Setup_v0.16.1_Modern_Interface_Offline.exe
+            dist-installer-yornis/Yornis_v0.16.1_Modern_Interface_Offline_Portable.zip
             dist-installer-yornis/SHA256SUMS.txt
 
 
@@ -260,7 +269,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           @'
-          Yornis v0.16.0 · Interfaz moderna
+          Yornis v0.16.1 · Identidad + calibración guiada
 
           - Interfaz modernizada con ttkbootstrap 2.2.7.
           - Botones, controles, tablas, pestañas y campos con estilo plano y espaciado moderno.
@@ -272,15 +281,15 @@ jobs:
           - Fórmulas, geometría, base de datos y lógica clínica sin cambios.
           '@ | Set-Content -Encoding utf8 release-notes.md
 
-          $tag='v0.16.0'
-          $setup='dist-installer-yornis/Yornis_Setup_v0.16.0_Modern_Interface_Offline.exe'
-          $portable='dist-installer-yornis/Yornis_v0.16.0_Modern_Interface_Offline_Portable.zip'
+          $tag='v0.16.1'
+          $setup='dist-installer-yornis/Yornis_Setup_v0.16.1_Modern_Interface_Offline.exe'
+          $portable='dist-installer-yornis/Yornis_v0.16.1_Modern_Interface_Offline_Portable.zip'
           $sums='dist-installer-yornis/SHA256SUMS.txt'
 
           gh release view $tag *> $null
           if ($LASTEXITCODE -eq 0) {
             gh release upload $tag $setup $portable $sums --clobber
-            gh release edit $tag --title "Yornis v0.16.0 · Interfaz moderna" --notes-file release-notes.md --latest
+            gh release edit $tag --title "Yornis v0.16.1 · Identidad + calibración guiada" --notes-file release-notes.md --latest
           } else {
-            gh release create $tag $setup $portable $sums --target $env:GITHUB_SHA --title "Yornis v0.16.0 · Interfaz moderna" --notes-file release-notes.md --latest
+            gh release create $tag $setup $portable $sums --target $env:GITHUB_SHA --title "Yornis v0.16.1 · Identidad + calibración guiada" --notes-file release-notes.md --latest
           }

@@ -1,6 +1,6 @@
-# YomCeph · Análisis cefalométrico
+# Yornis · Análisis cefalométrico
 
-Repositorio dedicado exclusivamente al módulo de **análisis cefalométrico lateral** de YomCeph.
+Repositorio dedicado exclusivamente al módulo de **análisis cefalométrico lateral** de Yornis.
 
 ## Alcance
 

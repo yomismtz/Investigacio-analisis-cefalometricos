@@ -27,7 +27,7 @@ class YornisV01592Tests(unittest.TestCase):
 
     def test_version(self):
         import yornis_desktop_v01592 as app
-        self.assertTrue(app.APP_VERSION.startswith("0.16.0"))
+        self.assertTrue(app.APP_VERSION.startswith("0.16.1"))
 
 
 if __name__ == "__main__":

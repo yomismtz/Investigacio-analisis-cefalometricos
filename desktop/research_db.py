@@ -14,9 +14,31 @@ from datetime import datetime
 from pathlib import Path
 from typing import Iterable
 
-APP_DIR = Path(os.getenv("APPDATA", str(Path.home()))) / "YomCeph"
+_APP_DATA_ROOT = Path(os.getenv("APPDATA", str(Path.home())))
+LEGACY_APP_DIR = _APP_DATA_ROOT / "YomCeph"
+APP_DIR = _APP_DATA_ROOT / "Yornis"
+# Migrate the previous local folder without deleting it. Keep the original as
+# a recovery copy; the active application now writes only under Yornis.
+try:
+    if LEGACY_APP_DIR.exists() and not APP_DIR.exists():
+        shutil.copytree(LEGACY_APP_DIR, APP_DIR)
+except OSError:
+    # A permission/lock issue must not destroy access to an existing study.
+    APP_DIR = LEGACY_APP_DIR
 RESEARCH_DIR = APP_DIR / "research"
-DB_PATH = RESEARCH_DIR / "yomceph_research.sqlite3"
+LEGACY_DB_PATH = LEGACY_APP_DIR / "research" / "yomceph_research.sqlite3"
+DB_PATH = RESEARCH_DIR / "yornis_research.sqlite3"
+if not DB_PATH.exists() and LEGACY_DB_PATH.exists():
+    try:
+        DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+        # SQLite backup reads a consistent snapshot, including committed WAL data.
+        with sqlite3.connect(LEGACY_DB_PATH) as source_db:
+            with sqlite3.connect(DB_PATH) as target_db:
+                source_db.backup(target_db)
+    except OSError:
+        # If migration cannot copy the database, continue using the intact
+        # legacy database rather than starting an empty research workspace.
+        DB_PATH = LEGACY_DB_PATH
 SUPPORTED_IMAGES = {".png", ".jpg", ".jpeg", ".bmp", ".tif", ".tiff", ".pdf"}
 MAX_CASES = 1000
 
@@ -653,7 +675,7 @@ class ResearchDB:
         target_zip = str(target_zip)
         study_folder = RESEARCH_DIR / f"study_{study_id:04d}"
         with zipfile.ZipFile(target_zip, "w", zipfile.ZIP_DEFLATED) as z:
-            z.write(self.db_path, arcname="database/yomceph_research.sqlite3")
+            z.write(self.db_path, arcname="database/yornis_research.sqlite3")
             if study_folder.exists():
                 for p in study_folder.rglob("*"):
                     if p.is_file():

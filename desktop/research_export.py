@@ -68,7 +68,7 @@ def export_json_bundle(db, study_id: int, path: str) -> str:
         item["landmarks"] = db.latest_landmarks(c["id"], protocol["version"])
         item["results"] = [dict(r) for r in db.latest_results(c["id"], protocol["version"])]
         cases.append(item)
-    data = {"format": "YomCeph Research Bundle", "version": 1, "study": study, "protocol": protocol, "cases": cases, "audit": [dict(r) for r in db.audit_rows(study_id)]}
+    data = {"format": "Yornis Research Bundle", "version": 1, "study": study, "protocol": protocol, "cases": cases, "audit": [dict(r) for r in db.audit_rows(study_id)]}
     Path(path).write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     db.audit(study_id, "export_json_bundle", target=path)
     return path
@@ -120,7 +120,7 @@ def export_case_pdf(db, case_id: int, protocol: dict, path: str) -> str:
     version = protocol.get("version", db.latest_protocol(case["study_id"])["version"])
     rows = db.latest_results(case_id, version)
     styles = getSampleStyleSheet(); doc = SimpleDocTemplate(path, pagesize=A4)
-    story = [Paragraph("YomCeph Desktop — Informe de caso", styles["Title"]), Spacer(1, 8)]
+    story = [Paragraph("Yornis Desktop — Informe de caso", styles["Title"]), Spacer(1, 8)]
     story.append(Paragraph(f"Estudio: {study['title']} · Caso: {case['study_code']} · Estado: {case['status']}", styles["BodyText"]))
     story.append(Paragraph("Uso educativo e investigación. No es un dispositivo médico ni sustituye el diagnóstico profesional.", styles["Italic"]))
     data = [["Análisis", "Medición", "Valor", "Unidad", "Referencia"]]
@@ -135,7 +135,7 @@ def export_study_pdf(db, study_id: int, protocol: dict, path: str) -> str:
     from reportlab.lib.styles import getSampleStyleSheet
     from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
     study = db.study(study_id); progress = db.progress(study_id); styles = getSampleStyleSheet(); doc = SimpleDocTemplate(path, pagesize=A4)
-    story = [Paragraph("YomCeph Desktop — Resumen de investigación", styles["Title"]), Paragraph(study["title"], styles["Heading2"]), Spacer(1, 8)]
+    story = [Paragraph("Yornis Desktop — Resumen de investigación", styles["Title"]), Paragraph(study["title"], styles["Heading2"]), Spacer(1, 8)]
     story.append(Paragraph(f"Investigador: {study['researcher']} · Institución: {study['institution']}", styles["BodyText"]))
     story.append(Paragraph("Uso educativo e investigación. No es un dispositivo médico ni sustituye el diagnóstico profesional.", styles["Italic"]))
     summary = [["Total", "Completos", "Pendientes", "En análisis", "Incompletos", "Excluidos"], [progress['total'], progress['complete'], progress['pending'], progress['in_progress'], progress['incomplete'], progress['excluded']]]
