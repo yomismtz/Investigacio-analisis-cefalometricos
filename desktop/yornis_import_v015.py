@@ -54,5 +54,8 @@ def import_progress(db,study_id,paths,metadata=None,copy_images=True,callback=No
 
 def install():
     global _INSTALLED
+    # Keep the image-replacement safety rule authoritative even when another
+    # compatibility layer has already installed the rest of this module.
+    ResearchDB.attach_image=attach_image
     if _INSTALLED:return
-    ResearchDB.add_case=add_case;ResearchDB.attach_image=attach_image;ResearchDB.import_files_progress=import_progress;_INSTALLED=True
+    ResearchDB.add_case=add_case;ResearchDB.import_files_progress=import_progress;_INSTALLED=True
