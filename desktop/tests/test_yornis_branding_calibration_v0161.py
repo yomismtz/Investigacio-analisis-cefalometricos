@@ -46,6 +46,12 @@ icon = "yomceph_logo.png"
         self.assertEqual(research_db.APP_DIR.name, "Yornis")
         self.assertEqual(research_db.DB_PATH.name, "yornis_research.sqlite3")
 
+    def test_brand_rewrite_does_not_change_the_legacy_class_name(self):
+        source = "class YomCephClassic: pass\\nlabel = 'YOMCEPH'"
+        updated = rebrand_classic_source(source)
+        self.assertIn("class YomCephClassic", updated)
+        self.assertIn("'YORNIS'", updated)
+
 
 if __name__ == "__main__":
     unittest.main()
