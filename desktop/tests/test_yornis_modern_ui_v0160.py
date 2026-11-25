@@ -39,7 +39,7 @@ class ModernInterfaceV0160Tests(unittest.TestCase):
                     self.assertEqual(tokens["background"], expected["bg"])
                     self.assertEqual(tokens["surface"], expected["panel"])
         finally:
-            yornis_theme.apply_theme(original, persist=False)
+            yornis_theme.apply_theme(original, persist=True)
 
     def test_install_is_idempotent(self):
         self.assertTrue(modern_ui.install())
