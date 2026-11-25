@@ -55,7 +55,7 @@ class ScrollBirdSoundsV01592Tests(unittest.TestCase):
                     modern_ui.apply_modern_styles(launcher)
                     self.assertEqual(modern_ui.primary_action_color(launcher), tokens["primary"])
             finally:
-                yornis_theme.apply_theme(original, persist=False)
+                yornis_theme.apply_theme(original, persist=True)
                 modern_ui.apply_modern_styles(launcher)
         finally:
             launcher.destroy()
