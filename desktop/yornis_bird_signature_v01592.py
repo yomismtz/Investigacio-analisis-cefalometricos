@@ -133,8 +133,7 @@ def _play(theme_name: str, volume: int) -> None:
         import winsound
         path = bundled_signature_path(theme_name, volume)
         if not path.is_file():
-            # Development fallback; packaged builds are expected to contain all WAVs.
-            path = ensure_signature_wav(theme_name, volume)
+            return
         winsound.PlaySound(str(path), winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_NODEFAULT)
     except Exception:
         return
