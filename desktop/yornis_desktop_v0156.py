@@ -185,6 +185,8 @@ def research_app(lang):
     previous.legacy.yornis_alignment_v0152.install_research(research_ui.ResearchWorkspace)
     previous.legacy.yornis_ceph_quality_v0153.install_research(research_ui.ResearchWorkspace)
     previous.hardening.install_research(research_ui.ResearchWorkspace)
+    import yornis_calibration_gate_v0164 as calibration_gate
+    calibration_gate.install_database()
     quality.install_research(research_ui.ResearchWorkspace)
     previous.evidence.install()
 
