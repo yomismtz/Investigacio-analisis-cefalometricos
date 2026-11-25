@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import re
+import sys
+from pathlib import Path
 import tkinter as tk
 from dataclasses import dataclass
 from tkinter import ttk
@@ -162,9 +164,21 @@ def _draw_avatar(theme_name: str, size: int = 180) -> Image.Image:
     return im.resize((size, size), Image.Resampling.LANCZOS)
 
 
+def _bird_asset_path(theme_name: str) -> Path:
+    slug = theme_name.replace(" ", "_").replace("á", "a").replace("é", "e")
+    root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+    return root / "assets" / "birds" / f"{slug}.png"
+
+
 def make_avatar_photo(master, size: int = 180, theme_name: str | None = None):
     name = theme_name or yornis_theme.current_theme_name()
-    return ImageTk.PhotoImage(_draw_avatar(name, size=size), master=master)
+    try:
+        with Image.open(_bird_asset_path(name)) as source:
+            image = source.convert("RGBA")
+            image.thumbnail((size, size), Image.Resampling.LANCZOS)
+        return ImageTk.PhotoImage(image, master=master)
+    except Exception:
+        return ImageTk.PhotoImage(_draw_avatar(name, size=size), master=master)
 
 
 def avatar_signature(theme_name: str) -> tuple[str, str]:
@@ -204,9 +218,15 @@ def refresh_assistant_button(root) -> None:
     btn = getattr(root, "_yornis_assistant_button_v0157", None)
     if btn is not None:
         try:
-            btn.configure(text=f"Asistente · {yornis_theme.current_theme_name()}")
+            name = yornis_theme.current_theme_name()
+            photo = make_avatar_photo(root, 28, name)
+            root._yornis_assistant_button_photo_v0157 = photo
+            btn.configure(text=f"Asistente · {name}", image=photo, compound="left")
         except Exception:
-            pass
+            try:
+                btn.configure(text=f"Asistente · {yornis_theme.current_theme_name()}")
+            except Exception:
+                pass
 
 
 def open_assistant(root, initial_query: str = "") -> None:
@@ -257,14 +277,25 @@ def open_assistant(root, initial_query: str = "") -> None:
     palette_grid.pack(fill="x")
 
     def switch_theme(name: str):
+        try:
+            import yornis_bird_signature_v01592 as bird_audio
+            bird_audio.play_bird_signature(name, root)
+        except Exception:
+            pass
         if name == yornis_theme.current_theme_name():
             return
         yornis_theme.apply_theme(name)
-        try:
-            import yornis_quality_ui_v0157 as quality
-            quality.apply_window(root, context="app")
-        except Exception:
-            pass
+        if hasattr(root, "_rebuild_quality_launcher"):
+            try:
+                root._rebuild_quality_launcher()
+            except Exception:
+                pass
+        else:
+            try:
+                import yornis_quality_ui_v0157 as quality
+                quality.apply_window(root, context="app")
+            except Exception:
+                pass
         refresh_assistant_button(root)
         q = search_var.get()
         win.destroy()
