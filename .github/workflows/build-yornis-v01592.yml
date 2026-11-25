@@ -160,10 +160,10 @@ jobs:
           l=Launcher(); l.geometry('1000x620'); l.update()
           assert modern_ui.active_widget_theme(l) in ('bootstrap-light', 'clam')
           for bird, palette in yornis_theme.THEMES.items():
-              yornis_theme.apply_theme(bird, persist=False)
+              yornis_theme.apply_theme(bird, persist=True)
               modern_ui.apply_modern_styles(l)
               assert modern_ui.primary_action_color(l) == palette['primary']
-          yornis_theme.apply_theme('Agaporni', persist=False)
+          yornis_theme.apply_theme('Agaporni', persist=True)
           modern_ui.apply_modern_styles(l)
           assert float(l.tk.call('tk','scaling')) > 0
           assert hasattr(l, '_scrollbar') and l._scrollbar.winfo_exists()
