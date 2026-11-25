@@ -27,7 +27,7 @@ jobs:
 
       - name: Dependencies
         shell: pwsh
-        run: python -m pip install pillow pymupdf reportlab openpyxl pyinstaller pyzipper ttkbootstrap==2.2.7 imageio-ffmpeg
+        run: python -m pip install pillow pymupdf reportlab openpyxl pyinstaller pyzipper ttkbootstrap==2.2.7
 
       - name: Render versioned SVG bird mascots to transparent PNGs
         shell: pwsh
@@ -53,59 +53,6 @@ jobs:
           print('Ten repository SVG mascots rendered to transparent PNGs')
           '@ | python -
 
-      - name: Generate real offline audio files for Búho and Colibrí
-        shell: pwsh
-        run: |
-          @'
-          from array import array
-          from pathlib import Path
-          import subprocess
-          import wave
-          import imageio_ffmpeg
-
-          ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
-          temp = Path('build-audio-temp')
-          temp.mkdir(parents=True, exist_ok=True)
-          sources = {
-              'Búho': Path('desktop/assets/bird_sources/Buho_original.mp3'),
-              'Colibrí': Path('desktop/assets/bird_sources/Colibri_original.mp3'),
-          }
-          volumes = (20, 35, 50, 70, 90)
-          targets = (('bird_audio', 1.15), ('bird_startup_audio', 2.80))
-          generated = 0
-          for bird, source in sources.items():
-              assert source.is_file(), f'Missing original recording for {bird}: {source}'
-              master = temp / f'{bird}_master.wav'
-              subprocess.run([ffmpeg, '-hide_banner', '-loglevel', 'error', '-y', '-i', str(source),
-                              '-ac', '1', '-ar', '22050', '-sample_fmt', 's16', str(master)], check=True)
-              with wave.open(str(master), 'rb') as wav:
-                  assert wav.getnchannels() == 1 and wav.getsampwidth() == 2
-                  rate = wav.getframerate()
-                  frames = wav.readframes(wav.getnframes())
-              samples = array('h')
-              samples.frombytes(frames)
-              peak = max((abs(v) for v in samples), default=0)
-              assert peak > 0 and len(samples) > rate, f'Empty or too short audio for {bird}'
-              for folder, seconds in targets:
-                  count = min(len(samples), int(rate * seconds))
-                  clip = samples[:count]
-                  clip_peak = max((abs(v) for v in clip), default=0)
-                  for volume in volumes:
-                      desired_peak = 0.78 * (volume / 100.0) * 32767
-                      gain = desired_peak / max(1, clip_peak)
-                      adjusted = array('h', (max(-32767, min(32767, int(v * gain))) for v in clip))
-                      out = Path('desktop/assets') / folder / f'{bird}_{volume}.wav'
-                      out.parent.mkdir(parents=True, exist_ok=True)
-                      with wave.open(str(out), 'wb') as target:
-                          target.setnchannels(1)
-                          target.setsampwidth(2)
-                          target.setframerate(rate)
-                          target.writeframes(adjusted.tobytes())
-                      generated += 1
-          assert generated == 20, f'Expected 20 real WAV variants, got {generated}'
-          print('20 real Búho/Colibrí WAV variants generated at five selectable volume levels')
-          '@ | python -
-
       - name: Pre-render offline bird audio libraries
         shell: pwsh
         run: |
@@ -115,7 +62,7 @@ jobs:
           sys.path.insert(0, 'desktop')
           import yornis_bird_signature_v01592 as signatures
           import yornis_startup_audio_v0159 as startup
-          names = ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul')
+          names = ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul','Búho','Colibrí')
           volumes = (20, 35, 50, 70, 90)
           destinations = (
               (signatures, Path('desktop/assets/bird_audio'), 'synthesize_signature'),
