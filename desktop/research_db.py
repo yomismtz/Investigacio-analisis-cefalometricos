@@ -487,15 +487,16 @@ class ResearchDB:
             target = self._study_folder(row["study_id"]) / f"{row['case_number']:04d}_{src.name}"
             shutil.copy2(src, target)
         with self.connect() as con:
-            # Explicitly archive every prior trace identity before changing the
-            # image. This also handles legacy rows whose image_hash is blank.
+            # Switch the case identity first, then archive every measurement
+            # row in the same transaction. Historical traces remain stored,
+            # but neither landmarks nor results can be treated as current.
+            con.execute("UPDATE cases SET image_path=?,original_filename=?,file_hash=?,case_mm_per_px=NULL,updated_at=? WHERE id=?", (str(target), src.name, digest, now_iso(), case_id))
             for table in ("landmarks", "results"):
                 con.execute(
-                    f"UPDATE {table} SET image_hash='historical:' || COALESCE(image_hash,'') "
+                    f"UPDATE {table} SET image_hash='historical:' || COALESCE(NULLIF(image_hash,''),'legacy-unidentified') "
                     "WHERE case_id=?",
                     (case_id,),
                 )
-            con.execute("UPDATE cases SET image_path=?,original_filename=?,file_hash=?,case_mm_per_px=NULL,updated_at=? WHERE id=?", (str(target), src.name, digest, now_iso(), case_id))
         self.audit(row["study_id"], "image_attached", case_id=case_id, filename=src.name, sha256=digest, calibration_reset=True, prior_trace_preserved=True)
 
     def import_files(self, study_id: int, paths: Iterable[str], metadata: dict[str, dict] | None = None, copy_images: bool = True) -> ImportResult:
