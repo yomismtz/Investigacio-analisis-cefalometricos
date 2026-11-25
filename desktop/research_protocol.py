@@ -215,5 +215,6 @@ def trace_qc(variable_keys: list[str], points: dict[str, tuple[float, float]], m
         issues.append({"level": "ok", "code": "basic_qc_ok", "message": "Sin alertas geométricas básicas. Esto no equivale a validación clínica."})
     return issues
 
+
 def serialize_catalog() -> dict:
     return {analysis: [asdict(v) | {"key": v.key} for v in variables] for analysis, variables in analysis_catalog().items()}
