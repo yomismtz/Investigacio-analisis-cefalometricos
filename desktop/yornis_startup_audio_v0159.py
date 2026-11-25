@@ -89,6 +89,17 @@ def attach_sound_controls(launcher) -> None:
     row = ttk.Frame(launcher.main)
     row.pack(fill="x", pady=(10, 0))
 
+    # Controls are attached after every palette rebuild; remove the previous row
+    # first to avoid duplicate controls accumulating across theme changes.
+    old = getattr(launcher, "_yornis_sound_controls_row", None)
+    if old is not None:
+        try:
+            if old.winfo_exists():
+                old.destroy()
+        except Exception:
+            pass
+    launcher._yornis_sound_controls_row = row
+
     launcher.startup_sound_var = getattr(launcher, "startup_sound_var", None) or __import__("tkinter").BooleanVar(value=enabled)
     launcher.startup_volume_var = getattr(launcher, "startup_volume_var", None) or __import__("tkinter").IntVar(value=volume)
 
