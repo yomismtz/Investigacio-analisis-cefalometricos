@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import sys
 import unittest
+import tkinter as tk
+import ttkbootstrap
 from importlib.metadata import version
 from pathlib import Path
 
@@ -42,6 +44,24 @@ class ModernInterfaceV0160Tests(unittest.TestCase):
     def test_install_is_idempotent(self):
         self.assertTrue(modern_ui.install())
         self.assertTrue(modern_ui.install())
+
+    def test_style_engine_rebinds_after_launcher_root_is_destroyed(self):
+        modern_ui.install()
+        first = tk.Tk()
+        first.withdraw()
+        self.assertTrue(modern_ui.apply_modern_styles(first))
+        self.assertEqual(modern_ui.active_widget_theme(first), "bootstrap-light")
+        first.destroy()
+        self.assertIsNone(ttkbootstrap.Style.get_instance())
+
+        second = tk.Tk()
+        second.withdraw()
+        try:
+            self.assertTrue(modern_ui.apply_modern_styles(second))
+            self.assertEqual(modern_ui.active_widget_theme(second), "bootstrap-light")
+            self.assertTrue(modern_ui.primary_action_color(second))
+        finally:
+            second.destroy()
 
 
 if __name__ == "__main__":
