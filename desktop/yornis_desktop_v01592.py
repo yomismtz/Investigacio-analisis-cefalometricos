@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import yornis_desktop_v01591 as previous
 import yornis_modern_ui_v0160 as modern_ui
+import yornis_viewport_v0165 as viewport_ui
+
+viewport_ui.install()
 
 modern_ui.install()
 
