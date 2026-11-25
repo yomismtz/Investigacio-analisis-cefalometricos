@@ -43,20 +43,19 @@ class BuhoColibriPaletteTests(unittest.TestCase):
                 if key != "description_es":
                     self.assertRegex(value, r"^#[0-9A-Fa-f]{6}$")
 
-    def test_both_birds_have_assistant_profiles_and_audio_signatures(self):
+    def test_both_new_birds_have_matching_original_audio_and_assistant_profiles(self):
         self.assertEqual(set(yornis_theme.theme_names()), set(assistant.BIRD_PROFILES))
         self.assertEqual(assistant.BIRD_PROFILES["Búho"]["shape"], "owl")
         self.assertEqual(assistant.BIRD_PROFILES["Colibrí"]["shape"], "hummingbird")
-        self.assertEqual(set(yornis_theme.theme_names()), set(signatures._SIGNATURES))
-        self.assertEqual(set(yornis_theme.theme_names()), set(startup_audio._THEME_FINALE))
-        self.assertNotEqual(signatures.synthesize_signature("Búho", 35),
-                            signatures.synthesize_signature("Colibrí", 35))
-
-    def test_offline_audio_variants_exist_for_both_new_birds(self):
+        self.assertEqual(signatures.BIRD_AUDIO_FILES["Búho"], "buho real.mp3")
+        self.assertEqual(signatures.BIRD_AUDIO_FILES["Colibrí"], "colibri.mp3")
         for bird in NEW_BIRDS:
-            for folder in ("bird_audio", "bird_startup_audio"):
-                for volume in (20, 35, 50, 70, 90):
-                    path = DESKTOP / "assets" / folder / f"{bird}_{volume}.wav"
+            self.assertTrue(signatures.source_audio_path(bird).is_file())
+            for volume in signatures.VOLUME_LEVELS:
+                for path in (
+                    signatures.bundled_signature_path(bird, volume),
+                    startup_audio.bundled_wav_path(bird, volume),
+                ):
                     self.assertTrue(path.is_file(), f"Missing {path}")
                     with wave.open(str(path), "rb") as wav:
                         self.assertEqual((wav.getnchannels(), wav.getsampwidth()), (1, 2))
