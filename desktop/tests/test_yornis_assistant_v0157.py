@@ -36,7 +36,7 @@ class BirdAssistantV0157Tests(unittest.TestCase):
     def test_version_and_theme_integrity(self):
         self.assertTrue(app.APP_VERSION.startswith("0.15.7"))
         self.assertEqual(assistant.ASSISTANT_VERSION, "0.15.7")
-        self.assertEqual(len(yornis_theme.theme_names()), 10
+        self.assertEqual(len(yornis_theme.theme_names()), 10)
 
     def test_c1_c7_universal_cutoff_is_not_reintroduced(self):
         index = assistant.search_content("lordosis cervical c1 c7")
