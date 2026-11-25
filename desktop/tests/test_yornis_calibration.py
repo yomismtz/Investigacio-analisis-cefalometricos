@@ -6,7 +6,6 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import yornis_calibration as calibration
-import research_protocol
 
 
 class CalibrationHelpersTests(unittest.TestCase):
@@ -47,22 +46,18 @@ class CalibrationHelpersTests(unittest.TestCase):
             calibration.normalize_landmark_confidence("maybe")
 
     def test_quality_control_reports_pending_and_low_confidence(self):
-        catalog = research_protocol.analysis_catalog()
-        analysis, measurements = next((name, values) for name, values in catalog.items() if values)
-        selected = [measurements[0].key]
-        required = research_protocol.minimum_landmarks(selected)
-        self.assertTrue(required)
-        points = {name: (index * 25.0, index * 13.0) for index, name in enumerate(required)}
+        required = ["S", "N", "A"]
+        points = {"S": (10.0, 20.0), "N": (50.0, 30.0), "A": (90.0, 40.0)}
         high = {name: "Alta" for name in required}
-        issues = research_protocol.trace_qc(selected, points, 0.25, high)
-        self.assertFalse(any(item["code"] in {"pending_landmark_confidence", "low_landmark_confidence"} for item in issues))
+        issues = calibration.confidence_quality_issues(required, points, high)
+        self.assertEqual(issues, [])
         pending = dict(high)
-        pending[required[0]] = "Pendiente"
-        issues = research_protocol.trace_qc(selected, points, 0.25, pending)
+        pending["S"] = "Pendiente"
+        issues = calibration.confidence_quality_issues(required, points, pending)
         self.assertTrue(any(item["code"] == "pending_landmark_confidence" for item in issues))
         low = dict(high)
-        low[required[0]] = "Baja"
-        issues = research_protocol.trace_qc(selected, points, 0.25, low)
+        low["N"] = "Baja"
+        issues = calibration.confidence_quality_issues(required, points, low)
         self.assertTrue(any(item["code"] == "low_landmark_confidence" for item in issues))
 
 
