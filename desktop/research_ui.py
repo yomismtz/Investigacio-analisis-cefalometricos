@@ -11,6 +11,8 @@ from tkinter import colorchooser, filedialog, messagebox, simpledialog, ttk
 
 from PIL import Image, ImageOps, ImageTk
 
+import yornis_calibration as calibration
+
 from research_db import MAX_CASES, RESEARCH_DIR, ResearchDB
 from research_export import export_audit_csv, export_case_pdf, export_excel, export_json_bundle, export_long_csv, export_study_pdf, export_wide_csv
 from research_protocol import EXCLUSION_REASONS_EN, EXCLUSION_REASONS_ES, analysis_catalog, compute_selected, minimum_landmarks, shared_landmark_summary, trace_qc
@@ -75,7 +77,7 @@ class ResearchWorkspace(tk.Tk):
         self.image = None; self.photo = None; self.image_path = ""
         self.zoom = 1.0; self.offx = 0.0; self.offy = 0.0
         self.points: dict[str, tuple[float,float]] = {}; self.undo_stack=[]; self.redo_stack=[]
-        self.landmarks: list[str] = []; self.landmark_index = 0; self.dragging = None; self.landmark_notes: dict[str,str] = {}
+        self.landmarks: list[str] = []; self.landmark_index = 0; self.dragging = None; self.landmark_notes: dict[str,str] = {}; self.landmark_confidence: dict[str,str] = {}
         self.calibration_mode = False; self.calibration_clicks=[]; self.pending_mm=0.0
         self.mm_per_px: float | None = None
         self.thumbnail_photo = None; self.magnifier_photo = None
@@ -189,7 +191,7 @@ class ResearchWorkspace(tk.Tk):
         self.pan_state=None
         self.magnifier=tk.Canvas(right,width=260,height=190,bg=PALETTE["canvas_dark"],highlightthickness=1,highlightbackground=SEMANTIC["border"]); self.magnifier.pack(fill="x",pady=3)
         ttk.Button(right,text=self.T("Ajustar imagen","Fit image"),command=self.fit_image).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Calibrar caso","Calibrate case"),command=self.start_calibration).pack(fill="x",pady=2); self.calib_label=ttk.Label(right,text=self.T("Sin calibrar","Not calibrated")); self.calib_label.pack(fill="x",pady=4)
-        ttk.Separator(right).pack(fill="x",pady=5); ttk.Button(right,text=self.T("Deshacer Ctrl+Z","Undo Ctrl+Z"),command=self.undo).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Rehacer Ctrl+Y","Redo Ctrl+Y"),command=self.redo).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Revisar puntos","Review points"),command=self.start_review).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Control de calidad","Quality control"),command=self.show_qc).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Calcular y guardar","Calculate & save"),command=self.calculate_and_save,style="Primary.TButton").pack(fill="x",pady=4); ttk.Button(right,text=self.T("Excluir caso…","Exclude case…"),command=self.exclude_current).pack(fill="x",pady=2)
+        ttk.Separator(right).pack(fill="x",pady=5); ttk.Button(right,text=self.T("Deshacer Ctrl+Z","Undo Ctrl+Z"),command=self.undo).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Rehacer Ctrl+Y","Redo Ctrl+Y"),command=self.redo).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Revisar puntos","Review points"),command=self.start_review).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Confianza del punto","Landmark confidence"),command=self.edit_landmark_confidence).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Control de calidad","Quality control"),command=self.show_qc).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Calcular y guardar","Calculate & save"),command=self.calculate_and_save,style="Primary.TButton").pack(fill="x",pady=4); ttk.Button(right,text=self.T("Excluir caso…","Exclude case…"),command=self.exclude_current).pack(fill="x",pady=2)
         self.trace_progress=ttk.Label(right,text=""); self.trace_progress.pack(fill="x",pady=5)
         self.results_tree=ttk.Treeview(right,columns=("value","unit"),show="tree headings",height=12); self.results_tree.heading("#0",text=self.T("Resultado","Result")); self.results_tree.heading("value",text=self.T("Valor","Value")); self.results_tree.heading("unit",text=self.T("Unidad","Unit")); self.results_tree.column("#0",width=180); self.results_tree.column("value",width=70); self.results_tree.column("unit",width=50); self.results_tree.pack(fill="both",expand=True)
 
@@ -395,15 +397,21 @@ class ResearchWorkspace(tk.Tk):
             self.db.attach_image(cid,p); c=self.db.case(cid)
         try:self.image=self.load_pil(c["image_path"]); self.image_path=c["image_path"]
         except Exception as e:messagebox.showerror("YomCeph",str(e));return
-        self.case_id=cid; self.landmarks=minimum_landmarks(self.protocol["selected_variables"]); self.landmark_notes={}; self.points=self.load_autosave(cid) or self.db.latest_landmarks(cid,self.protocol["version"]); self.landmark_index=0; self.undo_stack=[]; self.redo_stack=[]
-        s=self.db.study(self.study_id); self.mm_per_px=c["case_mm_per_px"] or s["study_mm_per_px"]
+        self.case_id=cid; self.landmarks=minimum_landmarks(self.protocol["selected_variables"]); self.landmark_notes={}; self.landmark_confidence={}
+        self.points=self.load_autosave(cid) or self.db.latest_landmarks(cid,self.protocol["version"])
+        # Calibration is image-specific. Never inherit a study-wide scale or a legacy autosave scale.
+        self.mm_per_px=c["case_mm_per_px"]
+        self.landmark_index=0; self.undo_stack=[]; self.redo_stack=[]
+        s=self.db.study(self.study_id)
         self.db.mark_in_progress(cid); self.landmark_list.delete(0,"end")
         for p in self.landmarks:self.landmark_list.insert("end",p)
         if self.landmarks:self.landmark_list.selection_set(0)
         self.trace_case_title.config(text=f"#{c['case_number']} · {c['study_code']}")
         if bool(s["blind_mode"]):self.trace_meta.config(text=self.T("Modo ciego activo: edad/sexo ocultos","Blind mode active: age/sex hidden"))
         else:self.trace_meta.config(text=f"{self.T('Sexo','Sex')}: {c['sex'] or '—'} · {self.T('Edad','Age')}: {c['age'] if c['age'] is not None else '—'}")
-        self.calib_label.config(text=(f"{self.mm_per_px:.6f} mm/px" if self.mm_per_px else self.T("Sin calibrar","Not calibrated"))); self.tabs.select(self.trace_tab); self.fit_image(); self.update_trace_progress(); self.calculate_preview()
+        self.calib_label.config(text=(f"{self.mm_per_px:.6f} mm/px" if self.mm_per_px else self.T("Calibración obligatoria","Calibration required")))
+        self.tabs.select(self.trace_tab); self.fit_image(); self.update_trace_progress(); self.calculate_preview()
+        if not self.mm_per_px:self.after(180,self.start_calibration)
 
     def fit_image(self):
         if self.image is None:return
@@ -429,7 +437,7 @@ class ResearchWorkspace(tk.Tk):
         self.landmark_index=max(0,min(len(self.landmarks)-1,self.landmark_index+delta));self.landmark_list.selection_clear(0,"end");self.landmark_list.selection_set(self.landmark_index);self.landmark_list.see(self.landmark_index);self.update_trace_progress();self.redraw();self.center_on_current()
     def update_trace_progress(self):
         if not self.landmarks:return
-        k=self.current_landmark();self.landmark_help.config(text=self.landmark_notes.get(k) or LANDMARK_HELP.get(k,k));placed=sum(x in self.points for x in self.landmarks);self.trace_progress.config(text=f"{placed}/{len(self.landmarks)} · {k}")
+        k=self.current_landmark();self.landmark_help.config(text=self.landmark_notes.get(k) or LANDMARK_HELP.get(k,k));placed=sum(x in self.points for x in self.landmarks);confidence=self.landmark_confidence.get(k,"Pendiente");self.trace_progress.config(text=f"{placed}/{len(self.landmarks)} · {k} · {self.T("Confianza: "+confidence,"Confidence: "+confidence)}")
     def edit_landmark_description(self):
         k=self.current_landmark()
         if not k:return
@@ -438,6 +446,20 @@ class ResearchWorkspace(tk.Tk):
         if value is None:return
         self.landmark_notes[k]=value.strip()
         self.autosave();self.update_trace_progress()
+    def edit_landmark_confidence(self):
+        k=self.current_landmark()
+        if not k:return
+        current=self.landmark_confidence.get(k,"Pendiente")
+        prompt=self.T("Confianza para el punto "+k+" (Alta, Media, Baja o Pendiente):","Confidence for landmark "+k+" (High, Medium, Low or Pending):")
+        value=simpledialog.askstring(self.T("Confianza del punto","Landmark confidence"),prompt,initialvalue=current,parent=self)
+        if value is None:return
+        try:
+            normalized=calibration.normalize_landmark_confidence(value)
+        except ValueError:
+            messagebox.showwarning("YomCeph",self.T("Usa Alta, Media, Baja o Pendiente.","Use High, Medium, Low or Pending."));return
+        self.landmark_confidence[k]=normalized
+        self.autosave();self.update_trace_progress()
+        messagebox.showinfo("YomCeph",self.T("Confianza guardada: "+normalized,"Confidence saved: "+normalized))
     def nearest_point(self,x,y):
         best=None;bd=14
         for k,p in self.points.items():
@@ -448,13 +470,26 @@ class ResearchWorkspace(tk.Tk):
     def canvas_click(self,e):
         if self.image is None:return
         p=self.canvas_to_image(e.x,e.y)
+        if not calibration.point_inside_image(p,self.image.width,self.image.height):
+            self.status.config(text=self.T("Haz clic dentro de la radiografía.","Click inside the radiograph."))
+            return
         if self.calibration_mode:
             self.calibration_clicks.append(p)
             if len(self.calibration_clicks)==2:
-                d=math.dist(*self.calibration_clicks);self.mm_per_px=self.pending_mm/d if d>0 else None;self.calibration_mode=False;self.calibration_clicks=[];self.calib_label.config(text=f"{self.mm_per_px:.6f} mm/px" if self.mm_per_px else self.T("Sin calibrar","Not calibrated"));
-                if self.mm_per_px and self.case_id:self.db.update_case_calibration(self.case_id,self.mm_per_px)
+                try:
+                    self.mm_per_px=calibration.calculate_mm_per_px(self.calibration_clicks[0],self.calibration_clicks[1],self.pending_mm)
+                except ValueError:
+                    self.calibration_clicks=[];self.status.config(text=self.T("Los extremos deben ser distintos y la distancia debe ser válida. Inténtalo de nuevo.","The endpoints must differ and the real distance must be valid. Try again."))
+                    self.redraw();return
+                self.calibration_mode=False;self.calibration_clicks=[]
+                if self.case_id:self.db.update_case_calibration(self.case_id,self.mm_per_px)
+                self.calib_label.config(text=f"{self.mm_per_px:.6f} mm/px")
+                self.status.config(text=self.T("Calibración guardada. Ya puedes iniciar el trazado.","Calibration saved. You can now start tracing."))
                 self.autosave()
             self.redraw();return
+        if not self.mm_per_px:
+            self.status.config(text=self.T("Primero calibra la radiografía con dos puntos de distancia conocida.","Calibrate the radiograph with two points of known distance first."))
+            return
         near=self.nearest_point(e.x,e.y);k=near or self.current_landmark()
         if not k:return
         old=self.points.get(k);self.undo_stack.append((k,old,p));self.redo_stack.clear();self.points[k]=p;self.dragging=k
@@ -491,20 +526,32 @@ class ResearchWorkspace(tk.Tk):
         k,old,new=self.redo_stack.pop();self.undo_stack.append((k,old,new));self.points[k]=new;self.autosave();self.redraw();self.update_trace_progress()
     def start_calibration(self):
         if self.image is None:return
-        mm=simpledialog.askfloat("YomCeph",self.T("Distancia real entre los dos puntos (mm):","Real distance between the two points (mm):"),minvalue=.01,parent=self)
-        if mm:self.pending_mm=mm;self.calibration_mode=True;self.calibration_clicks=[];self.status.config(text=self.T("Marca los dos extremos de la referencia.","Click both ends of the reference."))
+        case=self.db.case(self.case_id) if self.case_id is not None else None
+        if self.mm_per_px and case is not None and case["case_mm_per_px"] is not None:
+            if not messagebox.askyesno(self.T("Recalibrar radiografía","Recalibrate radiograph"),self.T("Esta radiografía ya tiene una calibración guardada. ¿Deseas sustituirla?","This radiograph already has a saved calibration. Replace it?"),parent=self):return
+        mm=simpledialog.askfloat(self.T("Calibrar Yornis","Calibrate Yornis"),self.T("Introduce la distancia REAL en milímetros entre los dos puntos que marcarás en la radiografía:","Enter the REAL distance in millimeters between the two points you will mark on the radiograph:"),minvalue=.01,parent=self)
+        if mm is None:
+            if not self.mm_per_px:self.status.config(text=self.T("Calibración pendiente: no puedes colocar puntos todavía.","Calibration pending: you cannot place landmarks yet."))
+            return
+        self.pending_mm=float(mm);self.calibration_mode=True;self.calibration_clicks=[]
+        self.status.config(text=self.T("Marca el primer extremo de la referencia en la radiografía.","Select the first reference endpoint on the radiograph."))
+        self.redraw()
     def autosave_path(self,cid):
         p=RESEARCH_DIR/f"study_{self.study_id:04d}"/"autosave";p.mkdir(parents=True,exist_ok=True);return p/f"case_{cid:04d}.json"
     def autosave(self):
         if not self.case_id:return
-        data={"case_id":self.case_id,"protocol_version":self.protocol.get("version"),"points":self.points,"mm_per_px":self.mm_per_px,"landmark_index":self.landmark_index,"landmark_notes":self.landmark_notes};self.autosave_path(self.case_id).write_text(json.dumps(data,ensure_ascii=False),encoding="utf-8")
+        data={"case_id":self.case_id,"protocol_version":self.protocol.get("version"),"points":self.points,"mm_per_px":self.mm_per_px,"landmark_index":self.landmark_index,"landmark_notes":self.landmark_notes,"landmark_confidence":self.landmark_confidence};self.autosave_path(self.case_id).write_text(json.dumps(data,ensure_ascii=False),encoding="utf-8")
     def load_autosave(self,cid):
         p=self.autosave_path(cid)
         if not p.exists():return {}
         try:
             d=json.loads(p.read_text(encoding="utf-8"));
             if d.get("protocol_version")!=self.protocol.get("version"):return {}
-            self.mm_per_px=d.get("mm_per_px") or self.mm_per_px;self.landmark_notes={k:str(v) for k,v in d.get("landmark_notes",{}).items()};return {k:tuple(v) for k,v in d.get("points",{}).items()}
+            self.mm_per_px=d.get("mm_per_px") or self.mm_per_px;self.landmark_notes={k:str(v) for k,v in d.get("landmark_notes",{}).items()};self.landmark_confidence={}
+            for k,v in d.get("landmark_confidence",{}).items():
+                try:self.landmark_confidence[str(k)]=calibration.normalize_landmark_confidence(v)
+                except ValueError:continue
+            return {k:tuple(v) for k,v in d.get("points",{}).items()}
         except Exception:return {}
     def calculate_preview(self):
         self.results_tree.delete(*self.results_tree.get_children())
@@ -516,7 +563,7 @@ class ResearchWorkspace(tk.Tk):
         return results
     def show_qc(self):
         if not self.case_id:return
-        issues=trace_qc(self.protocol.get("selected_variables",[]),self.points,self.mm_per_px);messagebox.showinfo(self.T("Control de calidad","Quality control"),"\n\n".join(("✓ " if x["level"]=="ok" else "◆ ")+x["message"] for x in issues))
+        issues=trace_qc(self.protocol.get("selected_variables",[]),self.points,self.mm_per_px,self.landmark_confidence);messagebox.showinfo(self.T("Control de calidad","Quality control"),"\n\n".join(("✓ " if x["level"]=="ok" else "◆ ")+x["message"] for x in issues))
     def calculate_and_save(self):
         if not self.case_id:return
         results=self.calculate_preview();issues=trace_qc(self.protocol.get("selected_variables",[]),self.points,self.mm_per_px)
