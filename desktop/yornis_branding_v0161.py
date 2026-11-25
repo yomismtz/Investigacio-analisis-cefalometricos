@@ -39,12 +39,12 @@ def rebrand_classic_source(source: str) -> str:
 CALIBRATION_TITLE = "Calibrar radiografía · Yornis"
 CALIBRATION_PROMPT_ES = (
     "CALIBRACIÓN EN DOS PASOS\n\n"
-    "1. Elige en la radiografía dos puntos de referencia cuya distancia real conozcas.\n"
-    "2. Escribe cuántos MILÍMETROS REALES hay entre esos dos puntos. "
-    "Por ejemplo, si la distancia es 25 mm, escribe 25.\n"
-    "3. Después, marca en la imagen el primer extremo y luego el segundo extremo "
-    "de ESA MISMA distancia.\n\n"
-    "Yornis calculará la escala en mm/píxel con la distancia que indiques y los dos puntos marcados."
+    "1. Escribe cuántos MILÍMETROS REALES hay entre dos referencias de la radiografía. "
+    "Por ejemplo, si la distancia conocida es 25 mm, escribe 25.\n"
+    "2. Pulsa OK para cerrar esta ventana.\n"
+    "3. En la radiografía, haz clic en el primer extremo y después en el segundo "
+    "extremo de ESA MISMA distancia.\n\n"
+    "Yornis calculará la escala en mm/píxel a partir de los dos puntos que marques."
 )
 
 
