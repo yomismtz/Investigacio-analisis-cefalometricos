@@ -54,9 +54,13 @@ def _attach_viewport(canvas):
 
 def _create_image(self, *args, **kwargs):
     item = _ORIGINAL_CREATE_IMAGE(self, *args, **kwargs)
-    _attach_viewport(self)
     try:
-        self.after_idle(lambda: _refresh(self))
+        bounds = self.bbox(item)
+        # Only the large radiograph viewport gets scrollbars; small logos,
+        # thumbnails and the magnifier's cropped preview remain untouched.
+        if bounds and (bounds[2] - bounds[0]) >= 600 and (bounds[3] - bounds[1]) >= 400:
+            _attach_viewport(self)
+            self.after_idle(lambda: _refresh(self))
     except tk.TclError:
         pass
     return item
