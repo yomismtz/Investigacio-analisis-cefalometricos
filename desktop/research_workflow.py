@@ -55,7 +55,7 @@ def research_completion(self):
     return (not missing,missing)
 
 def patched_init(self,*a,**kw):
-    ORIG['__init__'](self,*a,**kw); self.lang=read_lang(); self.title(f"YomCeph Desktop · v{HOST['APP_VERSION']}"); self.build_menu(); self.show_home()
+    ORIG['__init__'](self,*a,**kw); self.lang=read_lang(); self.title(f"Yornis Desktop · v{HOST['APP_VERSION']}"); self.build_menu(); self.show_home()
 
 def build_menu(self): ORIG['build_menu'](self)
 
@@ -64,7 +64,7 @@ def show_home(self):
     outer=ttk.Frame(self,padding=28);outer.pack(fill='both',expand=True)
     if self.logo_img:ttk.Label(outer,image=self.logo_img).pack(pady=(15,5))
     ttk.Label(outer,text=tr(self,'¿Qué vamos a hacer hoy?','What are we doing today?'),style='Title.TLabel').pack(pady=8)
-    ttk.Label(outer,text=tr(self,'Elige el flujo; YomCeph mostrará sólo lo necesario.','Choose the workflow; YomCeph will show only what is needed.'),style='Subtitle.TLabel').pack()
+    ttk.Label(outer,text=tr(self,'Elige el flujo; Yornis mostrará sólo lo necesario.','Choose the workflow; Yornis will show only what is needed.'),style='Subtitle.TLabel').pack()
     cards=ttk.Frame(outer);cards.pack(expand=True,pady=25)
     for c,(title,desc,cmd) in enumerate([(tr(self,'👤  Caso individual','👤  Individual case'),tr(self,'Una radiografía para análisis individual.','One radiograph for individual analysis.'),self.start_individual),(tr(self,'📊  Investigación','📊  Research'),tr(self,'Protocolo, checklist, análisis/resultados, hasta 1000 radiografías y base de datos.','Protocol, checklist, analyses/outcomes, up to 1000 radiographs and database.'),self.new_research)]):
         f=tk.Frame(cards,bg=p['panel'],highlightbackground=p['border'],highlightthickness=1,width=430,height=280);f.grid(row=0,column=c,padx=15);f.grid_propagate(False)
@@ -76,8 +76,8 @@ def show_home(self):
 
 def open_research(self):
     con=sqlite3.connect(HOST['DB_PATH']);rows=con.execute('SELECT id,name,planned_sample,locked,updated_at FROM studies ORDER BY updated_at DESC').fetchall();con.close()
-    if not rows:return messagebox.showinfo('YomCeph',tr(self,'No hay investigaciones guardadas.','No saved studies.'))
-    w=tk.Toplevel(self);w.title('YomCeph · '+tr(self,'Investigaciones','Studies'));w.geometry('820x470')
+    if not rows:return messagebox.showinfo('Yornis',tr(self,'No hay investigaciones guardadas.','No saved studies.'))
+    w=tk.Toplevel(self);w.title('Yornis · '+tr(self,'Investigaciones','Studies'));w.geometry('820x470')
     t=ttk.Treeview(w,columns=('n','lock','date'),show='tree headings');t.heading('#0',text=tr(self,'Investigación','Study'));t.heading('n',text=tr(self,'Muestra','Sample'));t.heading('lock',text=tr(self,'Protocolo','Protocol'));t.heading('date',text=tr(self,'Actualizado','Updated'));t.pack(fill='both',expand=True,padx=15,pady=15)
     for r in rows:t.insert('', 'end',iid=str(r[0]),text=r[1],values=(r[2],tr(self,'Bloqueado' if r[3] else 'Editable','Locked' if r[3] else 'Editable'),r[4]))
     def go(e=None):
@@ -88,7 +88,7 @@ def open_research(self):
 def open_protocol_editor(self,study_id=None):
     con=sqlite3.connect(HOST['DB_PATH']);row=con.execute('SELECT name,planned_sample,protocol_json,locked FROM studies WHERE id=?',(study_id,)).fetchone() if study_id else None;con.close()
     p=json.loads(row[2]) if row else {}; locked=bool(row[3]) if row else False
-    w=tk.Toplevel(self);w.title('YomCeph · '+tr(self,'Protocolo de investigación','Research protocol'));w.geometry('1100x800');w.transient(self);w.grab_set()
+    w=tk.Toplevel(self);w.title('Yornis · '+tr(self,'Protocolo de investigación','Research protocol'));w.geometry('1100x800');w.transient(self);w.grab_set()
     nb=ttk.Notebook(w);nb.pack(fill='both',expand=True,padx=12,pady=12);d=ttk.Frame(nb,padding=14);a=ttk.Frame(nb,padding=14);r=ttk.Frame(nb,padding=14);nb.add(d,text=tr(self,'1 · Datos y criterios','1 · Data & criteria'));nb.add(a,text=tr(self,'2 · Análisis y resultados','2 · Analyses & outcomes'));nb.add(r,text=tr(self,'3 · Revisar','3 · Review'))
     vals={k:tk.StringVar(value=str(p.get(k,''))) for k in ('name','planned_sample','age_min','age_max','country','institution')}; vals['name'].set(vals['name'].get() or (row[0] if row else '')); vals['planned_sample'].set(vals['planned_sample'].get() or (str(row[1]) if row else '100'))
     for i,(k,label) in enumerate([('name','Nombre'),('planned_sample','Muestra planeada (1–1000)'),('age_min','Edad mínima'),('age_max','Edad máxima'),('country','País'),('institution','Institución')]):ttk.Label(d,text=label+':').grid(row=i,column=0,sticky='w',pady=4);ttk.Entry(d,textvariable=vals[k],width=55,state='disabled' if locked else 'normal').grid(row=i,column=1,sticky='ew',pady=4)
@@ -114,7 +114,7 @@ def open_protocol_editor(self,study_id=None):
         try:n=int(vals['planned_sample'].get())
         except Exception:n=0
         ans=[x for x,v in av.items() if v.get()]
-        if not vals['name'].get().strip() or not 1<=n<=1000 or not ans or any(not selected[x] for x in ans):return messagebox.showwarning('YomCeph',tr(self,'Revise nombre, muestra y resultados seleccionados.','Check name, sample and selected outcomes.'),parent=w)
+        if not vals['name'].get().strip() or not 1<=n<=1000 or not ans or any(not selected[x] for x in ans):return messagebox.showwarning('Yornis',tr(self,'Revise nombre, muestra y resultados seleccionados.','Check name, sample and selected outcomes.'),parent=w)
         proto={k:vals[k].get().strip() for k in vals};proto['planned_sample']=n;proto.update(include_male=male.get(),include_female=female.get(),inclusion_checks=[x for x,v in inc.items() if v.get()],exclusion_checks=[x for x,v in exc.items() if v.get()],analyses=ans,measurements={x:sorted(selected[x]) for x in ans})
         con=sqlite3.connect(HOST['DB_PATH']);ts=now()
         if study_id:con.execute('UPDATE studies SET name=?,planned_sample=?,protocol_json=?,updated_at=? WHERE id=?',(proto['name'],n,json.dumps(proto,ensure_ascii=False),ts,study_id));sid=study_id
@@ -185,19 +185,19 @@ def import_radiographs(self,refresh=None):
     if refresh:refresh()
 
 def add_manual_research_case(self,refresh=None):
-    cid=simpledialog.askstring('YomCeph',tr(self,'Número / ID del caso:','Case number / ID:'),parent=self)
+    cid=simpledialog.askstring('Yornis',tr(self,'Número / ID del caso:','Case number / ID:'),parent=self)
     if not cid:return
-    cid=HOST['safe_case_id'](cid);age=simpledialog.askstring('YomCeph',tr(self,'Edad en años:','Age in years:'),parent=self) or '';sex=simpledialog.askstring('YomCeph',tr(self,'Sexo registrado: male / female','Recorded sex: male / female'),parent=self) or ''
+    cid=HOST['safe_case_id'](cid);age=simpledialog.askstring('Yornis',tr(self,'Edad en años:','Age in years:'),parent=self) or '';sex=simpledialog.askstring('Yornis',tr(self,'Sexo registrado: male / female','Recorded sex: male / female'),parent=self) or ''
     meta={'case_id':cid,'age':age,'sex':sex.lower(),'country':(self.study_protocol or {}).get('country','')};ts=now();con=sqlite3.connect(HOST['DB_PATH'])
     try:con.execute('INSERT INTO cases(case_id,research_study_id,mode,metadata_json,analysis_json,points_json,results_json,image_path,stored_image_path,mm_per_pixel,face_direction,eligibility,eligibility_reasons_json,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)',(cid,self.active_study_id,'research',json.dumps(meta,ensure_ascii=False),json.dumps(sorted(self.selected_analyses)),'{}','[]','','',None,'right','pending','[]',ts,ts));con.commit()
-    except sqlite3.IntegrityError:messagebox.showwarning('YomCeph',tr(self,'Ese ID ya existe.','That ID already exists.'))
+    except sqlite3.IntegrityError:messagebox.showwarning('Yornis',tr(self,'Ese ID ya existe.','That ID already exists.'))
     con.close()
     if refresh:refresh()
 
 def edit_meta(self,cid,refresh=None):
     con=sqlite3.connect(HOST['DB_PATH']);row=con.execute('SELECT metadata_json FROM cases WHERE case_id=?',(cid,)).fetchone()
     if not row:con.close();return
-    m=json.loads(row[0] or '{}');m['age']=simpledialog.askstring('YomCeph','Edad / Age:',initialvalue=m.get('age',''),parent=self) or m.get('age','');m['sex']=(simpledialog.askstring('YomCeph','Sexo / Sex (male/female):',initialvalue=m.get('sex',''),parent=self) or m.get('sex','')).lower();con.execute('UPDATE cases SET metadata_json=?,updated_at=? WHERE case_id=?',(json.dumps(m,ensure_ascii=False),now(),cid));con.commit();con.close()
+    m=json.loads(row[0] or '{}');m['age']=simpledialog.askstring('Yornis','Edad / Age:',initialvalue=m.get('age',''),parent=self) or m.get('age','');m['sex']=(simpledialog.askstring('Yornis','Sexo / Sex (male/female):',initialvalue=m.get('sex',''),parent=self) or m.get('sex','')).lower();con.execute('UPDATE cases SET metadata_json=?,updated_at=? WHERE case_id=?',(json.dumps(m,ensure_ascii=False),now(),cid));con.commit();con.close()
     if refresh:refresh()
 
 def exclude_case(self,cid,refresh=None):
@@ -212,7 +212,7 @@ def restore_case(self,cid,refresh=None):
 
 def open_database_browser(self):
     if self.mode!='research' or not self.active_study_id:return ORIG['open_database_browser'](self)
-    w=tk.Toplevel(self);w.title('YomCeph · '+tr(self,'Base de investigación','Research database'));w.geometry('1240x720');f=ttk.Frame(w,padding=12);f.pack(fill='both',expand=True);ttk.Label(f,text=self.active_study_name,style='Title.TLabel').pack(anchor='w');sub=ttk.Label(f,style='Subtitle.TLabel');sub.pack(anchor='w')
+    w=tk.Toplevel(self);w.title('Yornis · '+tr(self,'Base de investigación','Research database'));w.geometry('1240x720');f=ttk.Frame(w,padding=12);f.pack(fill='both',expand=True);ttk.Label(f,text=self.active_study_name,style='Title.TLabel').pack(anchor='w');sub=ttk.Label(f,style='Subtitle.TLabel');sub.pack(anchor='w')
     t=ttk.Treeview(f,columns=('status','sex','age','file','reason'),show='tree headings');t.heading('#0',text=tr(self,'Número','Number'));t.heading('status',text=tr(self,'Estado','Status'));t.heading('sex',text=tr(self,'Sexo','Sex'));t.heading('age',text=tr(self,'Edad','Age'));t.heading('file',text=tr(self,'Radiografía','Radiograph'));t.heading('reason',text=tr(self,'Motivo / nota','Reason / note'));t.pack(fill='both',expand=True,pady=8);t.tag_configure('complete',foreground='#18864B');t.tag_configure('excluded',foreground='#B33A3A');t.tag_configure('incomplete',foreground='#C47A00');t.tag_configure('pending',foreground='#6D6576')
     def refresh():
         t.delete(*t.get_children());con=sqlite3.connect(HOST['DB_PATH']);rows=con.execute('SELECT case_id,metadata_json,stored_image_path,image_path,eligibility,eligibility_reasons_json FROM cases WHERE research_study_id=? ORDER BY id',(self.active_study_id,)).fetchall();con.close();comp=exc=0
