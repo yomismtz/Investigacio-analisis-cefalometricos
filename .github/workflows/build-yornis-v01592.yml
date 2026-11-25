@@ -1,4 +1,4 @@
-name: Build Yornis v0.16.1 · Clean Brand + Guided Calibration
+name: Build Yornis v0.16.2 · Owl + Hummingbird Palettes and Offline Sound
 
 on:
   push:
@@ -37,7 +37,7 @@ jobs:
           import fitz
           from PIL import Image
           root = Path('desktop/assets/birds')
-          expected = {'Agaporni','Tucan','Pavorreal','Ninfa','Faisan','Quetzal','Guacamaya_Roja','Guacamaya_Azul'}
+          expected = {'Agaporni','Tucan','Pavorreal','Ninfa','Faisan','Quetzal','Guacamaya_Roja','Guacamaya_Azul','Búho','Colibrí'}
           sources = {p.stem: p for p in root.glob('*.svg')}
           assert set(sources) == expected, f'Missing or extra SVG mascots: {sorted(set(sources) ^ expected)}'
           for name, source in sources.items():
@@ -49,8 +49,8 @@ jobs:
               assert alpha_min == 0 and alpha_max > 0, f'{name}: expected genuine transparent pixels'
               image.save(root / f'{name}.png', optimize=True)
           rendered = list(root.glob('*.png'))
-          assert len(rendered) == 8
-          print('Eight repository SVG mascots rendered to transparent PNGs')
+          assert len(rendered) == 10
+          print('Ten repository SVG mascots rendered to transparent PNGs')
           '@ | python -
 
       - name: Pre-render offline bird audio libraries
@@ -62,7 +62,7 @@ jobs:
           sys.path.insert(0, 'desktop')
           import yornis_bird_signature_v01592 as signatures
           import yornis_startup_audio_v0159 as startup
-          names = ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul')
+          names = ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul','Búho','Colibrí')
           volumes = (20, 35, 50, 70, 90)
           destinations = (
               (signatures, Path('desktop/assets/bird_audio'), 'synthesize_signature'),
@@ -83,10 +83,10 @@ jobs:
                           wav.setframerate(module.SAMPLE_RATE)
                           wav.writeframes(frames)
               files = list(out.glob('*.wav'))
-              assert len(files) == 40 and all(p.stat().st_size > 1000 for p in files)
+              assert len(files) == 50 and all(p.stat().st_size > 1000 for p in files)
               total += len(files)
-          assert total == 80
-          print('80 offline bird WAVs generated and validated before packaging')
+          assert total == 100
+          print('100 offline bird WAVs generated and validated before packaging')
           '@ | python -
 
       - name: Rebuild 512px Yornis branding
@@ -115,7 +115,7 @@ jobs:
         shell: pwsh
         run: python -m unittest discover -s desktop/tests -p "test_*.py" -v
 
-      - name: v0.16.1 branding, guided calibration and clinical audit
+      - name: v0.16.2 branding, guided calibration and clinical audit
         shell: pwsh
         run: |
           @'
@@ -130,7 +130,7 @@ jobs:
           import yornis_modern_ui_v0160 as modern_ui
           import yornis_reference_help_v0156 as refs
           import classic_engine as engine
-          assert app.APP_VERSION.startswith('0.16.1')
+          assert app.APP_VERSION.startswith('0.16.2')
           assert research_db.APP_DIR.name == 'Yornis'
           assert research_db.DB_PATH.name == 'yornis_research.sqlite3'
           check_source = "class YomCephClassic: pass\nlabel = 'YOMCEPH'"
@@ -151,10 +151,10 @@ jobs:
               digests.append(hashlib.sha256(frames).hexdigest())
               assert sounds.bundled_signature_path(name, 35).is_file()
               assert startup_sounds.bundled_wav_path(name, 35).is_file()
-          assert len(set(digests)) == 8
-          assert len(list(__import__('pathlib').Path('desktop/assets/bird_audio').glob('*.wav'))) == 40
-          assert len(list(__import__('pathlib').Path('desktop/assets/bird_startup_audio').glob('*.wav'))) == 40
-          print('YORNIS v0.16.1 BRANDING + GUIDED CALIBRATION + OFFLINE OK')
+          assert len(set(digests)) == 10
+          assert len(list(__import__('pathlib').Path('desktop/assets/bird_audio').glob('*.wav'))) == 50
+          assert len(list(__import__('pathlib').Path('desktop/assets/bird_startup_audio').glob('*.wav'))) == 50
+          print('YORNIS v0.16.2 TEN PALETTES + OFFLINE SOUND PROFILES + CLINICAL AUDIT OK')
           '@ | python -
 
       - name: GUI scrollbar + HiDPI smoke test
@@ -186,16 +186,16 @@ jobs:
           assert after > before
           assert hasattr(l, 'startup_sound_var')
           assert hasattr(l, 'startup_volume_var')
-          assert len(l.palette_cards) == 8
+          assert len(l.palette_cards) == 10
           from yornis_bird_signature_v01592 import bundled_signature_path
-          for bird in ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul'):
+          for bird in ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul','Búho','Colibrí'):
               assert bundled_signature_path(bird, 35).name.endswith('_35.wav')
           from yornis_virtual_assistant_v0157 import make_avatar_photo
-          for bird in ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul'):
+          for bird in ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul','Búho','Colibrí'):
               image = make_avatar_photo(l, 64, bird)
               assert image.width() > 0 and image.height() > 0
           l.destroy()
-          print('YORNIS v0.16.1 BRANDING + GUIDED CALIBRATION + OFFLINE GUI OK')
+          print('YORNIS v0.16.2 TEN PALETTES + OFFLINE GUI OK')
           '@ | python -
 
       - name: Build application
@@ -241,24 +241,24 @@ jobs:
           choco install innosetup --no-progress -y
           New-Item -ItemType Directory -Force -Path dist-installer-yornis | Out-Null
           & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' desktop\Yornis_v01592.iss
-          $setup='dist-installer-yornis/Yornis_Setup_v0.16.1_Modern_Interface_Offline.exe'
+          $setup='dist-installer-yornis/Yornis_Setup_v0.16.2_Modern_Interface_Offline.exe'
           if(!(Test-Path $setup)){throw 'Installer missing'}
-          Compress-Archive -Path dist\Yornis\* -DestinationPath dist-installer-yornis\Yornis_v0.16.1_Modern_Interface_Offline_Portable.zip -Force
+          Compress-Archive -Path dist\Yornis\* -DestinationPath dist-installer-yornis\Yornis_v0.16.2_Modern_Interface_Offline_Portable.zip -Force
 
       - name: Checksums
         shell: pwsh
         run: |
-          $a=Get-FileHash dist-installer-yornis\Yornis_Setup_v0.16.1_Modern_Interface_Offline.exe -Algorithm SHA256
-          $b=Get-FileHash dist-installer-yornis\Yornis_v0.16.1_Modern_Interface_Offline_Portable.zip -Algorithm SHA256
-          "$($a.Hash.ToLower())  Yornis_Setup_v0.16.1_Modern_Interface_Offline.exe" | Out-File dist-installer-yornis\SHA256SUMS.txt -Encoding ascii
-          "$($b.Hash.ToLower())  Yornis_v0.16.1_Modern_Interface_Offline_Portable.zip" | Out-File dist-installer-yornis\SHA256SUMS.txt -Encoding ascii -Append
+          $a=Get-FileHash dist-installer-yornis\Yornis_Setup_v0.16.2_Modern_Interface_Offline.exe -Algorithm SHA256
+          $b=Get-FileHash dist-installer-yornis\Yornis_v0.16.2_Modern_Interface_Offline_Portable.zip -Algorithm SHA256
+          "$($a.Hash.ToLower())  Yornis_Setup_v0.16.2_Modern_Interface_Offline.exe" | Out-File dist-installer-yornis\SHA256SUMS.txt -Encoding ascii
+          "$($b.Hash.ToLower())  Yornis_v0.16.2_Modern_Interface_Offline_Portable.zip" | Out-File dist-installer-yornis\SHA256SUMS.txt -Encoding ascii -Append
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Yornis-v0.16.1-Modern-Interface-Offline-Windows-x64
+          name: Yornis-v0.16.2-Modern-Interface-Offline-Windows-x64
           path: |
-            dist-installer-yornis/Yornis_Setup_v0.16.1_Modern_Interface_Offline.exe
-            dist-installer-yornis/Yornis_v0.16.1_Modern_Interface_Offline_Portable.zip
+            dist-installer-yornis/Yornis_Setup_v0.16.2_Modern_Interface_Offline.exe
+            dist-installer-yornis/Yornis_v0.16.2_Modern_Interface_Offline_Portable.zip
             dist-installer-yornis/SHA256SUMS.txt
 
 
@@ -269,27 +269,27 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           @'
-          Yornis v0.16.1 · Identidad + calibración guiada
+          Yornis v0.16.2 · Identidad + calibración guiada
 
           - Interfaz modernizada con ttkbootstrap 2.2.7.
           - Botones, controles, tablas, pestañas y campos con estilo plano y espaciado moderno.
-          - Las ocho paletas de aves mantienen sus colores y actualizan los controles en tiempo real.
+          - Las diez paletas de aves mantienen sus colores y actualizan los controles en tiempo real.
           - Sistema visual aplicado al lanzador, caso individual e investigación.
           - 102 mediciones y 17 tablas de referencia conservadas.
           - Calibración por radiografía y control de confianza de landmarks conservados.
-          - 8 mascotas y 80 WAV incluidos para ejecución offline.
+          - 10 identidades de aves y 100 WAV locales (perfiles de sonido generados) incluidos para ejecución offline.
           - Fórmulas, geometría, base de datos y lógica clínica sin cambios.
           '@ | Set-Content -Encoding utf8 release-notes.md
 
-          $tag='v0.16.1'
-          $setup='dist-installer-yornis/Yornis_Setup_v0.16.1_Modern_Interface_Offline.exe'
-          $portable='dist-installer-yornis/Yornis_v0.16.1_Modern_Interface_Offline_Portable.zip'
+          $tag='v0.16.2'
+          $setup='dist-installer-yornis/Yornis_Setup_v0.16.2_Modern_Interface_Offline.exe'
+          $portable='dist-installer-yornis/Yornis_v0.16.2_Modern_Interface_Offline_Portable.zip'
           $sums='dist-installer-yornis/SHA256SUMS.txt'
 
           gh release view $tag *> $null
           if ($LASTEXITCODE -eq 0) {
             gh release upload $tag $setup $portable $sums --clobber
-            gh release edit $tag --title "Yornis v0.16.1 · Identidad + calibración guiada" --notes-file release-notes.md --latest
+            gh release edit $tag --title "Yornis v0.16.2 · Identidad + calibración guiada" --notes-file release-notes.md --latest
           } else {
-            gh release create $tag $setup $portable $sums --target $env:GITHUB_SHA --title "Yornis v0.16.1 · Identidad + calibración guiada" --notes-file release-notes.md --latest
+            gh release create $tag $setup $portable $sums --target $env:GITHUB_SHA --title "Yornis v0.16.2 · Identidad + calibración guiada" --notes-file release-notes.md --latest
           }

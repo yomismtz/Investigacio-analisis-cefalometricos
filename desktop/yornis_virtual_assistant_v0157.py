@@ -23,6 +23,8 @@ BIRD_PROFILES = {
     "Quetzal": {"tagline": "Conecta análisis, evidencia y contexto clínico.", "personality": "Académico y preciso.", "shape": "quetzal"},
     "Guacamaya Roja": {"tagline": "Te recuerda lo importante con señales muy visibles.", "personality": "Enérgico y claro.", "shape": "macaw-red"},
     "Guacamaya Azul": {"tagline": "Te acompaña en búsquedas, tablas y tareas complejas.", "personality": "Analítico y sereno.", "shape": "macaw-blue"},
+    "Búho": {"tagline": "Te ayuda a revisar detalles con calma y precisión.", "personality": "Observador, sereno y metódico.", "shape": "owl"},
+    "Colibrí": {"tagline": "Te guía con agilidad entre análisis y herramientas.", "personality": "Ágil, claro y dinámico.", "shape": "hummingbird"},
 }
 
 GUIDES = [
@@ -39,7 +41,7 @@ GUIDES = [
     {"title": "Excluir un caso sin borrarlo", "keywords": "excluir exclusion caso investigacion auditoria borrar", "steps": ["Usa la acción de exclusión del modo Investigación.", "Registra el motivo de exclusión cuando corresponda.", "El caso permanece auditable; la exclusión no debe equivaler a eliminar datos silenciosamente."]},
     {"title": "Exportar resultados", "keywords": "exportar csv excel xlsx pdf spss json resultados dataset", "steps": ["Revisa que los casos y outcomes estén completos.", "Elige el formato de exportación necesario para tu análisis.", "Para SPSS utiliza la sintaxis generada junto con las variables/etiquetas.", "Para compartir datos, prioriza exportaciones pseudonimizadas y revisa el contenido antes de enviarlo."]},
     {"title": "Respaldar y restaurar", "keywords": "backup respaldo restaurar restore sqlite base datos seguridad", "steps": ["Crea un respaldo desde las herramientas del modo Investigación.", "Guarda la copia en una ubicación distinta al equipo de trabajo cuando sea posible.", "Antes de restaurar, confirma que el archivo corresponde al estudio esperado.", "Yornis valida la integridad del respaldo compatible antes de restaurarlo."]},
-    {"title": "Cambiar la paleta y el asistente", "keywords": "paleta color tema ave asistente agaporni tucan pavorreal ninfa faisan quetzal guacamaya", "steps": ["En el lanzador selecciona una de las ocho tarjetas de color.", "La paleta completa cambia y el ave de esa paleta se convierte en tu asistente.", "El asistente conserva las mismas funciones; cambia su identidad visual.", "También puedes cambiar de paleta desde la ventana del asistente."]},
+    {"title": "Cambiar la paleta y el asistente", "keywords": "paleta color tema ave asistente agaporni tucan pavorreal ninfa faisan quetzal guacamaya", "steps": ["En el lanzador selecciona una de las diez tarjetas de color.", "La paleta completa cambia y el ave de esa paleta se convierte en tu asistente.", "El asistente conserva las mismas funciones; cambia su identidad visual.", "También puedes cambiar de paleta desde la ventana del asistente."]},
     {"title": "Buscar dentro de Yornis", "keywords": "buscar buscador interno ayuda tabla medicion analisis comando", "steps": ["Abre «Asistente» desde la esquina superior derecha.", "Escribe un análisis, una medición, una tabla o una tarea.", "El buscador combina guías, las 17 tablas y las mediciones del motor.", "Haz doble clic en una tabla para abrirla directamente en Referencias."]},
 ]
 
@@ -155,12 +157,32 @@ def _draw_avatar(theme_name: str, size: int = 180) -> Image.Image:
         d.arc(box(0.43,0.34,0.63,0.55), 210, 340, fill=t["primary_dark"], width=max(3,S//120))
         d.polygon([pt(0.60,0.41), pt(0.82,0.47), pt(0.60,0.55)], fill=t["accent"], outline=t["primary_dark"])
         d.polygon([pt(0.35,0.72), pt(0.44,0.98), pt(0.51,0.72)], fill=t["secondary"])
+    elif shape == "owl":
+        d.polygon([pt(0.29,0.34), pt(0.33,0.08), pt(0.48,0.28)], fill=t["primary"], outline=t["primary_dark"])
+        d.polygon([pt(0.53,0.28), pt(0.70,0.08), pt(0.72,0.36)], fill=t["primary"], outline=t["primary_dark"])
+        d.ellipse(box(0.31,0.31,0.52,0.53), fill=t["accent_soft"], outline=t["primary_dark"], width=max(3,S//120))
+        d.ellipse(box(0.49,0.31,0.70,0.53), fill=t["accent_soft"], outline=t["primary_dark"], width=max(3,S//120))
+        d.ellipse(box(0.39,0.37,0.46,0.46), fill=t["primary_dark"])
+        d.ellipse(box(0.56,0.37,0.63,0.46), fill=t["primary_dark"])
+        d.polygon([pt(0.47,0.48), pt(0.54,0.48), pt(0.505,0.57)], fill=t["accent"])
+        d.ellipse(box(0.39,0.61,0.64,0.81), fill=t["accent_soft"], outline=t["tertiary"], width=max(3,S//140))
+        d.arc(box(0.27,0.50,0.49,0.81), 285, 65, fill=t["secondary_dark"], width=max(5,S//80))
+        d.arc(box(0.52,0.50,0.74,0.81), 115, 255, fill=t["secondary_dark"], width=max(5,S//80))
+    elif shape == "hummingbird":
+        d.polygon([pt(0.39,0.70), pt(0.27,0.97), pt(0.48,0.78)], fill=t["secondary_dark"])
+        d.polygon([pt(0.48,0.70), pt(0.52,0.99), pt(0.57,0.72)], fill=t["accent"])
+        d.polygon([pt(0.43,0.50), pt(0.14,0.30), pt(0.31,0.68)], fill=t["secondary"], outline=t["secondary_dark"])
+        d.polygon([pt(0.49,0.48), pt(0.40,0.13), pt(0.63,0.39)], fill=t["accent"], outline=t["secondary_dark"])
+        d.ellipse(box(0.48,0.35,0.57,0.44), fill="#FFFFFF")
+        d.ellipse(box(0.51,0.37,0.55,0.42), fill=t["primary_dark"])
+        d.polygon([pt(0.59,0.40), pt(0.99,0.30), pt(0.61,0.47)], fill=t["primary_dark"])
     else:
         d.ellipse(box(0.30,0.22,0.68,0.59), fill=t["tertiary"])
         d.polygon([pt(0.60,0.41), pt(0.77,0.48), pt(0.60,0.54)], fill=t["accent"])
-    d.ellipse(box(0.48,0.33,0.56,0.41), fill=t["primary_dark"])
-    d.ellipse(box(0.505,0.345,0.53,0.37), fill="#FFFFFF")
-    d.arc(box(0.34,0.52,0.70,0.86), 185, 345, fill=t["accent"], width=max(5,S//75))
+    if shape not in {"owl", "hummingbird"}:
+        d.ellipse(box(0.48,0.33,0.56,0.41), fill=t["primary_dark"])
+        d.ellipse(box(0.505,0.345,0.53,0.37), fill="#FFFFFF")
+        d.arc(box(0.34,0.52,0.70,0.86), 185, 345, fill=t["accent"], width=max(5,S//75))
     return im.resize((size, size), Image.Resampling.LANCZOS)
 
 

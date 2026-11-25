@@ -19,7 +19,7 @@ class YornisFinalPolishTests(unittest.TestCase):
 
         self.assertEqual(quality.QUALITY_VERSION, "0.15.8")
         self.assertTrue(app.APP_VERSION.startswith("0.15.8"))
-        self.assertEqual(len(yornis_theme.theme_names()), 8)
+        self.assertEqual(len(yornis_theme.theme_names()), 10)
         self.assertEqual(set(yornis_theme.theme_names()), set(assistant.BIRD_PROFILES))
         self.assertEqual(len(refs.TABLES), 17)
         self.assertEqual(len(engine.MEASUREMENTS), 102)

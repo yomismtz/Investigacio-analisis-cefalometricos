@@ -28,6 +28,8 @@ _THEME_FINALE = {
     "Quetzal": (2250, 3600),
     "Guacamaya Roja": (1550, 2650),
     "Guacamaya Azul": (1850, 3050),
+    "Búho": (560, 820),
+    "Colibrí": (4200, 5700),
 }
 
 
