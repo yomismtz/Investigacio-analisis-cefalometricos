@@ -501,9 +501,12 @@ class ResearchDB:
             # but neither landmarks nor results can be treated as current.
             con.execute("UPDATE cases SET image_path=?,original_filename=?,file_hash=?,image_revision=COALESCE(image_revision,1)+1,case_mm_per_px=NULL,updated_at=? WHERE id=?", (str(target), src.name, digest, now_iso(), case_id))
             for table in ("landmarks", "results"):
+                # Mark every existing row as historical using a value that
+                # cannot match the new positive case revision. This is an
+                # independent safeguard even for legacy rows with stale hashes.
                 con.execute(
-                    f"UPDATE {table} SET image_hash='historical:' || COALESCE(NULLIF(image_hash,''),'legacy-unidentified') "
-                    "WHERE case_id=?",
+                    f"UPDATE {table} SET image_hash='historical:' || COALESCE(NULLIF(image_hash,''),'legacy-unidentified'), "
+                    "image_revision=-ABS(COALESCE(image_revision,1)) WHERE case_id=?",
                     (case_id,),
                 )
         self.audit(row["study_id"], "image_attached", case_id=case_id, filename=src.name, sha256=digest, calibration_reset=True, prior_trace_preserved=True)
