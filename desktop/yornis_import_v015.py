@@ -30,12 +30,10 @@ def attach_image(db,case_id,image_path,copy_image=True):
     if copy_image:
         target=db._study_folder(row['study_id'])/f"YC_{int(row['case_number']):04d}{src.suffix.lower() or '.img'}";shutil.copy2(src,target)
     with db.connect() as con:
-        # A newly attached radiograph invalidates the previous image-specific scale
-        # and all coordinates/results measured on the replaced image.
-        con.execute('DELETE FROM landmarks WHERE case_id=?',(case_id,))
-        con.execute('DELETE FROM results WHERE case_id=?',(case_id,))
+        # Keep historical coordinates/results. Their old image_hash will not
+        # match the replacement image, so they cannot be reused in its tracing.
         con.execute('UPDATE cases SET image_path=?,original_filename=?,file_hash=?,case_mm_per_px=NULL,updated_at=? WHERE id=?',(str(target),src.name,digest,now_iso(),case_id))
-    db.audit(row['study_id'],'image_attached',case_id=case_id,source_filename=src.name,stored_filename=Path(target).name,sha256=digest,anonymized=bool(copy_image),calibration_reset=True,prior_trace_invalidated=True)
+    db.audit(row['study_id'],'image_attached',case_id=case_id,source_filename=src.name,stored_filename=Path(target).name,sha256=digest,anonymized=bool(copy_image),calibration_reset=True,prior_trace_preserved=True)
 
 def import_progress(db,study_id,paths,metadata=None,copy_images=True,callback=None,cancel_event=None):
     result=ImportResult();metadata=metadata or {};allowed={'.png','.jpg','.jpeg','.bmp','.tif','.tiff','.pdf'};paths=[str(p) for p in paths if Path(p).suffix.lower() in allowed]
