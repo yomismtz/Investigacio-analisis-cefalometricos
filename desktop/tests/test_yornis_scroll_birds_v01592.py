@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-import hashlib
 import sys
 import unittest
+import wave
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parents[1]
@@ -15,18 +15,26 @@ import yornis_modern_ui_v0160 as modern_ui
 
 
 class ScrollBirdSoundsV01592Tests(unittest.TestCase):
-    def test_all_palettes_have_distinct_signature(self):
-        self.assertEqual(set(yornis_theme.theme_names()), set(sounds._SIGNATURES))
-        digests = {
-            hashlib.sha256(sounds.synthesize_signature(name, 35)).hexdigest()
-            for name in yornis_theme.theme_names()
-        }
-        self.assertEqual(len(digests), 10)
-
-    def test_signature_pcm_shape(self):
-        frames = sounds.synthesize_signature("Tucán", 35)
-        self.assertEqual(len(frames), int(sounds.SIGNATURE_DURATION * sounds.SAMPLE_RATE) * 2)
-        self.assertTrue(any(frames))
+    def test_all_palettes_use_their_own_uploaded_recording(self):
+        names = yornis_theme.theme_names()
+        self.assertEqual(set(names), set(sounds.BIRD_AUDIO_FILES))
+        sources = [sounds.BIRD_AUDIO_FILES[name] for name in names]
+        self.assertEqual(len(set(sources)), 10)
+        for name in names:
+            self.assertTrue(sounds.source_audio_path(name).is_file())
+            full = sounds.bundled_signature_path(name, 35)
+            startup = sounds.bundled_startup_path(name, 35)
+            self.assertTrue(full.is_file())
+            self.assertTrue(startup.is_file())
+            with wave.open(str(full), "rb") as wav:
+                self.assertEqual((wav.getnchannels(), wav.getsampwidth()), (1, 2))
+                self.assertEqual(wav.getframerate(), sounds.SAMPLE_RATE)
+                self.assertGreater(wav.getnframes(), sounds.SAMPLE_RATE // 5)
+            with wave.open(str(startup), "rb") as wav:
+                self.assertEqual((wav.getnchannels(), wav.getsampwidth()), (1, 2))
+                self.assertEqual(wav.getframerate(), sounds.SAMPLE_RATE)
+                self.assertGreater(wav.getnframes(), sounds.SAMPLE_RATE // 5)
+                self.assertLessEqual(wav.getnframes(), int(sounds.SAMPLE_RATE * 2.8))
 
     def test_launcher_has_scroll_navigation(self):
         import yornis_desktop_v01592 as app
