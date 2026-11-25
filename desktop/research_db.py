@@ -223,6 +223,12 @@ class ResearchDB:
                 );
                 """
             )
+            # Keep historical traces, but associate each saved trace with the
+            # exact radiograph hash so replacing an image cannot reuse old points.
+            for table in ("landmarks", "results"):
+                columns = {row[1] for row in con.execute(f"PRAGMA table_info({table})").fetchall()}
+                if "image_hash" not in columns:
+                    con.execute(f"ALTER TABLE {table} ADD COLUMN image_hash TEXT DEFAULT ''")
 
     # ---------- Audit ----------
     def audit(self, study_id: int, event: str, case_id: int | None = None, **details):
@@ -475,12 +481,10 @@ class ResearchDB:
             target = self._study_folder(row["study_id"]) / f"{row['case_number']:04d}_{src.name}"
             shutil.copy2(src, target)
         with self.connect() as con:
-            # A replacement radiograph is a new measurement surface: never reuse
-            # the previous image's scale or landmarks/results.
-            con.execute("DELETE FROM landmarks WHERE case_id=?", (case_id,))
-            con.execute("DELETE FROM results WHERE case_id=?", (case_id,))
+            # Preserve the old trace for audit. Its image_hash will no longer
+            # match the replacement radiograph, so it cannot be loaded as current.
             con.execute("UPDATE cases SET image_path=?,original_filename=?,file_hash=?,case_mm_per_px=NULL,updated_at=? WHERE id=?", (str(target), src.name, digest, now_iso(), case_id))
-        self.audit(row["study_id"], "image_attached", case_id=case_id, filename=src.name, sha256=digest, calibration_reset=True, prior_trace_invalidated=True)
+        self.audit(row["study_id"], "image_attached", case_id=case_id, filename=src.name, sha256=digest, calibration_reset=True, prior_trace_preserved=True)
 
     def import_files(self, study_id: int, paths: Iterable[str], metadata: dict[str, dict] | None = None, copy_images: bool = True) -> ImportResult:
         result = ImportResult()
@@ -567,16 +571,17 @@ class ResearchDB:
         case = self.case(case_id)
         if not case:
             raise KeyError(case_id)
+        image_hash = str(case["file_hash"] or "")
         with self.connect() as con:
             lv = con.execute("SELECT COALESCE(MAX(version),0)+1 FROM landmarks WHERE case_id=? AND protocol_version=?", (case_id, protocol_version)).fetchone()[0]
             rv = con.execute("SELECT COALESCE(MAX(version),0)+1 FROM results WHERE case_id=? AND protocol_version=?", (case_id, protocol_version)).fetchone()[0]
             stamp = now_iso()
             for name, (x, y) in points.items():
-                con.execute("INSERT INTO landmarks(case_id,protocol_version,name,x,y,version,created_at) VALUES(?,?,?,?,?,?,?)", (case_id, protocol_version, name, float(x), float(y), lv, stamp))
+                con.execute("INSERT INTO landmarks(case_id,protocol_version,name,x,y,version,created_at,image_hash) VALUES(?,?,?,?,?,?,?,?)", (case_id, protocol_version, name, float(x), float(y), lv, stamp, image_hash))
             for r in results:
                 con.execute(
-                    "INSERT INTO results(case_id,protocol_version,analysis,measurement,value,unit,reference_text,interpretation,version,created_at) VALUES(?,?,?,?,?,?,?,?,?,?)",
-                    (case_id, protocol_version, str(r.get("analysis", "")), str(r.get("measurement", "")), r.get("value"), str(r.get("unit", "")), str(r.get("reference", "")), str(r.get("interpretation", "")), rv, stamp),
+                    "INSERT INTO results(case_id,protocol_version,analysis,measurement,value,unit,reference_text,interpretation,version,created_at,image_hash) VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+                    (case_id, protocol_version, str(r.get("analysis", "")), str(r.get("measurement", "")), r.get("value"), str(r.get("unit", "")), str(r.get("reference", "")), str(r.get("interpretation", "")), rv, stamp, image_hash),
                 )
             if mm_per_px is not None:
                 con.execute("UPDATE cases SET case_mm_per_px=?,updated_at=? WHERE id=?", (mm_per_px, stamp, case_id))
@@ -585,19 +590,23 @@ class ResearchDB:
         self.audit(case["study_id"], "trace_saved", case_id=case_id, landmark_version=lv, result_version=rv, landmark_count=len(points), result_count=len(results))
 
     def latest_landmarks(self, case_id: int, protocol_version: int) -> dict[str, tuple[float, float]]:
+        case = self.case(case_id)
+        image_hash = str(case["file_hash"] or "") if case else ""
         with self.connect() as con:
-            v = con.execute("SELECT MAX(version) FROM landmarks WHERE case_id=? AND protocol_version=?", (case_id, protocol_version)).fetchone()[0]
+            v = con.execute("SELECT MAX(version) FROM landmarks WHERE case_id=? AND protocol_version=? AND image_hash=?", (case_id, protocol_version, image_hash)).fetchone()[0]
             if v is None:
                 return {}
-            rows = con.execute("SELECT name,x,y FROM landmarks WHERE case_id=? AND protocol_version=? AND version=?", (case_id, protocol_version, v)).fetchall()
+            rows = con.execute("SELECT name,x,y FROM landmarks WHERE case_id=? AND protocol_version=? AND version=? AND image_hash=?", (case_id, protocol_version, v, image_hash)).fetchall()
         return {r["name"]: (float(r["x"]), float(r["y"])) for r in rows}
 
     def latest_results(self, case_id: int, protocol_version: int):
+        case = self.case(case_id)
+        image_hash = str(case["file_hash"] or "") if case else ""
         with self.connect() as con:
-            v = con.execute("SELECT MAX(version) FROM results WHERE case_id=? AND protocol_version=?", (case_id, protocol_version)).fetchone()[0]
+            v = con.execute("SELECT MAX(version) FROM results WHERE case_id=? AND protocol_version=? AND image_hash=?", (case_id, protocol_version, image_hash)).fetchone()[0]
             if v is None:
                 return []
-            return con.execute("SELECT * FROM results WHERE case_id=? AND protocol_version=? AND version=? ORDER BY analysis,measurement", (case_id, protocol_version, v)).fetchall()
+            return con.execute("SELECT * FROM results WHERE case_id=? AND protocol_version=? AND version=? AND image_hash=? ORDER BY analysis,measurement", (case_id, protocol_version, v, image_hash)).fetchall()
 
     def mark_in_progress(self, case_id: int):
         row = self.case(case_id)
