@@ -45,6 +45,29 @@ jobs:
           print('Eight bundled bird mascots rendered successfully')
           '@ | python -
 
+      - name: Pre-render offline bird audio library
+        shell: pwsh
+        run: |
+          @'
+          import sys, wave
+          from pathlib import Path
+          sys.path.insert(0, 'desktop')
+          import yornis_bird_signature_v01592 as audio
+          names = ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul')
+          volumes = (20, 35, 50, 70, 90)
+          out = Path('desktop/assets/bird_audio')
+          out.mkdir(parents=True, exist_ok=True)
+          for name in names:
+              safe = ''.join(ch if ch.isalnum() else '_' for ch in name)
+              for volume in volumes:
+                  frames = audio.synthesize_signature(name, volume)
+                  with wave.open(str(out / f'{safe}_{volume}.wav'), 'wb') as wav:
+                      wav.setnchannels(1); wav.setsampwidth(2); wav.setframerate(audio.SAMPLE_RATE); wav.writeframes(frames)
+          files = list(out.glob('*.wav'))
+          assert len(files) == 40 and all(f.stat().st_size > 1000 for f in files)
+          print('40 offline bird audio WAVs generated and validated')
+          '@ | python -
+
       - name: Rebuild 512px branding
         shell: pwsh
         run: |
@@ -118,6 +141,9 @@ jobs:
           assert hasattr(l, 'startup_sound_var')
           assert hasattr(l, 'startup_volume_var')
           assert len(l.palette_cards) == 8
+          from yornis_bird_signature_v01592 import bundled_signature_path
+          for bird in ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul'):
+              assert bundled_signature_path(bird, 35).name.endswith('_35.wav')
           from yornis_virtual_assistant_v0157 import make_avatar_photo
           for bird in ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul'):
               image = make_avatar_photo(l, 64, bird)
@@ -143,7 +169,7 @@ jobs:
           --hidden-import yornis_reference_help_v0154 --hidden-import yornis_reference_help_v0154_all --hidden-import yornis_evidence_v0155 --hidden-import yornis_quality_ui_v0156 --hidden-import yornis_reference_help_v0156
           --hidden-import yornis_quality_ui_v0157 --hidden-import yornis_virtual_assistant_v0157 --hidden-import yornis_quality_ui_v0158 --hidden-import yornis_startup_audio_v0159 --hidden-import yornis_desktop_v0159 --hidden-import yornis_desktop_v01591 --hidden-import yornis_bird_signature_v01592
           --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --collect-all pyzipper
-          --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;." --add-data "desktop/assets/birds;assets/birds"
+          --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;." --add-data "desktop/assets/birds;assets/birds" --add-data "desktop/assets/bird_audio;assets/bird_audio"
           desktop/yornis_desktop_v01592.py
 
       - name: Cold start
