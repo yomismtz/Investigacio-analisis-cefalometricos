@@ -11,6 +11,7 @@ if str(HERE) not in sys.path:
 
 import yornis_bird_signature_v01592 as sounds
 import yornis_theme
+import yornis_modern_ui_v0160 as modern_ui
 
 
 class ScrollBirdSoundsV01592Tests(unittest.TestCase):
@@ -46,6 +47,16 @@ class ScrollBirdSoundsV01592Tests(unittest.TestCase):
             launcher._scroll_canvas.yview_scroll(8, "units")
             launcher.update_idletasks()
             self.assertGreater(launcher._scroll_canvas.yview()[0], old)
+            self.assertEqual(modern_ui.active_widget_theme(launcher), "bootstrap-light")
+            original = yornis_theme.current_theme_name()
+            try:
+                for bird, tokens in yornis_theme.THEMES.items():
+                    yornis_theme.apply_theme(bird, persist=False)
+                    modern_ui.apply_modern_styles(launcher)
+                    self.assertEqual(modern_ui.primary_action_color(launcher), tokens["primary"])
+            finally:
+                yornis_theme.apply_theme(original, persist=False)
+                modern_ui.apply_modern_styles(launcher)
         finally:
             launcher.destroy()
 
