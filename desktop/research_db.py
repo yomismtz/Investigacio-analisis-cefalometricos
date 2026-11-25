@@ -475,8 +475,12 @@ class ResearchDB:
             target = self._study_folder(row["study_id"]) / f"{row['case_number']:04d}_{src.name}"
             shutil.copy2(src, target)
         with self.connect() as con:
-            con.execute("UPDATE cases SET image_path=?,original_filename=?,file_hash=?,updated_at=? WHERE id=?", (str(target), src.name, digest, now_iso(), case_id))
-        self.audit(row["study_id"], "image_attached", case_id=case_id, filename=src.name, sha256=digest)
+            # A replacement radiograph is a new measurement surface: never reuse
+            # the previous image's scale or landmarks/results.
+            con.execute("DELETE FROM landmarks WHERE case_id=?", (case_id,))
+            con.execute("DELETE FROM results WHERE case_id=?", (case_id,))
+            con.execute("UPDATE cases SET image_path=?,original_filename=?,file_hash=?,case_mm_per_px=NULL,updated_at=? WHERE id=?", (str(target), src.name, digest, now_iso(), case_id))
+        self.audit(row["study_id"], "image_attached", case_id=case_id, filename=src.name, sha256=digest, calibration_reset=True, prior_trace_invalidated=True)
 
     def import_files(self, study_id: int, paths: Iterable[str], metadata: dict[str, dict] | None = None, copy_images: bool = True) -> ImportResult:
         result = ImportResult()
