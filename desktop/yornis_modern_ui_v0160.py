@@ -65,7 +65,7 @@ def apply_modern_styles(root) -> bool:
         # ttkbootstrap attaches to the existing Tk interpreter; the application
         # keeps its current Tk/Toplevel architecture and does not create a new root.
         if ttkb is not None:
-            style = ttkb.Style(master=root, theme=BASE_THEME)
+            style = ttkb.Style(theme=BASE_THEME)
             style.theme_use(BASE_THEME)
             active_theme = BASE_THEME
         else:
