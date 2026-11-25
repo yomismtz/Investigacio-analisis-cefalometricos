@@ -25,6 +25,7 @@ except Exception:  # pragma: no cover - deployment test catches missing dependen
 
 _INSTALLED = False
 _ORIGINAL_APPLY_STYLES = None
+_ORIGINAL_TK_DESTROY = None
 
 
 def modern_backend_available() -> bool:
@@ -233,10 +234,10 @@ def _polish_native_widgets(root, t: dict) -> None:
 
 
 def install() -> bool:
-    """Patch the existing global quality layer once, preserving its window hooks."""
-    global _INSTALLED, _ORIGINAL_APPLY_STYLES
+    """Patch quality styling and safely rebind the style engine between Tk roots."""
+    global _INSTALLED, _ORIGINAL_APPLY_STYLES, _ORIGINAL_TK_DESTROY
     if _INSTALLED:
-        return modern_backend_available()
+        return True
     try:
         import yornis_quality_ui_v0158 as quality
         _ORIGINAL_APPLY_STYLES = quality.apply_styles
@@ -246,6 +247,33 @@ def install() -> bool:
             apply_modern_styles(root)
 
         quality.apply_styles = modern_apply_styles
+
+        # Yornis intentionally creates the launcher, then a separate root for
+        # individual/research mode. ttkbootstrap 2.x uses one Style singleton;
+        # clear it when its owning Tk root is destroyed so the next root can
+        # bind a fresh style engine instead of inheriting a dead Tcl interpreter.
+        if ttkb is not None and _ORIGINAL_TK_DESTROY is None:
+            _ORIGINAL_TK_DESTROY = tk.Tk.destroy
+
+            def _destroy_and_reset_style(root):
+                try:
+                    result = _ORIGINAL_TK_DESTROY(root)
+                finally:
+                    try:
+                        style = ttkb.Style.get_instance()
+                        if style is not None and getattr(style, "master", None) is root:
+                            ttkb.Style.instance = None
+                            try:
+                                from ttkbootstrap.utils.fonts import Fonts
+                                Fonts.reset()
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
+                return result
+
+            tk.Tk.destroy = _destroy_and_reset_style
+
         _INSTALLED = True
         return True
     except Exception:
