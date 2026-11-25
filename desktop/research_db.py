@@ -229,6 +229,12 @@ class ResearchDB:
                 columns = {row[1] for row in con.execute(f"PRAGMA table_info({table})").fetchall()}
                 if "image_hash" not in columns:
                     con.execute(f"ALTER TABLE {table} ADD COLUMN image_hash TEXT DEFAULT ''")
+                # Backfill legacy trace rows against the radiograph currently
+                # assigned to each case, preserving existing work on upgrade.
+                con.execute(
+                    f"UPDATE {table} SET image_hash=COALESCE((SELECT file_hash FROM cases WHERE cases.id={table}.case_id),'') "
+                    "WHERE image_hash IS NULL OR image_hash=''"
+                )
 
     # ---------- Audit ----------
     def audit(self, study_id: int, event: str, case_id: int | None = None, **details):
