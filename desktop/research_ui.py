@@ -82,7 +82,7 @@ class ResearchWorkspace(tk.Tk):
         self.mm_per_px: float | None = None
         self.thumbnail_photo = None; self.magnifier_photo = None
         self.randomized_order = False
-        self.title("YomCeph Desktop · v0.14 Classic Research Suite")
+        self.title("Yornis · Investigación")
         self.geometry("1540x940"); self.minsize(1180, 720)
         self.configure(bg=SEMANTIC["app_background"])
         self.protocol("WM_DELETE_WINDOW", self.on_close)
@@ -109,12 +109,12 @@ class ResearchWorkspace(tk.Tk):
         m=tk.Menu(self)
         f=tk.Menu(m,tearoff=0); f.add_command(label=self.T("Nueva investigación","New study"),command=self.new_study); f.add_command(label=self.T("Abrir/continuar investigación","Open/resume study"),command=self.choose_study); f.add_separator(); f.add_command(label=self.T("Respaldar investigación…","Back up study…"),command=self.backup); f.add_separator(); f.add_command(label=self.T("Salir","Exit"),command=self.on_close); m.add_cascade(label=self.T("ARCHIVO","FILE"),menu=f)
         r=tk.Menu(m,tearoff=0); r.add_command(label=self.T("Bloquear protocolo","Lock protocol"),command=self.lock_protocol); r.add_command(label=self.T("Muestra de reproducibilidad…","Reproducibility sample…"),command=self.repro_sample); r.add_command(label=self.T("Orden aleatorio","Random order"),command=self.toggle_random); r.add_command(label=self.T("Revisar trazado","Review tracing"),command=self.start_review); m.add_cascade(label=self.T("INVESTIGACIÓN","RESEARCH"),menu=r)
-        h=tk.Menu(m,tearoff=0); h.add_command(label=self.T("Ayuda de atajos (F1)","Shortcut help (F1)"),command=self.show_help); h.add_command(label=self.T("Acerca de YomCeph","About YomCeph"),command=self.about); m.add_cascade(label=self.T("AYUDA","HELP"),menu=h)
+        h=tk.Menu(m,tearoff=0); h.add_command(label=self.T("Ayuda de atajos (F1)","Shortcut help (F1)"),command=self.show_help); h.add_command(label=self.T("Acerca de Yornis","About Yornis"),command=self.about); m.add_cascade(label=self.T("AYUDA","HELP"),menu=h)
         self.config(menu=m)
 
     def _build(self):
         top=ttk.Frame(self,padding=(10,8)); top.pack(fill="x")
-        ttk.Label(top,text="YomCeph",style="Title.TLabel").pack(side="left")
+        ttk.Label(top,text="Yornis",style="Title.TLabel").pack(side="left")
         self.study_label=ttk.Label(top,text=self.T("Sin investigación abierta","No study open")); self.study_label.pack(side="left",padx=18)
         self.progress_label=ttk.Label(top,text=""); self.progress_label.pack(side="right",padx=8)
         self.tabs=ttk.Notebook(self); self.tabs.pack(fill="both",expand=True,padx=8,pady=(0,6))
@@ -190,7 +190,7 @@ class ResearchWorkspace(tk.Tk):
         self.canvas.bind("<Button-1>",self.canvas_click); self.canvas.bind("<B1-Motion>",self.canvas_drag); self.canvas.bind("<ButtonRelease-1>",self.canvas_release); self.canvas.bind("<Button-3>",self.pan_begin); self.canvas.bind("<B3-Motion>",self.pan_move); self.canvas.bind("<MouseWheel>",self.zoom_wheel); self.canvas.bind("<Motion>",self.update_magnifier); self.canvas.bind("<Configure>",lambda e:self.redraw())
         self.pan_state=None
         self.magnifier=tk.Canvas(right,width=260,height=190,bg=PALETTE["canvas_dark"],highlightthickness=1,highlightbackground=SEMANTIC["border"]); self.magnifier.pack(fill="x",pady=3)
-        ttk.Button(right,text=self.T("Ajustar imagen","Fit image"),command=self.fit_image).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Calibrar caso","Calibrate case"),command=self.start_calibration).pack(fill="x",pady=2); self.calib_label=ttk.Label(right,text=self.T("Sin calibrar","Not calibrated")); self.calib_label.pack(fill="x",pady=4)
+        ttk.Button(right,text=self.T("Ajustar imagen","Fit image"),command=self.fit_image).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Calibrar radiografía","Calibrate radiograph"),command=self.start_calibration).pack(fill="x",pady=2); self.calib_label=ttk.Label(right,text=self.T("Sin calibrar","Not calibrated")); self.calib_label.pack(fill="x",pady=4)
         ttk.Separator(right).pack(fill="x",pady=5); ttk.Button(right,text=self.T("Deshacer Ctrl+Z","Undo Ctrl+Z"),command=self.undo).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Rehacer Ctrl+Y","Redo Ctrl+Y"),command=self.redo).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Revisar puntos","Review points"),command=self.start_review).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Confianza del punto","Landmark confidence"),command=self.edit_landmark_confidence).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Control de calidad","Quality control"),command=self.show_qc).pack(fill="x",pady=2); ttk.Button(right,text=self.T("Calcular y guardar","Calculate & save"),command=self.calculate_and_save,style="Primary.TButton").pack(fill="x",pady=4); ttk.Button(right,text=self.T("Excluir caso…","Exclude case…"),command=self.exclude_current).pack(fill="x",pady=2)
         self.trace_progress=ttk.Label(right,text=""); self.trace_progress.pack(fill="x",pady=5)
         self.results_tree=ttk.Treeview(right,columns=("value","unit"),show="tree headings",height=12); self.results_tree.heading("#0",text=self.T("Resultado","Result")); self.results_tree.heading("value",text=self.T("Valor","Value")); self.results_tree.heading("unit",text=self.T("Unidad","Unit")); self.results_tree.column("#0",width=180); self.results_tree.column("value",width=70); self.results_tree.column("unit",width=50); self.results_tree.pack(fill="both",expand=True)
@@ -222,7 +222,7 @@ class ResearchWorkspace(tk.Tk):
         for i,(k,l) in enumerate([("title",self.T("Título","Title")),("researcher",self.T("Investigador","Researcher")),("institution",self.T("Institución","Institution")),("objective",self.T("Objetivo","Objective"))]): ttk.Label(w,text=l).pack(anchor="w",padx=14,pady=(10 if i==0 else 4,2)); ttk.Entry(w,textvariable=fields[k]).pack(fill="x",padx=14)
         blind=tk.BooleanVar(); ttk.Checkbutton(w,text=self.T("Modo ciego","Blind mode"),variable=blind).pack(anchor="w",padx=14,pady=10)
         def create():
-            if not fields["title"].get().strip(): messagebox.showwarning("YomCeph",self.T("Escribe un título.","Enter a title."),parent=w); return
+            if not fields["title"].get().strip(): messagebox.showwarning("Yornis",self.T("Escribe un título.","Enter a title."),parent=w); return
             sid=self.db.create_study(fields["title"].get(),fields["researcher"].get(),fields["institution"].get(),fields["objective"].get(),self.language,blind.get()); w.destroy(); self.load_study(sid); self.tabs.select(self.protocol_tab)
         ttk.Button(w,text=self.T("Crear investigación","Create study"),command=create,style="Primary.TButton").pack(pady=16)
 
@@ -257,7 +257,7 @@ class ResearchWorkspace(tk.Tk):
 
     def add_criterion(self, kind):
         if not self.study_id: return
-        text=simpledialog.askstring("YomCeph",self.T("Escribe el criterio:","Enter criterion:"),parent=self)
+        text=simpledialog.askstring("Yornis",self.T("Escribe el criterio:","Enter criterion:"),parent=self)
         if text: self.db.add_criterion(self.study_id,kind,text); self.refresh_criteria()
 
     def populate_measure_checks(self):
@@ -287,32 +287,32 @@ class ResearchWorkspace(tk.Tk):
     def save_protocol(self):
         if not self.study_id: return
         self.on_measure_toggle(); cfg=self.collect_protocol()
-        if not cfg["selected_variables"]: messagebox.showwarning("YomCeph",self.T("Selecciona al menos un resultado.","Select at least one outcome.")); return
+        if not cfg["selected_variables"]: messagebox.showwarning("Yornis",self.T("Selecciona al menos un resultado.","Select at least one outcome.")); return
         latest=self.db.latest_protocol(self.study_id); version=self.db.save_protocol(self.study_id,cfg,lock=False,force_new_version=bool(latest["locked"])); self.db.set_study_calibration(self.study_id,cfg["study_mm_per_px"]); self.protocol=cfg|{"version":version}; self.study_label.config(text=f"{cfg['title']} · v{version}"); self.refresh_cases(); self.status.config(text=self.T("Protocolo guardado","Protocol saved"))
 
     def lock_protocol(self):
         if not self.study_id:return
         if not self.db.latest_protocol(self.study_id)["version"]: self.save_protocol()
-        if messagebox.askyesno("YomCeph",self.T("¿Bloquear el protocolo? Los cambios posteriores crearán una nueva versión.","Lock protocol? Later changes will create a new version.")):
+        if messagebox.askyesno("Yornis",self.T("¿Bloquear el protocolo? Los cambios posteriores crearán una nueva versión.","Lock protocol? Later changes will create a new version.")):
             self.db.lock_protocol(self.study_id); self.lock_label.config(text=self.T("🔒 Protocolo bloqueado","🔒 Protocol locked"))
 
     # ---------- import/database ----------
     def require_study(self):
-        if not self.study_id: messagebox.showinfo("YomCeph",self.T("Abre o crea una investigación.","Open or create a study.")); return False
+        if not self.study_id: messagebox.showinfo("Yornis",self.T("Abre o crea una investigación.","Open or create a study.")); return False
         return True
 
     def import_files(self):
         if not self.require_study():return
         files=filedialog.askopenfilenames(filetypes=[("Radiografías","*.png *.jpg *.jpeg *.bmp *.tif *.tiff *.pdf"),("Todos","*.*")])
         if not files:return
-        r=self.db.import_files(self.study_id,files); self.refresh_cases(); self.refresh_dashboard(); messagebox.showinfo("YomCeph",self.T(f"Agregadas: {r.added}\nDuplicadas: {r.duplicates}\nOmitidas: {r.skipped}",f"Added: {r.added}\nDuplicates: {r.duplicates}\nSkipped: {r.skipped}"))
+        r=self.db.import_files(self.study_id,files); self.refresh_cases(); self.refresh_dashboard(); messagebox.showinfo("Yornis",self.T(f"Agregadas: {r.added}\nDuplicadas: {r.duplicates}\nOmitidas: {r.skipped}",f"Added: {r.added}\nDuplicates: {r.duplicates}\nSkipped: {r.skipped}"))
 
     def import_folder(self):
         if not self.require_study():return
         folder=filedialog.askdirectory();
         if not folder:return
         csv_path=filedialog.askopenfilename(title=self.T("CSV de metadatos opcional (Cancelar para omitir)","Optional metadata CSV (Cancel to skip)"),filetypes=[("CSV","*.csv")])
-        r=self.db.import_folder(self.study_id,folder,csv_path or None); self.refresh_cases(); self.refresh_dashboard(); messagebox.showinfo("YomCeph",f"{self.T('Agregadas','Added')}: {r.added}\n{self.T('Duplicadas','Duplicates')}: {r.duplicates}\n{self.T('Omitidas','Skipped')}: {r.skipped}")
+        r=self.db.import_folder(self.study_id,folder,csv_path or None); self.refresh_cases(); self.refresh_dashboard(); messagebox.showinfo("Yornis",f"{self.T('Agregadas','Added')}: {r.added}\n{self.T('Duplicadas','Duplicates')}: {r.duplicates}\n{self.T('Omitidas','Skipped')}: {r.skipped}")
 
     def import_metadata_csv(self):
         if not self.require_study():return
@@ -322,7 +322,7 @@ class ResearchWorkspace(tk.Tk):
         for c in self.db.list_cases(self.study_id,include_excluded=True):
             md=meta.get(c["original_filename"],meta.get(Path(c["original_filename"]).stem,meta.get(c["study_code"],{})))
             if md: self.db.update_case_metadata(c["id"],sex=str(md.get("sex") or c["sex"]),age=self.db._float_or_none(md.get("age")) if md.get("age") not in (None,"") else c["age"],study_code=str(md.get("id") or c["study_code"]),examiner=str(md.get("examiner") or c["examiner"])); updated+=1
-        self.refresh_cases(); messagebox.showinfo("YomCeph",self.T(f"Se actualizaron {updated} registros.",f"Updated {updated} records."))
+        self.refresh_cases(); messagebox.showinfo("Yornis",self.T(f"Se actualizaron {updated} registros.",f"Updated {updated} records."))
 
     def add_manual(self):
         if not self.require_study():return
@@ -331,7 +331,7 @@ class ResearchWorkspace(tk.Tk):
         image_var=tk.StringVar(); ttk.Label(w,text=self.T("Radiografía (opcional)","Radiograph (optional)")).pack(anchor="w",padx=12,pady=(8,2)); row=ttk.Frame(w); row.pack(fill="x",padx=12); ttk.Entry(row,textvariable=image_var).pack(side="left",fill="x",expand=True); ttk.Button(row,text="…",command=lambda:image_var.set(filedialog.askopenfilename())).pack(side="left")
         def add():
             try:self.db.add_case(self.study_id,vs["code"].get() or None,vs["sex"].get(),self.db._float_or_none(vs["age"].get()),image_var.get()); w.destroy(); self.refresh_cases(); self.refresh_dashboard()
-            except Exception as e:messagebox.showerror("YomCeph",str(e),parent=w)
+            except Exception as e:messagebox.showerror("Yornis",str(e),parent=w)
         ttk.Button(w,text=self.T("Agregar","Add"),command=add,style="Primary.TButton").pack(pady=12)
 
     def refresh_cases(self):
@@ -360,11 +360,11 @@ class ResearchWorkspace(tk.Tk):
     def edit_selected_meta(self):
         cid=self.selected_case_id();
         if not cid:return
-        c=self.db.case(cid); code=simpledialog.askstring("YomCeph","ID:",initialvalue=c["study_code"],parent=self); 
+        c=self.db.case(cid); code=simpledialog.askstring("Yornis","ID:",initialvalue=c["study_code"],parent=self); 
         if code is None:return
-        sex=simpledialog.askstring("YomCeph",self.T("Sexo:","Sex:"),initialvalue=c["sex"],parent=self); age=simpledialog.askfloat("YomCeph",self.T("Edad:","Age:"),initialvalue=c["age"],parent=self)
+        sex=simpledialog.askstring("Yornis",self.T("Sexo:","Sex:"),initialvalue=c["sex"],parent=self); age=simpledialog.askfloat("Yornis",self.T("Edad:","Age:"),initialvalue=c["age"],parent=self)
         try:self.db.update_case_metadata(cid,sex=sex or "",age=age,study_code=code); self.refresh_cases()
-        except Exception as e:messagebox.showerror("YomCeph",str(e))
+        except Exception as e:messagebox.showerror("Yornis",str(e))
 
     def exclude_selected(self):
         cid=self.selected_case_id();
@@ -389,14 +389,14 @@ class ResearchWorkspace(tk.Tk):
     def open_case(self,cid:int):
         if not self.study_id:return
         latest=self.db.latest_protocol(self.study_id); self.protocol=latest["config"] or self.protocol; self.protocol["version"]=latest["version"]
-        if not self.protocol.get("selected_variables"):messagebox.showwarning("YomCeph",self.T("Primero guarda el protocolo y selecciona resultados.","Save the protocol and select outcomes first."));return
+        if not self.protocol.get("selected_variables"):messagebox.showwarning("Yornis",self.T("Primero guarda el protocolo y selecciona resultados.","Save the protocol and select outcomes first."));return
         c=self.db.case(cid)
         if not c["image_path"] or not Path(c["image_path"]).exists():
             p=filedialog.askopenfilename(filetypes=[("Radiografías","*.png *.jpg *.jpeg *.bmp *.tif *.tiff *.pdf")])
             if not p:return
             self.db.attach_image(cid,p); c=self.db.case(cid)
         try:self.image=self.load_pil(c["image_path"]); self.image_path=c["image_path"]
-        except Exception as e:messagebox.showerror("YomCeph",str(e));return
+        except Exception as e:messagebox.showerror("Yornis",str(e));return
         self.case_id=cid; self.landmarks=minimum_landmarks(self.protocol["selected_variables"]); self.landmark_notes={}; self.landmark_confidence={}
         self.points=self.load_autosave(cid) or self.db.latest_landmarks(cid,self.protocol["version"])
         # Calibration is image-specific. Never inherit a study-wide scale or a legacy autosave scale.
@@ -409,7 +409,7 @@ class ResearchWorkspace(tk.Tk):
         self.trace_case_title.config(text=f"#{c['case_number']} · {c['study_code']}")
         if bool(s["blind_mode"]):self.trace_meta.config(text=self.T("Modo ciego activo: edad/sexo ocultos","Blind mode active: age/sex hidden"))
         else:self.trace_meta.config(text=f"{self.T('Sexo','Sex')}: {c['sex'] or '—'} · {self.T('Edad','Age')}: {c['age'] if c['age'] is not None else '—'}")
-        self.calib_label.config(text=(f"{self.mm_per_px:.6f} mm/px" if self.mm_per_px else self.T("Calibración obligatoria","Calibration required")))
+        self.calib_label.config(text=(f"{self.mm_per_px:.6f} mm/px" if self.mm_per_px else self.T("Falta calibrar la radiografía","Radiograph calibration required")))
         self.tabs.select(self.trace_tab); self.fit_image(); self.update_trace_progress(); self.calculate_preview()
         if not self.mm_per_px:self.after(180,self.start_calibration)
 
@@ -456,10 +456,10 @@ class ResearchWorkspace(tk.Tk):
         try:
             normalized=calibration.normalize_landmark_confidence(value)
         except ValueError:
-            messagebox.showwarning("YomCeph",self.T("Usa Alta, Media, Baja o Pendiente.","Use High, Medium, Low or Pending."));return
+            messagebox.showwarning("Yornis",self.T("Usa Alta, Media, Baja o Pendiente.","Use High, Medium, Low or Pending."));return
         self.landmark_confidence[k]=normalized
         self.autosave();self.update_trace_progress()
-        messagebox.showinfo("YomCeph",self.T("Confianza guardada: "+normalized,"Confidence saved: "+normalized))
+        messagebox.showinfo("Yornis",self.T("Confianza guardada: "+normalized,"Confidence saved: "+normalized))
     def nearest_point(self,x,y):
         best=None;bd=14
         for k,p in self.points.items():
@@ -475,6 +475,9 @@ class ResearchWorkspace(tk.Tk):
             return
         if self.calibration_mode:
             self.calibration_clicks.append(p)
+            if len(self.calibration_clicks)==1:
+                self.status.config(text=self.T(f"Primer punto colocado. Ahora marca el SEGUNDO extremo: la distancia completa debe ser de {self.pending_mm:g} mm.",f"First point placed. Now mark the SECOND endpoint: the full distance must be {self.pending_mm:g} mm."))
+                self.redraw();return
             if len(self.calibration_clicks)==2:
                 try:
                     self.mm_per_px=calibration.calculate_mm_per_px(self.calibration_clicks[0],self.calibration_clicks[1],self.pending_mm)
@@ -484,7 +487,7 @@ class ResearchWorkspace(tk.Tk):
                 self.calibration_mode=False;self.calibration_clicks=[]
                 if self.case_id:self.db.update_case_calibration(self.case_id,self.mm_per_px)
                 self.calib_label.config(text=f"{self.mm_per_px:.6f} mm/px")
-                self.status.config(text=self.T("Calibración guardada. Ya puedes iniciar el trazado.","Calibration saved. You can now start tracing."))
+                self.status.config(text=self.T(f"Calibración guardada: {self.pending_mm:g} mm entre los dos puntos · escala {self.mm_per_px:.6f} mm/píxel.",f"Calibration saved: {self.pending_mm:g} mm between the two points · scale {self.mm_per_px:.6f} mm/pixel."))
                 self.autosave()
             self.redraw();return
         if not self.mm_per_px:
@@ -529,12 +532,12 @@ class ResearchWorkspace(tk.Tk):
         case=self.db.case(self.case_id) if self.case_id is not None else None
         if self.mm_per_px and case is not None and case["case_mm_per_px"] is not None:
             if not messagebox.askyesno(self.T("Recalibrar radiografía","Recalibrate radiograph"),self.T("Esta radiografía ya tiene una calibración guardada. ¿Deseas sustituirla?","This radiograph already has a saved calibration. Replace it?"),parent=self):return
-        mm=simpledialog.askfloat(self.T("Calibrar Yornis","Calibrate Yornis"),self.T("Introduce la distancia REAL en milímetros entre los dos puntos que marcarás en la radiografía:","Enter the REAL distance in millimeters between the two points you will mark on the radiograph:"),minvalue=.01,parent=self)
+        mm=simpledialog.askfloat(self.T("Calibrar Yornis","Calibrate Yornis"),self.T("Antes de marcar: indica cuántos MILÍMETROS REALES hay entre los dos puntos de referencia que vas a colocar. Después, marca primero un extremo y luego el otro extremo de ESA MISMA distancia. Ejemplo: si hay 25 mm entre ellos, escribe 25.","Before marking: enter how many REAL MILLIMETERS separate the two reference points you will place. Then mark the first endpoint and the other endpoint of THAT SAME distance. Example: if they are 25 mm apart, enter 25."),minvalue=.01,parent=self)
         if mm is None:
             if not self.mm_per_px:self.status.config(text=self.T("Calibración pendiente: no puedes colocar puntos todavía.","Calibration pending: you cannot place landmarks yet."))
             return
         self.pending_mm=float(mm);self.calibration_mode=True;self.calibration_clicks=[]
-        self.status.config(text=self.T("Marca el primer extremo de la referencia en la radiografía.","Select the first reference endpoint on the radiograph."))
+        self.status.config(text=self.T("Paso 2 de 2: marca el PRIMER extremo de la distancia que acabas de indicar.","Step 2 of 2: mark the FIRST endpoint of the distance you entered."))
         self.redraw()
     def autosave_path(self,cid):
         p=RESEARCH_DIR/f"study_{self.study_id:04d}"/"autosave";p.mkdir(parents=True,exist_ok=True);return p/f"case_{cid:04d}.json"
@@ -573,8 +576,8 @@ class ResearchWorkspace(tk.Tk):
         blocking=[x for x in issues if x["level"]!="ok"]
         self.db.save_trace(self.case_id,self.protocol["version"],self.points,results,[k.split("::",1)[1] for k in self.protocol.get("selected_variables",[])],self.mm_per_px)
         status=self.db.case(self.case_id)["status"];self.refresh_cases();self.refresh_dashboard();self.autosave()
-        if status=="complete":messagebox.showinfo("YomCeph",self.T("Caso completo. Se marcó automáticamente en verde menta.","Case complete. It was automatically marked mint green."))
-        else:messagebox.showwarning("YomCeph",self.T("El caso se guardó pero aún no cumple todos los resultados del protocolo.","The case was saved but does not yet contain every protocol outcome."))
+        if status=="complete":messagebox.showinfo("Yornis",self.T("Caso completo. Se marcó automáticamente en verde menta.","Case complete. It was automatically marked mint green."))
+        else:messagebox.showwarning("Yornis",self.T("El caso se guardó pero aún no cumple todos los resultados del protocolo.","The case was saved but does not yet contain every protocol outcome."))
     def start_review(self):
         if not self.case_id or not self.landmarks:return
         self.landmark_index=0;self.step_landmark(0);self.status.config(text=self.T("Modo revisión: usa ←/→ para recorrer landmarks.","Review mode: use ←/→ to move through landmarks."))
@@ -584,7 +587,7 @@ class ResearchWorkspace(tk.Tk):
         reasons=EXCLUSION_REASONS_ES if self.language=="es" else EXCLUSION_REASONS_EN
         w=tk.Toplevel(self);w.title(self.T("Excluir caso","Exclude case"));w.transient(self);w.grab_set();var=tk.StringVar(value=reasons[0]);
         ttk.Label(w,text=self.T("Motivo documentado:","Documented reason:")).pack(anchor="w",padx=12,pady=(12,4));combo=ttk.Combobox(w,textvariable=var,values=reasons,state="readonly",width=55);combo.pack(padx=12);ttk.Label(w,text=self.T("Observación:","Note:")).pack(anchor="w",padx=12,pady=(10,4));note=tk.Text(w,width=60,height=5);note.pack(padx=12)
-        def do():self.db.exclude_case(cid,var.get(),note.get("1.0","end").strip());w.destroy();self.refresh_cases();self.refresh_dashboard();messagebox.showinfo("YomCeph",self.T("Caso retirado de la muestra válida y conservado en auditoría.","Case removed from the valid sample and retained in audit."))
+        def do():self.db.exclude_case(cid,var.get(),note.get("1.0","end").strip());w.destroy();self.refresh_cases();self.refresh_dashboard();messagebox.showinfo("Yornis",self.T("Caso retirado de la muestra válida y conservado en auditoría.","Case removed from the valid sample and retained in audit."))
         ttk.Button(w,text=self.T("Confirmar exclusión","Confirm exclusion"),command=do).pack(pady=12)
 
     # ---------- dashboard/export ----------
@@ -601,7 +604,7 @@ class ResearchWorkspace(tk.Tk):
     def export_wide(self):
         if not self.study_id:return
         p=self.save_target(".csv","CSV");
-        if p:export_wide_csv(self.db,self.study_id,self.protocol_for_export(),p,False);messagebox.showinfo("YomCeph",self.T("CSV de muestra válida exportado.","Valid-sample CSV exported."))
+        if p:export_wide_csv(self.db,self.study_id,self.protocol_for_export(),p,False);messagebox.showinfo("Yornis",self.T("CSV de muestra válida exportado.","Valid-sample CSV exported."))
     def export_long(self):
         p=self.save_target(".csv","CSV");
         if p:export_long_csv(self.db,self.study_id,self.protocol_for_export(),p,False)
@@ -618,20 +621,20 @@ class ResearchWorkspace(tk.Tk):
         p=self.save_target(".pdf","PDF");
         if p:export_study_pdf(self.db,self.study_id,self.protocol_for_export(),p)
     def export_case_report(self):
-        if not self.case_id:messagebox.showinfo("YomCeph",self.T("Abre un caso primero.","Open a case first."));return
+        if not self.case_id:messagebox.showinfo("Yornis",self.T("Abre un caso primero.","Open a case first."));return
         p=self.save_target(".pdf","PDF");
         if p:export_case_pdf(self.db,self.case_id,self.protocol_for_export(),p)
     def backup(self):
         if not self.study_id:return
         p=self.save_target(".zip","ZIP");
-        if p:self.db.backup_study(self.study_id,p);messagebox.showinfo("YomCeph",self.T("Respaldo creado.","Backup created."))
+        if p:self.db.backup_study(self.study_id,p);messagebox.showinfo("Yornis",self.T("Respaldo creado.","Backup created."))
     def repro_sample(self):
         if not self.study_id:return
-        n=simpledialog.askinteger("YomCeph",self.T("Número de casos completos para repetir:","Number of complete cases to repeat:"),minvalue=1,maxvalue=MAX_CASES,parent=self)
+        n=simpledialog.askinteger("Yornis",self.T("Número de casos completos para repetir:","Number of complete cases to repeat:"),minvalue=1,maxvalue=MAX_CASES,parent=self)
         if n:
-            ex=simpledialog.askstring("YomCeph",self.T("Examinador:","Examiner:"),parent=self) or "";ids=self.db.reproducibility_sample(self.study_id,n,ex);messagebox.showinfo("YomCeph",self.T(f"Se seleccionaron {len(ids)} casos aleatoriamente.",f"Randomly selected {len(ids)} cases."))
-    def show_help(self):messagebox.showinfo("YomCeph",self.T("Atajos:\nCtrl+Z deshacer\nCtrl+Y rehacer\nEspacio/→ siguiente landmark\n← landmark anterior\n+/- zoom\nEnter calcular/guardar\nF1 ayuda","Shortcuts:\nCtrl+Z undo\nCtrl+Y redo\nSpace/→ next landmark\n← previous landmark\n+/- zoom\nEnter calculate/save\nF1 help"))
-    def about(self):messagebox.showinfo("YomCeph","YomCeph Desktop v0.14 Classic Research Suite\n\n"+self.T(EDU_ES,EDU_EN))
+            ex=simpledialog.askstring("Yornis",self.T("Examinador:","Examiner:"),parent=self) or "";ids=self.db.reproducibility_sample(self.study_id,n,ex);messagebox.showinfo("Yornis",self.T(f"Se seleccionaron {len(ids)} casos aleatoriamente.",f"Randomly selected {len(ids)} cases."))
+    def show_help(self):messagebox.showinfo("Yornis",self.T("Atajos:\nCtrl+Z deshacer\nCtrl+Y rehacer\nEspacio/→ siguiente landmark\n← landmark anterior\n+/- zoom\nEnter calcular/guardar\nF1 ayuda","Shortcuts:\nCtrl+Z undo\nCtrl+Y redo\nSpace/→ next landmark\n← previous landmark\n+/- zoom\nEnter calculate/save\nF1 help"))
+    def about(self):messagebox.showinfo("Yornis","Yornis Desktop v0.14 Classic Research Suite\n\n"+self.T(EDU_ES,EDU_EN))
     def on_close(self):
         if self.case_id:self.autosave()
         self.destroy()
