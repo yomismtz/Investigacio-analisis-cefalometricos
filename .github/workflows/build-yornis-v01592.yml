@@ -133,7 +133,7 @@ jobs:
           assert app.APP_VERSION.startswith('0.16.1')
           assert research_db.APP_DIR.name == 'Yornis'
           assert research_db.DB_PATH.name == 'yornis_research.sqlite3'
-          check_source = "class YomCephClassic: pass\\nlabel = 'YOMCEPH'"
+          check_source = "class YomCephClassic: pass\nlabel = 'YOMCEPH'"
           branded_source = branding.rebrand_classic_source(check_source)
           assert 'class YomCephClassic' in branded_source and "'YORNIS'" in branded_source
           cal_title, cal_prompt = branding.calibration_dialog_copy('Calibrar mm', 'Distancia real entre puntos')
