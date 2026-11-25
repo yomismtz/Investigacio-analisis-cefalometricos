@@ -78,14 +78,65 @@ class IndividualSelectorFlowTests(unittest.TestCase):
         self.assertEqual(obj.active_study_name, "")
         self.assertIsNone(obj.study_protocol)
 
+    def test_calibration_gate_disables_image_canvas_until_calibration_is_started(self):
+        import tkinter as tk
+        import yornis_calibration_gate_v0164 as gate
+
+        class FakeClassic:
+            def __init__(self, root):
+                self.canvas = tk.Canvas(root, width=20, height=20)
+                self.canvas.pack()
+                self.points = {"S": (1.0, 2.0)}
+                self.calibration_points = [(1.0, 1.0)]
+                self.calibration_real_mm = 5.0
+                self.mm_per_px = 0.5
+                self.start_count = 0
+
+            def winfo_children(self):
+                return [self.canvas]
+
+            def after_idle(self, callback):
+                callback()
+
+            def load_image_file(self, _path):
+                self.image_path = _path
+
+            def start_calibration(self):
+                self.start_count += 1
+                self.calibration_real_mm = 12.0
+                self.calibration_mode = True
+
+            def finish_calibration(self):
+                self.mm_per_px = 0.2
+                self.calibration_points = []
+
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            gate.install_individual(FakeClassic)
+            app = FakeClassic(root)
+            app.load_image_file("new-radiograph.png")
+            self.assertEqual(app.points, {})
+            self.assertIsNone(app.mm_per_px)
+            self.assertEqual(app.start_count, 1)
+            self.assertEqual(str(app.canvas.cget("state")), "normal")
+
+            app.calibration_real_mm = None
+            app.start_calibration()
+            self.assertEqual(str(app.canvas.cget("state")), "disabled")
+
+            app.start_calibration()
+            app.finish_calibration()
+            self.assertEqual(str(app.canvas.cget("state")), "normal")
+        finally:
+            root.destroy()
+
     def test_real_classic_individual_click_opens_selector_dialog(self):
         import tkinter as tk
         import yomceph_desktop_v130_classic as classic
-        print("DEBUG_CLASS_METHODS", [name for name in dir(classic.YomCephClassic) if any(term in name.lower() for term in ("click", "image", "radiograph", "calibr", "point", "landmark", "load", "open"))])
 
         flow.install(classic.YomCephClassic)
         app = classic.YomCephClassic()
-        print("DEBUG_APP_ATTRS", sorted(name for name in vars(app) if any(term in name.lower() for term in ("image", "radiograph", "calibr", "point", "canvas", "scale"))))
         app.withdraw()
         try:
             app.start_individual()
