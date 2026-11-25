@@ -33,7 +33,7 @@ def attach_image(db,case_id,image_path,copy_image=True):
         # Explicitly archive old trace identities, including legacy blank hashes,
         # before switching the case to the replacement radiograph.
         for table in ('landmarks','results'):
-            con.execute(f"UPDATE {table} SET image_hash='historical:' || COALESCE(image_hash,'') WHERE case_id=? AND (image_hash=? OR image_hash='')",(case_id,str(row['file_hash'] or '')))
+            con.execute(f"UPDATE {table} SET image_hash='historical:' || COALESCE(image_hash,'') WHERE case_id=?",(case_id,str(row['file_hash'] or '')))
         con.execute('UPDATE cases SET image_path=?,original_filename=?,file_hash=?,case_mm_per_px=NULL,updated_at=? WHERE id=?',(str(target),src.name,digest,now_iso(),case_id))
     db.audit(row['study_id'],'image_attached',case_id=case_id,source_filename=src.name,stored_filename=Path(target).name,sha256=digest,anonymized=bool(copy_image),calibration_reset=True,prior_trace_preserved=True)
 
