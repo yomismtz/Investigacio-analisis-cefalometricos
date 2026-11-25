@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import sys
 import unittest
+from importlib.metadata import version
 from pathlib import Path
 
 DESKTOP = Path(__file__).resolve().parents[1]
@@ -16,8 +17,8 @@ import yornis_theme
 class ModernInterfaceV0160Tests(unittest.TestCase):
     def test_modern_ttk_backend_is_available(self):
         self.assertTrue(modern_ui.modern_backend_available())
-        version = tuple(int(part) for part in ttkbootstrap.__version__.split(".")[:3])
-        self.assertGreaterEqual(version, (2, 2, 7))
+        installed = tuple(int(part) for part in version("ttkbootstrap").split(".")[:3])
+        self.assertGreaterEqual(installed, (2, 2, 7))
 
     def test_modern_ui_version_and_base_theme(self):
         self.assertEqual(modern_ui.MODERN_UI_VERSION, "0.16.0")
