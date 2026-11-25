@@ -5,6 +5,83 @@ from __future__ import annotations
 from research_db import ResearchDB
 
 
+def _walk_canvases(widget):
+    """Find the classic image canvas without depending on its private attribute name."""
+    try:
+        from tkinter import Canvas
+    except Exception:
+        Canvas = ()
+    try:
+        children = widget.winfo_children()
+    except Exception:
+        children = []
+    for child in children:
+        if Canvas and isinstance(child, Canvas):
+            yield child
+        yield from _walk_canvases(child)
+
+
+def _set_classic_canvas_state(app, state: str) -> None:
+    for canvas in _walk_canvases(app):
+        try:
+            canvas.configure(state=state)
+        except Exception:
+            pass
+
+
+def install_individual(classic_class) -> None:
+    """Require a fresh two-point calibration each time Individual loads an image."""
+    if getattr(classic_class, "_yornis_calibration_gate_v0164", False):
+        return
+
+    original_load = getattr(classic_class, "load_image_file", None)
+    original_start = getattr(classic_class, "start_calibration", None)
+    original_finish = getattr(classic_class, "finish_calibration", None)
+
+    if callable(original_load):
+        def load_image_file(self, *args, **kwargs):
+            # Coordinates and scale are tied to the old image; never carry them over.
+            self.calibration_points = []
+            self.calibration_real_mm = None
+            self.points = {}
+            if hasattr(self, "mm_per_px"):
+                self.mm_per_px = None
+            if hasattr(self, "calibration_mode"):
+                self.calibration_mode = False
+            result = original_load(self, *args, **kwargs)
+            _set_classic_canvas_state(self, "disabled")
+            if callable(getattr(self, "start_calibration", None)):
+                try:
+                    self.after_idle(self.start_calibration)
+                except Exception:
+                    self.start_calibration()
+            return result
+        classic_class.load_image_file = load_image_file
+
+    if callable(original_start):
+        def start_calibration(self, *args, **kwargs):
+            # The image canvas is enabled only for the two calibration clicks.
+            _set_classic_canvas_state(self, "normal")
+            result = original_start(self, *args, **kwargs)
+            if not getattr(self, "calibration_real_mm", None):
+                _set_classic_canvas_state(self, "disabled")
+            return result
+        classic_class.start_calibration = start_calibration
+
+    if callable(original_finish):
+        def finish_calibration(self, *args, **kwargs):
+            result = original_finish(self, *args, **kwargs)
+            calibrated = bool(getattr(self, "mm_per_px", None)) or (
+                bool(getattr(self, "calibration_real_mm", None))
+                and len(getattr(self, "calibration_points", []) or []) >= 2
+            )
+            _set_classic_canvas_state(self, "normal" if calibrated else "disabled")
+            return result
+        classic_class.finish_calibration = finish_calibration
+
+    classic_class._yornis_calibration_gate_v0164 = True
+
+
 def install_database() -> None:
     """Wrap the active image-import layer without replacing its privacy behavior."""
     current = ResearchDB.attach_image
