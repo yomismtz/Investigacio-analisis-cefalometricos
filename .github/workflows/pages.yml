@@ -64,9 +64,9 @@ jobs:
           test -f docs/yornis-v01592-scroll-bird-sounds.md
           test -f docs/yornis-individual-flow-interface-2026-09-17.md
           grep -q "Yornis" docs/index.html
-          grep -q "v0.15.9.2" docs/index.html
+          grep -q "v0.16.2" docs/index.html
           grep -q "Individual Flow" docs/index.html
-          grep -q "8 firmas sonoras" docs/index.html
+          grep -q "10 paletas" docs/index.html
           grep -q "Scroll vertical" docs/index.html
           grep -q "Caso individual" docs/index.html
           grep -q "análisis → medidas/ángulos → puntos" docs/index.html
@@ -78,6 +78,10 @@ jobs:
           grep -q "birdSignatures" docs/app.js
           grep -q "playBirdSignature" docs/app.js
           grep -q "Guacamaya Azul" docs/app.js
+          grep -q "Búho" docs/app.js
+          grep -q "Colibrí" docs/app.js
+          grep -q "bird-audio/Buho.mp3" docs/app.js
+          grep -q "bird-audio/Colibri.mp3" docs/app.js
           grep -q "filter-chip" docs/app.js
           grep -q "focus-visible" docs/styles.css
           grep -q "IntersectionObserver" docs/app.js
