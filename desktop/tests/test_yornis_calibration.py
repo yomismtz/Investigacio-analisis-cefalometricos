@@ -48,8 +48,8 @@ class CalibrationHelpersTests(unittest.TestCase):
 
     def test_quality_control_reports_pending_and_low_confidence(self):
         catalog = research_protocol.analysis_catalog()
-        analysis, measurements = next(iter(catalog.items()))
-        selected = [f"{analysis}::{measurements[0].key}"]
+        analysis, measurements = next((name, values) for name, values in catalog.items() if values)
+        selected = [measurements[0].key]
         required = research_protocol.minimum_landmarks(selected)
         self.assertTrue(required)
         points = {name: (index * 25.0, index * 13.0) for index, name in enumerate(required)}
