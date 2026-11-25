@@ -5,11 +5,11 @@ import yornis_modern_ui_v0160 as modern_ui
 
 modern_ui.install()
 
-APP_VERSION = "0.16.2 Paletas Búho + Colibrí + Sonido Offline"
+APP_VERSION = "0.16.3 Grabaciones originales de aves · Sonido offline"
 
 
 class Launcher(previous.Launcher):
-    """v0.16.2: ten bird palettes, real offline recordings and unchanged clinical workflows."""
+    """v0.16.3: ten palettes, original offline recordings and audited clinical workflows."""
 
     def __init__(self):
         super().__init__()
