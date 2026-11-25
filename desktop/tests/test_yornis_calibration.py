@@ -9,6 +9,18 @@ import yornis_calibration as calibration
 
 
 class CalibrationHelpersTests(unittest.TestCase):
+
+    def test_calibration_guidance_explains_two_points_and_real_distance(self):
+        spanish = calibration.calibration_guidance("es").lower()
+        english = calibration.calibration_guidance("en").lower()
+        self.assertIn("dos puntos", spanish)
+        self.assertIn("milímetros", spanish)
+        self.assertIn("primer extremo", spanish)
+        self.assertIn("two", english)
+        self.assertIn("millimeters", english)
+        self.assertIn("first endpoint", english)
+        self.assertIn("milímetros reales", calibration.calibration_distance_prompt("es").lower())
+
     def test_known_distance_returns_mm_per_pixel(self):
         self.assertAlmostEqual(calibration.calculate_mm_per_px((10, 20), (110, 20), 25.4), 0.254)
 
