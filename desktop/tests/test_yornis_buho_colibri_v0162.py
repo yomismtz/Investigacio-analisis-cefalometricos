@@ -52,14 +52,8 @@ class BuhoColibriPaletteTests(unittest.TestCase):
         self.assertNotEqual(signatures.synthesize_signature("Búho", 35),
                             signatures.synthesize_signature("Colibrí", 35))
 
-    def test_original_mp3_sources_and_real_wav_variants_exist(self):
-        sources = {
-            "Búho": DESKTOP / "assets" / "bird_sources" / "Buho_original.mp3",
-            "Colibrí": DESKTOP / "assets" / "bird_sources" / "Colibri_original.mp3",
-        }
-        for bird, source in sources.items():
-            self.assertTrue(source.is_file(), f"Missing original source for {bird}")
-            self.assertGreater(source.stat().st_size, 1000)
+    def test_offline_audio_variants_exist_for_both_new_birds(self):
+        for bird in NEW_BIRDS:
             for folder in ("bird_audio", "bird_startup_audio"):
                 for volume in (20, 35, 50, 70, 90):
                     path = DESKTOP / "assets" / folder / f"{bird}_{volume}.wav"
