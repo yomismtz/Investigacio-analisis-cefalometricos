@@ -27,7 +27,23 @@ jobs:
 
       - name: Dependencies
         shell: pwsh
-        run: python -m pip install pillow pymupdf reportlab openpyxl pyinstaller pyzipper
+        run: python -m pip install pillow pymupdf reportlab openpyxl pyinstaller pyzipper cairosvg
+
+      - name: Render bundled bird mascot images
+        shell: pwsh
+        run: |
+          @'
+          from pathlib import Path
+          import cairosvg
+          root = Path('desktop/assets/birds')
+          files = sorted(root.glob('*.svg'))
+          assert len(files) == 8, f'Expected 8 bird SVG assets, found {len(files)}'
+          for source in files:
+              target = source.with_suffix('.png')
+              cairosvg.svg2png(url=str(source), write_to=str(target), output_width=512, output_height=512)
+              assert target.exists() and target.stat().st_size > 1000
+          print('Eight bundled bird mascots rendered successfully')
+          '@ | python -
 
       - name: Rebuild 512px branding
         shell: pwsh
@@ -102,6 +118,10 @@ jobs:
           assert hasattr(l, 'startup_sound_var')
           assert hasattr(l, 'startup_volume_var')
           assert len(l.palette_cards) == 8
+          from yornis_virtual_assistant_v0157 import make_avatar_photo
+          for bird in ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul'):
+              image = make_avatar_photo(l, 64, bird)
+              assert image.width() > 0 and image.height() > 0
           l.destroy()
           print('YORNIS v0.15.9.2 SCROLLBAR GUI OK')
           '@ | python -
@@ -123,7 +143,7 @@ jobs:
           --hidden-import yornis_reference_help_v0154 --hidden-import yornis_reference_help_v0154_all --hidden-import yornis_evidence_v0155 --hidden-import yornis_quality_ui_v0156 --hidden-import yornis_reference_help_v0156
           --hidden-import yornis_quality_ui_v0157 --hidden-import yornis_virtual_assistant_v0157 --hidden-import yornis_quality_ui_v0158 --hidden-import yornis_startup_audio_v0159 --hidden-import yornis_desktop_v0159 --hidden-import yornis_desktop_v01591 --hidden-import yornis_bird_signature_v01592
           --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --collect-all pyzipper
-          --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;."
+          --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yomceph_logo.png;." --add-data "desktop/assets/yornis.ico;." --add-data "desktop/assets/birds;assets/birds"
           desktop/yornis_desktop_v01592.py
 
       - name: Cold start
