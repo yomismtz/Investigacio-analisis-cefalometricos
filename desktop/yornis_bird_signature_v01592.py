@@ -37,6 +37,8 @@ def _variant_volume(volume: int) -> int:
 
 def asset_root() -> Path:
     """Assets root in source mode and in the PyInstaller bundle."""
+    # PyInstaller --onedir stores --add-data targets relative to the bundle
+    # root. In source mode this module resides in desktop/, beside assets/.
     root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
     return root / "assets"
 
