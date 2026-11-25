@@ -27,22 +27,56 @@ jobs:
 
       - name: Dependencies
         shell: pwsh
-        run: python -m pip install pillow pymupdf reportlab openpyxl pyinstaller pyzipper cairosvg
+        run: python -m pip install pillow pymupdf reportlab openpyxl pyinstaller pyzipper
 
-      - name: Render bundled bird mascot images
+      - name: Render bundled bird mascot images with Pillow
         shell: pwsh
         run: |
           @'
           from pathlib import Path
-          import cairosvg
+          from PIL import Image, ImageDraw
+          import math
           root = Path('desktop/assets/birds')
-          files = sorted(root.glob('*.svg'))
-          assert len(files) == 8, f'Expected 8 bird SVG assets, found {len(files)}'
-          for source in files:
-              target = source.with_suffix('.png')
-              cairosvg.svg2png(url=str(source), write_to=str(target), output_width=512, output_height=512)
-              assert target.exists() and target.stat().st_size > 1000
-          print('Eight bundled bird mascots rendered successfully')
+          root.mkdir(parents=True, exist_ok=True)
+          birds = {
+            'Agaporni': ('#5A246F','#17A8A2','#65D8BC','#A376D2','lovebird'),
+            'Tucan': ('#D96816','#15AFA5','#F4C542','#5C4238','toucan'),
+            'Pavorreal': ('#15517A','#138F85','#D6A82B','#573C83','peacock'),
+            'Ninfa': ('#7A587F','#D8A82E','#E6A0AD','#9FA5A8','cockatiel'),
+            'Faisan': ('#7B294B','#9B5A32','#B49B42','#6E7040','pheasant'),
+            'Quetzal': ('#087D64','#0BA39B','#59CBA5','#BB3545','quetzal'),
+            'Guacamaya_Roja': ('#B52632','#185CB7','#F0B82E','#8D2851','macaw'),
+            'Guacamaya_Azul': ('#176BB4','#1AA6C7','#F2C54D','#31468D','macaw'),
+          }
+          for name,(head,body,wing,tail,kind) in birds.items():
+            im=Image.new('RGBA',(512,512),(0,0,0,0)); d=ImageDraw.Draw(im)
+            d.ellipse((130,205,400,465),fill=body,outline=head,width=12)
+            d.polygon([(175,350),(35,475),(240,420)],fill=tail,outline=head)
+            d.ellipse((120,45,395,325),fill=head,outline='#30202A',width=10)
+            d.ellipse((145,230,365,435),fill=wing,outline=head,width=8)
+            if kind=='peacock':
+              for x in (190,255,320):
+                d.line((255,100,x,20),fill=body,width=12); d.ellipse((x-20,0,x+20,40),fill=wing)
+            elif kind=='cockatiel':
+              d.polygon([(210,75),(190,0),(250,70),(285,0),(290,90)],fill=wing)
+            elif kind=='quetzal':
+              d.polygon([(220,365),(145,510),(260,405)],fill=tail)
+              d.polygon([(275,365),(365,500),(310,385)],fill=body)
+            elif kind=='toucan':
+              d.polygon([(335,155),(500,205),(350,265)],fill=wing,outline='#30202A')
+              d.polygon([(340,205),(490,210),(350,235)],fill='#30202A')
+            elif kind=='macaw':
+              d.ellipse((190,130,330,285),fill='#FFF7E7')
+              for y in (165,205,245): d.arc((195,y-20,325,y+25),180,350,fill='#30202A',width=8)
+            else:
+              d.polygon([(225,65),(255,5),(280,70)],fill=tail)
+            d.ellipse((285,145,325,185),fill='#201927'); d.ellipse((296,150,309,163),fill='white')
+            d.polygon([(345,195),(425,230),(350,260)],fill=wing,outline='#30202A')
+            d.arc((215,245,330,330),10,150,fill='#30202A',width=8)
+            d.line((230,440,215,490),fill='#5B5361',width=12); d.line((320,440,335,490),fill='#5B5361',width=12)
+            im.save(root/f'{name}.png',optimize=True)
+          assert len(list(root.glob('*.png'))) == 8
+          print('Eight offline mascot PNGs generated with Pillow')
           '@ | python -
 
       - name: Pre-render offline bird audio library
