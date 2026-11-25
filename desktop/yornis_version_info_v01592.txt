@@ -14,12 +14,12 @@ VSVersionInfo(
       StringTable('040904B0', [
         StringStruct('CompanyName', 'Yomira Salgado Martínez'),
         StringStruct('FileDescription', 'Yornis · Modern interface · Offline clinical analysis'),
-        StringStruct('FileVersion', '0.16.0'),
+        StringStruct('FileVersion', '0.16.1'),
         StringStruct('InternalName', 'Yornis'),
         StringStruct('LegalCopyright', '© 2026 Yomira Salgado Martínez'),
         StringStruct('OriginalFilename', 'Yornis.exe'),
         StringStruct('ProductName', 'Yornis'),
-        StringStruct('ProductVersion', '0.16.0')
+        StringStruct('ProductVersion', '0.16.1')
       ])
     ]),
     VarFileInfo([VarStruct('Translation', [1033, 1200])])
