@@ -135,7 +135,6 @@ class IndividualSelectorFlowTests(unittest.TestCase):
     def test_real_classic_individual_click_opens_selector_dialog(self):
         import tkinter as tk
         import yomceph_desktop_v130_classic as classic
-        print("DEBUG_CALIBRATION_CODE", {name: getattr(classic.YomCephClassic, name).__code__.co_names for name in ("load_image_file", "start_calibration", "finish_calibration") if hasattr(classic.YomCephClassic, name)})
 
         flow.install(classic.YomCephClassic)
         app = classic.YomCephClassic()
