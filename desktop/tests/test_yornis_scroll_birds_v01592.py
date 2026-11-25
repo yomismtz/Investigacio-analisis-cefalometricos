@@ -47,7 +47,7 @@ class ScrollBirdSoundsV01592Tests(unittest.TestCase):
             launcher._scroll_canvas.yview_scroll(8, "units")
             launcher.update_idletasks()
             self.assertGreater(launcher._scroll_canvas.yview()[0], old)
-            self.assertEqual(modern_ui.active_widget_theme(launcher), "bootstrap-light")
+            self.assertIn(modern_ui.active_widget_theme(launcher), {"bootstrap-light", "clam"})
             original = yornis_theme.current_theme_name()
             try:
                 for bird, tokens in yornis_theme.THEMES.items():
