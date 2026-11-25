@@ -2,6 +2,9 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 from research_db import MAX_CASES, ImportResult, ResearchDB, now_iso, sha256_file
+
+# Capture the canonical database method before compatibility layers are installed.
+_CORE_ATTACH_IMAGE = ResearchDB.attach_image
 _INSTALLED=False
 
 def add_case(db,study_id,study_code=None,sex='',age=None,image_path='',examiner='',copy_image=True):
