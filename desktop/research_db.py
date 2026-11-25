@@ -31,7 +31,10 @@ DB_PATH = RESEARCH_DIR / "yornis_research.sqlite3"
 if not DB_PATH.exists() and LEGACY_DB_PATH.exists():
     try:
         DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(LEGACY_DB_PATH, DB_PATH)
+        # SQLite backup reads a consistent snapshot, including committed WAL data.
+        with sqlite3.connect(LEGACY_DB_PATH) as source_db:
+            with sqlite3.connect(DB_PATH) as target_db:
+                source_db.backup(target_db)
     except OSError:
         # If migration cannot copy the database, continue using the intact
         # legacy database rather than starting an empty research workspace.
