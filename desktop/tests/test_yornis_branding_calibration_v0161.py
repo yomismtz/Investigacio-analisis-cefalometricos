@@ -31,6 +31,12 @@ icon = "yomceph_logo.png"
         self.assertNotIn('"YOMCEPH"', updated)
         self.assertNotIn('"YomCeph Desktop"', updated)
 
+    def test_interpolated_brand_text_is_rewritten(self):
+        source = 'title = f"YomCeph Desktop · v{version}"'
+        updated = rebrand_classic_source(source)
+        self.assertIn('Yornis Desktop', updated)
+        self.assertNotIn('YomCeph', updated)
+
     def test_calibration_dialog_explains_known_distance_and_two_clicks(self):
         title, prompt = calibration_dialog_copy(
             "Calibrar mm",
