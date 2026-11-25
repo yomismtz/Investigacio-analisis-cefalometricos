@@ -4,6 +4,7 @@ import math
 import os
 import random
 import struct
+import sys
 import threading
 import wave
 from pathlib import Path
@@ -132,10 +133,21 @@ def ensure_wav(theme_name: str | None = None, volume: int | None = None) -> Path
     return path
 
 
+def bundled_wav_path(theme_name: str | None = None, volume: int | None = None) -> Path:
+    theme_name = theme_name or yornis_theme.current_theme_name()
+    if volume is None:
+        _, volume = settings()
+    safe = "".join(c if c.isalnum() else "_" for c in theme_name)
+    root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+    return root / "assets" / "bird_startup_audio" / f"{safe}_{int(volume)}.wav"
+
+
 def _play(theme_name: str, volume: int) -> None:
     try:
         import winsound
-        path = ensure_wav(theme_name, volume)
+        path = bundled_wav_path(theme_name, volume)
+        if not path.is_file():
+            return
         winsound.PlaySound(str(path), winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_NODEFAULT)
     except Exception:
         # Audio is decorative; never block or crash Yornis if the sound device is unavailable.
