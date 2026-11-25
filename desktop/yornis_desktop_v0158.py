@@ -309,6 +309,8 @@ def main():
         previous.quality.install_individual(classic.YomCephClassic)
         quality.install_individual(classic.YomCephClassic)
         individual_flow.install(classic.YomCephClassic)
+        import yornis_calibration_gate_v0164 as calibration_gate
+        calibration_gate.install_individual(classic.YomCephClassic)
         previous.previous.previous.evidence.install()
         app = classic.YomCephClassic()
         app.title(f"Yornis · Yom Dental Análisis · v{APP_VERSION} · Individual")
