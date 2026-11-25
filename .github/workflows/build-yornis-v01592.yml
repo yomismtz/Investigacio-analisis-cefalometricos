@@ -1,4 +1,4 @@
-name: Build Yornis v0.16.2 · Owl + Hummingbird Palettes and Real Audio
+name: Build Yornis v0.16.2 · Owl + Hummingbird Palettes and Offline Sound
 
 on:
   push:
@@ -154,7 +154,7 @@ jobs:
           assert len(set(digests)) == 10
           assert len(list(__import__('pathlib').Path('desktop/assets/bird_audio').glob('*.wav'))) == 50
           assert len(list(__import__('pathlib').Path('desktop/assets/bird_startup_audio').glob('*.wav'))) == 50
-          print('YORNIS v0.16.2 TEN PALETTES + REAL OFFLINE AUDIO + CLINICAL AUDIT OK')
+          print('YORNIS v0.16.2 TEN PALETTES + OFFLINE SOUND PROFILES + CLINICAL AUDIT OK')
           '@ | python -
 
       - name: GUI scrollbar + HiDPI smoke test
