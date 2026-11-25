@@ -31,7 +31,7 @@ class ModernInterfaceV0160Tests(unittest.TestCase):
         try:
             for name, expected in yornis_theme.THEMES.items():
                 with self.subTest(bird=name):
-                    yornis_theme.apply_theme(name, persist=False)
+                    yornis_theme.apply_theme(name, persist=True)
                     tokens = modern_ui.theme_palette()
                     self.assertEqual(tokens["primary"], expected["primary"])
                     self.assertEqual(tokens["secondary"], expected["secondary"])
