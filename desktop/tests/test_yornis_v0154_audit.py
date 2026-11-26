@@ -134,6 +134,8 @@ class AuditHardeningTests(unittest.TestCase):
         self.assertIn("L1/plano oclusal", downs_rows)
         self.assertIn("L1/plano mandibular", downs_rows)
         self.assertIn("U1 a A-Pg", downs_rows)
+        engine_downs = {m.name for m in engine.MEASUREMENTS if m.analysis == "Downs"}
+        self.assertEqual(set(downs_rows), engine_downs)
 
         mcnamara = next(table for table in refs.TABLES if table["id"] == "mcnamara")
         rows = {row[0]: row for row in mcnamara["rows"]}
