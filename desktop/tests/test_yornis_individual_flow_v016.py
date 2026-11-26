@@ -160,6 +160,7 @@ class IndividualSelectorFlowTests(unittest.TestCase):
                 self.points = {}
                 self.mm_per_px = None
                 self.start_count = 0
+                self.calibration_mode = False
                 self.calculated = False
 
             def winfo_children(self):
@@ -170,9 +171,11 @@ class IndividualSelectorFlowTests(unittest.TestCase):
 
             def load_image_file(self, _path):
                 self.image_path = _path
+                self.calibration_mode = True
 
             def start_calibration(self):
                 self.start_count += 1
+                self.calibration_mode = True
 
             def calculate(self):
                 self.calculated = True
@@ -185,6 +188,7 @@ class IndividualSelectorFlowTests(unittest.TestCase):
             app.load_image_file("angular-only.png")
             self.assertEqual(app.start_count, 0)
             self.assertIsNone(app.mm_per_px)
+            self.assertFalse(app.calibration_mode)
             self.assertEqual(str(app.canvas.cget("state")), "normal")
             app.calculate()
             self.assertTrue(app.calculated)
@@ -204,6 +208,7 @@ class IndividualSelectorFlowTests(unittest.TestCase):
                 self.points = {}
                 self.mm_per_px = None
                 self.start_count = 0
+                self.calibration_mode = False
                 self.calculated = False
 
             def winfo_children(self):
@@ -214,9 +219,11 @@ class IndividualSelectorFlowTests(unittest.TestCase):
 
             def load_image_file(self, _path):
                 self.image_path = _path
+                self.calibration_mode = True
 
             def start_calibration(self):
                 self.start_count += 1
+                self.calibration_mode = True
 
             def calculate(self):
                 self.calculated = True
@@ -228,6 +235,7 @@ class IndividualSelectorFlowTests(unittest.TestCase):
             app = LinearClassic(root)
             app.load_image_file("linear-measure.png")
             self.assertEqual(app.start_count, 1)
+            self.assertTrue(app.calibration_mode)
             with patch("tkinter.messagebox.showwarning"):
                 self.assertIsNone(app.calculate())
             self.assertFalse(app.calculated)
