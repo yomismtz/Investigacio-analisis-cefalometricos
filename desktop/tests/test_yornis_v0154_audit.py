@@ -72,6 +72,15 @@ class AuditHardeningTests(unittest.TestCase):
         self.assertIn("CS4", rows["Concavidad borde inferior C4"][1])
         self.assertIn("CS4: rectangular horizontal", rows["Forma de cuerpos C3–C4"][1])
 
+    def test_reference_tables_are_counted_and_cervical_claims_are_limited(self):
+        import yornis_reference_help_v0154 as refs
+        import yornis_reference_help_v0156 as reference_ui
+        self.assertEqual(len(refs.TABLES), 13)
+        self.assertNotIn("17 tablas", reference_ui.__dict__.get("TABLE_COUNT_LABEL", ""))
+        cervical = next(table for table in refs.TABLES if table["id"] == "alineacion_cervical_c2_c4")
+        self.assertIn("No diagnostica patología cervical", cervical["note"])
+        self.assertNotIn("vía aérea", " ".join(str(cell) for row in cervical["rows"] for cell in row))
+
     def test_hp_measurements_request_construction_landmarks(self):
         candidates = [v for vs in rp.analysis_catalog().values() for v in vs if str(v.kind).lower().startswith("hp_")]
         self.assertTrue(candidates)
