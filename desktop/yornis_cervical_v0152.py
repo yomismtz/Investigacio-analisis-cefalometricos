@@ -16,7 +16,7 @@ CVM_ANALYSIS = "CVM C2–C4"
 CVM_MEASUREMENT = "Estadio CVM Baccetti"
 
 LORDOSIS_POINTS = ("C1 tub post", "C1 tub ant", "C7 inf post", "C7 inf ant")
-LORDOSIS_REFERENCE = "Media 40°; rango de referencia 35–45°. Interpretar con la técnica y posición radiográfica."
+LORDOSIS_REFERENCE = "Sin norma directa validada para esta construcción C1–C7. Registrar ángulo firmado, puntos y método; no aplicar un rango universal."
 CVM_REFERENCE = "Baccetti–Franchi–McNamara: CS1–CS6 por morfología de C2–C4; no equivale a una edad cronológica exacta."
 
 _ENGINE_PATCHED = False
@@ -70,22 +70,12 @@ def cervical_lordosis_angle(points: dict[str, tuple[float, float]], side: str = 
 def posture_classification(angle: float) -> tuple[str, str]:
     if angle < 0:
         return (
-            "Cifosis / inversión de la curva",
-            "El signo indica inversión respecto a la orientación lordótica esperada. Confirmar técnica, postura y trazado.",
-        )
-    if angle < 35:
-        return (
-            "Lordosis disminuida / compatible con rectificación",
-            "Valor por debajo del rango de referencia 35–45°. La posición durante la radiografía puede reducir la lordosis aparente.",
-        )
-    if angle <= 45:
-        return (
-            "Lordosis dentro del rango de referencia",
-            "Rango de referencia usado por Yornis: 35–45°, media aproximada 40°.",
+            "Ángulo negativo según la convención del trazado",
+            "El signo refleja la orientación de las líneas C1 y C7 en esta proyección. Revisar puntos, lateralidad y adquisición; no diagnostica cifosis.",
         )
     return (
-        "Hiperlordosis",
-        "Valor por encima del rango de referencia de 45°. Interpretar con el resto de la evaluación cervical.",
+        "Medición descriptiva de curvatura C1–C7",
+        "No se aplica un umbral universal: comparar solo con estudios que usen los mismos puntos terminales, método y convención de signo. La postura durante la adquisición puede modificar el ángulo.",
     )
 
 
@@ -137,8 +127,8 @@ def _clone_measurement() -> object:
         "kind": "yornis_cervical_lordosis",
         "norm_text": LORDOSIS_REFERENCE,
         "reference": LORDOSIS_REFERENCE,
-        "lo": 35.0,
-        "hi": 45.0,
+        "lo": None,
+        "hi": None,
     }
     for key, value in attrs.items():
         try:
