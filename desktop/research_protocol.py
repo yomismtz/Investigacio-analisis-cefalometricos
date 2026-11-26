@@ -170,6 +170,11 @@ def _is_linear(v: Variable) -> bool:
     return u in {"mm", "cm"} or "distance" in v.kind.lower() or "lineal" in v.kind.lower()
 
 
+def requires_calibration(variable_keys: list[str]) -> bool:
+    """Return whether the selected protocol contains at least one linear variable."""
+    return any(_is_linear(variable) for variable in selected_variables(variable_keys))
+
+
 def compute_selected(variable_keys: list[str], points: dict[str, tuple[float, float]], mm_per_px: float | None, side: str = "right", sex: str = "", age: float | None = None, population: str = "") -> list[dict]:
     results: list[dict] = []
     scale = mm_per_px or 1.0
