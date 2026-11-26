@@ -228,25 +228,64 @@ def install_individual(classic_class) -> None:
 
 
 def install_database() -> None:
-    """Wrap the active image-import layer without replacing its privacy behavior."""
-    current = ResearchDB.attach_image
-    if getattr(current, "_yornis_image_calibration_reset_v0164", False):
+    """Guard image identity after legacy hardening and calibration wrappers."""
+    current_attach = ResearchDB.attach_image
+    if not getattr(current_attach, "_yornis_image_calibration_reset_v0164", False):
+        def attach_image_with_calibration_reset(self, case_id, image_path, copy_image=True):
+            result = current_attach(self, case_id, image_path, copy_image)
+            self.update_case_calibration(case_id, None)
+            case = self.case(case_id)
+            if case:
+                self.audit(
+                    case["study_id"],
+                    "image_calibration_reset",
+                    case_id=case_id,
+                    calibration_reset=True,
+                    prior_trace_preserved=True,
+                    current_image_sha256=str(case["file_hash"] or ""),
+                )
+            return result
+
+        attach_image_with_calibration_reset._yornis_image_calibration_reset_v0164 = True
+        ResearchDB.attach_image = attach_image_with_calibration_reset
+
+    # Some older hardening layers replace latest_results after the core DB
+    # implementation. Apply a final, SQL-backed image/revision filter after
+    # those wrappers so a historical row can never reappear as current.
+    current_latest = ResearchDB.latest_results
+    if getattr(current_latest, "_yornis_latest_results_image_guard_v0166", False):
         return
 
-    def attach_image_with_calibration_reset(self, case_id, image_path, copy_image=True):
-        result = current(self, case_id, image_path, copy_image)
-        self.update_case_calibration(case_id, None)
+    def latest_results_for_current_image(self, case_id: int, protocol_version: int):
         case = self.case(case_id)
-        if case:
-            self.audit(
-                case["study_id"],
-                "image_calibration_reset",
-                case_id=case_id,
-                calibration_reset=True,
-                prior_trace_preserved=True,
-                current_image_sha256=str(case["file_hash"] or ""),
-            )
-        return result
+        if not case:
+            return []
+        image_hash = self._active_image_hash(case)
+        stored_hash = str(case["file_hash"] or "")
+        image_revision = int(case["image_revision"] or 1)
+        if not image_hash or not stored_hash or image_hash != stored_hash:
+            return []
+        with self.connect() as con:
+            current_trace = con.execute(
+                "SELECT 1 FROM landmarks l JOIN cases c ON c.id=l.case_id "
+                "WHERE l.case_id=? AND l.protocol_version=? AND l.image_hash=? "
+                "AND l.image_hash=c.file_hash AND l.image_revision=c.image_revision LIMIT 1",
+                (case_id, protocol_version, image_hash),
+            ).fetchone()
+        if current_trace is None:
+            return []
+        rows = current_latest(self, case_id, protocol_version)
+        current = []
+        for row in rows or []:
+            try:
+                if (
+                    str(row["image_hash"] or "") == image_hash
+                    and int(row["image_revision"] or 0) == image_revision
+                ):
+                    current.append(row)
+            except (KeyError, IndexError, TypeError, ValueError):
+                continue
+        return current
 
-    attach_image_with_calibration_reset._yornis_image_calibration_reset_v0164 = True
-    ResearchDB.attach_image = attach_image_with_calibration_reset
+    latest_results_for_current_image._yornis_latest_results_image_guard_v0166 = True
+    ResearchDB.latest_results = latest_results_for_current_image
