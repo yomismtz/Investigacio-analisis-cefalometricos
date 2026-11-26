@@ -41,13 +41,19 @@ def _positive_finite(value) -> bool:
 
 
 def _has_two_distinct_calibration_points(app) -> bool:
+    """Require two finite 2D endpoints separated by a meaningful pixel distance."""
     points = getattr(app, "calibration_points", None)
     if not isinstance(points, (list, tuple)) or len(points) < 2:
         return False
     try:
-        return points[0] != points[1]
-    except Exception:
+        x1, y1 = float(points[0][0]), float(points[0][1])
+        x2, y2 = float(points[1][0]), float(points[1][1])
+    except (TypeError, ValueError, IndexError, OverflowError):
         return False
+    values = (x1, y1, x2, y2)
+    if not all(math.isfinite(value) for value in values):
+        return False
+    return math.hypot(x2 - x1, y2 - y1) > 1e-9
 
 
 def _has_valid_scale(app) -> bool:
