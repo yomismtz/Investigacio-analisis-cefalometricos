@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import ttk
 
 # Load the extended catalog: 13 core tables plus 4 additional reference modules.
+# Reference spreads are labeled explicitly because not every ± value is an original SD.
 import yornis_reference_help_v0154_all as base
 import yornis_theme
 import yornis_quality_ui_v0156 as quality
