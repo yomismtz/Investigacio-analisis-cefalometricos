@@ -199,6 +199,8 @@ def _ensure_table(db) -> None:
                 id INTEGER PRIMARY KEY,
                 case_id INTEGER NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
                 protocol_version INTEGER NOT NULL DEFAULT 0,
+                image_hash TEXT DEFAULT '',
+                image_revision INTEGER NOT NULL DEFAULT 1,
                 lordosis_angle REAL,
                 posture_class TEXT DEFAULT '',
                 cvm_stage INTEGER,
@@ -209,6 +211,26 @@ def _ensure_table(db) -> None:
             );
             """
         )
+        cols = {row[1] for row in con.execute("PRAGMA table_info(cervical_assessments)").fetchall()}
+        if "image_hash" not in cols:
+            con.execute("ALTER TABLE cervical_assessments ADD COLUMN image_hash TEXT DEFAULT ''")
+        if "image_revision" not in cols:
+            con.execute("ALTER TABLE cervical_assessments ADD COLUMN image_revision INTEGER NOT NULL DEFAULT 1")
+
+
+def _image_identity(db, case_id: int) -> tuple[str, int]:
+    case = db.case(case_id)
+    if not case:
+        return "", 1
+    try:
+        image_hash = str(db._active_image_hash(case) or "")
+    except Exception:
+        image_hash = ""
+    try:
+        revision = max(1, int(case["image_revision"] or 1))
+    except Exception:
+        revision = 1
+    return image_hash, revision
 
 
 def _case_protocol_version(workspace) -> int:
@@ -224,17 +246,18 @@ def _save_cvm(workspace, result: dict, features: dict) -> None:
     db = workspace.db
     _ensure_table(db)
     version = _case_protocol_version(workspace)
+    image_hash, image_revision = _image_identity(db, workspace.case_id)
     with db.connect() as con:
         con.execute(
-            "INSERT INTO cervical_assessments(case_id,protocol_version,cvm_stage,cvm_phase,features_json,updated_at) VALUES(?,?,?,?,?,?) "
-            "ON CONFLICT(case_id,protocol_version) DO UPDATE SET cvm_stage=excluded.cvm_stage,cvm_phase=excluded.cvm_phase,features_json=excluded.features_json,updated_at=excluded.updated_at",
-            (workspace.case_id, version, result.get("stage"), result.get("phase", ""), json.dumps(features, ensure_ascii=False), _now()),
+            "INSERT INTO cervical_assessments(case_id,protocol_version,image_hash,image_revision,cvm_stage,cvm_phase,features_json,updated_at) VALUES(?,?,?,?,?,?,?,?) "
+            "ON CONFLICT(case_id,protocol_version) DO UPDATE SET image_hash=excluded.image_hash,image_revision=excluded.image_revision,cvm_stage=excluded.cvm_stage,cvm_phase=excluded.cvm_phase,features_json=excluded.features_json,updated_at=excluded.updated_at",
+            (workspace.case_id, version, image_hash, image_revision, result.get("stage"), result.get("phase", ""), json.dumps(features, ensure_ascii=False), _now()),
         )
         con.execute("DELETE FROM results WHERE case_id=? AND protocol_version=? AND analysis=? AND measurement=?", (workspace.case_id, version, CVM_ANALYSIS, CVM_MEASUREMENT))
         if result.get("stage"):
             con.execute(
-                "INSERT INTO results(case_id,protocol_version,analysis,measurement,value,unit,reference_text,interpretation,version,created_at) VALUES(?,?,?,?,?,?,?,?,1,?)",
-                (workspace.case_id, version, CVM_ANALYSIS, CVM_MEASUREMENT, float(result["stage"]), "CS", CVM_REFERENCE, f"{result['phase']}. {result['timing']}", _now()),
+                "INSERT INTO results(case_id,protocol_version,analysis,measurement,value,unit,reference_text,interpretation,image_hash,image_revision,version,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,1,?)",
+                (workspace.case_id, version, CVM_ANALYSIS, CVM_MEASUREMENT, float(result["stage"]), "CS", CVM_REFERENCE, f"{result['phase']}. {result['timing']}", image_hash, image_revision, _now()),
             )
     try:
         row = db.case(workspace.case_id)
@@ -250,12 +273,13 @@ def _save_posture(workspace, angle: float) -> None:
     db = workspace.db
     _ensure_table(db)
     version = _case_protocol_version(workspace)
+    image_hash, image_revision = _image_identity(db, workspace.case_id)
     label, note = posture_classification(angle)
     with db.connect() as con:
         con.execute(
-            "INSERT INTO cervical_assessments(case_id,protocol_version,lordosis_angle,posture_class,updated_at) VALUES(?,?,?,?,?) "
-            "ON CONFLICT(case_id,protocol_version) DO UPDATE SET lordosis_angle=excluded.lordosis_angle,posture_class=excluded.posture_class,updated_at=excluded.updated_at",
-            (workspace.case_id, version, float(angle), label, _now()),
+            "INSERT INTO cervical_assessments(case_id,protocol_version,image_hash,image_revision,lordosis_angle,posture_class,updated_at) VALUES(?,?,?,?,?,?,?) "
+            "ON CONFLICT(case_id,protocol_version) DO UPDATE SET image_hash=excluded.image_hash,image_revision=excluded.image_revision,lordosis_angle=excluded.lordosis_angle,posture_class=excluded.posture_class,updated_at=excluded.updated_at",
+            (workspace.case_id, version, image_hash, image_revision, float(angle), label, _now()),
         )
     try:
         row = db.case(workspace.case_id)
