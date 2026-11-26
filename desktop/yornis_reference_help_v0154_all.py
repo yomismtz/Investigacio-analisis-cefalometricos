@@ -16,8 +16,9 @@ _EXTRA_TABLES = [
         ],
     },
     {
-        "id":"via_aerea","title":"ANÁLISIS DE VÍA AÉREA","subtitle":"McNamara · referencia orientativa","first":"Ángulo o plano",
+        "id":"via_aerea","title":"ANÁLISIS DE VÍA AÉREA","subtitle":"Tabla complementaria; medidas calculadas en McNamara","first":"Ángulo o plano",
         "source":"McNamara JA Jr. A method of cephalometric evaluation. Am J Orthod. 1984;86(6):449-469. DOI 10.1016/S0002-9416(84)90352-X.",
+        "note":"Esta tabla es complementaria; las dimensiones de vía aérea superior e inferior se calculan dentro del análisis McNamara, no como un módulo independiente. Los valores dependen de edad, sexo, postura, proyección y posición del paladar blando. No diagnostican obstrucción ni sustituyen evaluación otorrinolaringológica.",
         "rows":[
             ("Vía aérea superior (nasofaringe)","Adultos: 17.4 mm; aumenta con edad","♀ ±3.4 / ♂ ±4.3 mm","≤5 mm: indicador de posible compromiso, no diagnóstico; requiere valoración otorrinolaringológica.","Media adulta Ann Arbor; la deglución/posición del paladar puede limitar la medición.","Un valor alto aislado no confirma permeabilidad funcional."),
             ("Vía aérea inferior (orofaringe)","10–12 mm; cambio escaso con edad","Adultos: ♀ 11.3 ±3.3 / ♂ 13.5 ±4.3 mm","Un valor menor a la media no es notable por sí solo y no demuestra obstrucción.","Referencia descrita por McNamara; correlacionar con edad, postura y clínica.",">15 mm puede sugerir posición anterior de lengua; no equivale a mejor función."),
