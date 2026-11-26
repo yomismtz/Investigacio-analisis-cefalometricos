@@ -27,6 +27,7 @@ TABLES = [
         "id": "steiner", "title": "ANÁLISIS DE STEINER", "subtitle": "Normas históricas orientativas",
         "first": "Ángulo o plano",
         "source": "Steiner CC. Cephalometrics for you and me. Am J Orthod. 1953;39(10):729-755. DOI 10.1016/0002-9416(53)90082-7.",
+        "note": "Steiner publicó medias de referencia para varias medidas sin desviación estándar original. Las bandas ± mostradas en algunas filas proceden de convenciones o fuentes posteriores; no deben interpretarse como DE de Steiner ni como límites universales.",
         "rows": [
             _row("SNA","82°","±2°","Sugiere retrusión maxilar o deficiencia sagital del maxilar; tendencia esqueletal Clase III.","Posición sagital maxilar adecuada respecto a la base craneal.","Sugiere protrusión maxilar o adelantamiento del maxilar; tendencia esqueletal Clase II."),
             _row("SNB","80°","±2°","Sugiere retrusión mandibular y mentón más posterior; tendencia Clase II.","Posición sagital mandibular adecuada respecto a la base craneal.","Sugiere protrusión mandibular y mentón adelantado; tendencia Clase III."),
@@ -59,6 +60,7 @@ TABLES = [
     {
         "id":"tweed","title":"ANÁLISIS DE TWEED","subtitle":"Normas históricas orientativas","first":"Ángulo o plano",
         "source":"Tweed CH. The diagnostic facial triangle in the control of treatment objectives. Am J Orthod. 1969;55(6):651-667. DOI 10.1016/0002-9416(69)90041-4.",
+        "note":"FMA 25° ±5° se presenta como intervalo clínico de referencia; no debe asumirse como desviación estándar universal. Interpretar el triángulo FMA–FMIA–IMPA de forma conjunta y según el protocolo.",
         "rows":[
             _row("FMA","25°","±5°","Patrón hipodivergente o braquifacial; crecimiento más horizontal y tendencia a sobremordida profunda.","Relación Frankfort-plano mandibular equilibrada.","Patrón hiperdivergente o dolicofacial; crecimiento más vertical y tendencia a mordida abierta."),
             _row("FMIA","65°","±5°","Incisivo inferior más proinclinado/protrusivo respecto a Frankfort.","Inclinación del incisivo inferior dentro de lo esperado.","Incisivo inferior más retroinclinado o retraído."),
