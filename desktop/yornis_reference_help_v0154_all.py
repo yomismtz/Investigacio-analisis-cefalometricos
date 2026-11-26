@@ -18,12 +18,12 @@ _EXTRA_TABLES = [
         "id":"via_aerea","title":"ANÁLISIS DE VÍA AÉREA","subtitle":"McNamara · referencia orientativa","first":"Ángulo o plano",
         "source":"McNamara JA Jr. A method of cephalometric evaluation. Am J Orthod. 1984;86(6):449-469. DOI 10.1016/S0002-9416(84)90352-X.",
         "rows":[
-            ("Vía aérea superior (nasofaringe)","17 mm","±4 mm","Reducción del espacio nasofaríngeo; posible resistencia aérea aumentada o adenoides prominentes.","Dimensión nasofaríngea compatible con permeabilidad adecuada en esta proyección.","Espacio nasofaríngeo amplio; sin dato de estrechamiento en este nivel."),
-            ("Vía aérea inferior (orofaringe)","12 mm","±3 mm","Estrechamiento orofaríngeo; posible disminución de la permeabilidad faríngea.","Relación orofaríngea dentro de la referencia clásica.","Espacio orofaríngeo amplio; valorar siempre junto con clínica respiratoria."),
-            ("Interpretación funcional","Flujo aéreo adecuado","cualitativa","Puede asociarse con respiración oral, obstrucción relativa o compensación postural.","No sugiere estrechamiento cefalométrico evidente.","No implica por sí mismo mejor función; integrar con exploración clínica."),
-            ("Relación con crecimiento","Compatible","cualitativa","Puede asociarse con patrón vertical aumentado y adaptación cráneo-cervical.","Sin repercusión cefalométrica evidente en esta medición aislada.","Hallazgo descriptivo; no sustituye estudios funcionales o de sueño."),
+            ("Vía aérea superior (nasofaringe)","Adultos: 17.4 mm; aumenta con edad","♀ ±3.4 / ♂ ±4.3 mm","≤5 mm: indicador de posible compromiso, no diagnóstico; requiere valoración otorrinolaringológica.","Media adulta Ann Arbor; la deglución/posición del paladar puede limitar la medición.","Un valor alto aislado no confirma permeabilidad funcional."),
+            ("Vía aérea inferior (orofaringe)","10–12 mm; cambio escaso con edad","Adultos: ♀ 11.3 ±3.3 / ♂ 13.5 ±4.3 mm","Un valor menor a la media no es notable por sí solo y no demuestra obstrucción.","Referencia descrita por McNamara; correlacionar con edad, postura y clínica.",">15 mm puede sugerir posición anterior de lengua; no equivale a mejor función."),
+            ("Interpretación funcional","Indicador cefalométrico bidimensional","No es prueba funcional","La radiografía lateral no diagnostica apnea, obstrucción ni respiración oral.","Describe dimensiones en una proyección y momento determinados.","No permite inferir flujo aéreo normal ni ausencia de trastorno."),
+            ("Relación con crecimiento","Interpretar con edad y desarrollo","No aplica","No inferir patrón vertical o maduración a partir de una sola medida faríngea.","Correlacionar con morfología, postura y exploración clínica.","No usar como predictor aislado de crecimiento o sueño."),
         ],
-        "note":"Medidas bidimensionales orientativas; interpretar con postura, fase respiratoria y evaluación clínica/otorrinolaringológica.",
+        "note":"McNamara advierte que la telerradiografía es una representación 2D de una estructura 3D; la deglución puede alterar el paladar blando. ≤5 mm en faringe superior solo indica posible compromiso; el diagnóstico requiere valoración otorrinolaringológica. En faringe inferior, un valor bajo no es notable por sí solo; >15 mm puede reflejar posición anterior de lengua.",
     },
     {
         "id":"craneo_cervical","title":"ANÁLISIS CRÁNEO-CERVICAL","subtitle":"Solow–Tallgren / Rocabado · referencias orientativas","first":"Ángulo o plano",
