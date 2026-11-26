@@ -44,6 +44,8 @@ def install() -> None:
             changes.update(ref="14.5° ±3.5° (desviación respecto a 90°)", lo=11.0, hi=18.0)
         elif analysis == "Downs" and name == "U1 a A-Pg":
             changes.update(ref="Descriptiva; sin límite universal adoptado", lo=None, hi=None)
+        elif analysis == "Steiner" and name == "Pog a NB":
+            changes.update(ref="2 mm aprox.; media histórica sin banda validada", lo=None, hi=None)
         updated.append(replace(measurement, **changes) if changes else measurement)
 
     engine.MEASUREMENTS[:] = updated
@@ -75,6 +77,21 @@ def install() -> None:
                 0.0,
                 "°",
                 "Downs 1948",
+            )
+        )
+
+    if ("Steiner", "SND") not in names:
+        engine.MEASUREMENTS.append(
+            engine.Measurement(
+                "Steiner",
+                "SND",
+                "angle3",
+                ("S", "N", "D"),
+                "76° (media histórica; banda no verificada)",
+                None,
+                None,
+                "°",
+                "Steiner 1953",
             )
         )
 
