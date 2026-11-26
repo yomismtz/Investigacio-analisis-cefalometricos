@@ -482,7 +482,7 @@ class ResearchWorkspace(tk.Tk):
         return best
     def canvas_click(self,e):
         if self.image is None:return
-        p=self.canvas_to_image(e.x,e.y)
+        p=self.canvas_to_image(self.canvas.canvasx(e.x),self.canvas.canvasy(e.y))
         if not calibration.point_inside_image(p,self.image.width,self.image.height):
             self.status.config(text=self.T("Haz clic dentro de la radiografía.","Click inside the radiograph."))
             return
@@ -506,13 +506,16 @@ class ResearchWorkspace(tk.Tk):
         if requires_calibration(self.protocol.get("selected_variables",[])) and not self.mm_per_px:
             self.status.config(text=self.T("Primero calibra la radiografía con dos puntos de distancia conocida.","Calibrate the radiograph with two points of known distance first."))
             return
-        near=self.nearest_point(e.x,e.y);k=near or self.current_landmark()
+        cx,cy=self.canvas.canvasx(e.x),self.canvas.canvasy(e.y)
+        near=self.nearest_point(cx,cy);k=near or self.current_landmark()
         if not k:return
         old=self.points.get(k);self.undo_stack.append((k,old,p));self.redo_stack.clear();self.points[k]=p;self.dragging=k
         if near is None and self.landmark_index<len(self.landmarks)-1:self.step_landmark(1)
         self.autosave();self.update_trace_progress();self.redraw()
     def canvas_drag(self,e):
-        if self.dragging and self.image is not None:self.points[self.dragging]=self.canvas_to_image(e.x,e.y);self.redraw()
+        if self.dragging and self.image is not None:
+            cx,cy=self.canvas.canvasx(e.x),self.canvas.canvasy(e.y)
+            self.points[self.dragging]=self.canvas_to_image(cx,cy);self.redraw()
     def canvas_release(self,e):
         if self.dragging:self.autosave();self.dragging=None;self.update_trace_progress()
     def pan_begin(self,e):self.pan_state=(e.x,e.y,self.offx,self.offy)
@@ -520,7 +523,8 @@ class ResearchWorkspace(tk.Tk):
         if self.pan_state:x,y,ox,oy=self.pan_state;self.offx=ox+e.x-x;self.offy=oy+e.y-y;self.redraw()
     def zoom_wheel(self,e):
         if self.image is None:return
-        before=self.canvas_to_image(e.x,e.y);factor=1.12 if e.delta>0 else 1/1.12;self.zoom=max(.05,min(10,self.zoom*factor));self.offx=e.x-before[0]*self.zoom;self.offy=e.y-before[1]*self.zoom;self.redraw()
+        cx,cy=self.canvas.canvasx(e.x),self.canvas.canvasy(e.y)
+        before=self.canvas_to_image(cx,cy);factor=1.12 if e.delta>0 else 1/1.12;self.zoom=max(.05,min(10,self.zoom*factor));self.offx=cx-before[0]*self.zoom;self.offy=cy-before[1]*self.zoom;self.redraw()
     def zoom_center(self,factor):
         if self.image is None:return
         cx=self.canvas.winfo_width()/2;cy=self.canvas.winfo_height()/2;before=self.canvas_to_image(cx,cy);self.zoom=max(.05,min(10,self.zoom*factor));self.offx=cx-before[0]*self.zoom;self.offy=cy-before[1]*self.zoom;self.redraw()
@@ -530,7 +534,8 @@ class ResearchWorkspace(tk.Tk):
         x,y=self.points[k];self.offx=self.canvas.winfo_width()/2-x*self.zoom;self.offy=self.canvas.winfo_height()/2-y*self.zoom;self.redraw()
     def update_magnifier(self,e):
         if self.image is None:return
-        x,y=self.canvas_to_image(e.x,e.y);r=max(20,int(70/self.zoom));box=(max(0,int(x-r)),max(0,int(y-r)),min(self.image.width,int(x+r)),min(self.image.height,int(y+r)))
+        cx,cy=self.canvas.canvasx(e.x),self.canvas.canvasy(e.y)
+        x,y=self.canvas_to_image(cx,cy);r=max(20,int(70/self.zoom));box=(max(0,int(x-r)),max(0,int(y-r)),min(self.image.width,int(x+r)),min(self.image.height,int(y+r)))
         try:
             crop=self.image.crop(box).resize((260,190),Image.Resampling.LANCZOS);self.magnifier_photo=ImageTk.PhotoImage(crop);self.magnifier.delete("all");self.magnifier.create_image(130,95,image=self.magnifier_photo);self.magnifier.create_line(125,95,135,95,fill=PALETTE["mint_300"],width=2);self.magnifier.create_line(130,90,130,100,fill=PALETTE["mint_300"],width=2)
         except Exception:pass
