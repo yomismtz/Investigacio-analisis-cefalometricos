@@ -5,7 +5,8 @@ import yornis_reference_help_v0154 as _base
 _EXTRA_TABLES = [
     {
         "id":"powell","title":"ANÁLISIS DE POWELL","subtitle":"Perfil blando · referencia estética orientativa","first":"Ángulo o plano",
-        "source":"Powell N, Humphreys B. Proportions of the Aesthetic Face. Thieme-Stratton; 1984. Referencia estética orientativa, a correlacionar con sexo, edad y etnia.",
+        "source":"Powell N, Humphreys B. Proportions of the Aesthetic Face. Thieme-Stratton; 1984.",
+        "note":"Proporciones estéticas históricas, no criterios diagnósticos ni estándares universales. La interpretación depende de edad, sexo, población, preferencias estéticas y técnica de fotografía/perfil.",
         "rows":[
             ("Ángulo nasofrontal","122°","±7°","Ángulo más agudo; glabela y/o dorso nasal relativamente más prominentes.","Transición armónica frente–nariz.","Ángulo más obtuso; región glabelar o puente nasal más planos."),
             ("Ángulo nasofacial","36°","±4°","Nariz menos proyectada o mentón relativamente más prominente.","Proyección nasal equilibrada respecto al perfil facial.","Nariz más proyectada o mentón relativamente retrusivo."),
