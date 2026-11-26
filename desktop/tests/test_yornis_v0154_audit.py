@@ -81,6 +81,10 @@ class AuditHardeningTests(unittest.TestCase):
         upper_distance = next(v for v in rp.analysis_catalog()["Ricketts"] if v.name == "U1 a A-Pg")
         self.assertIsNone(upper_distance.measurement.lo)
         self.assertIsNone(upper_distance.measurement.hi)
+        convexity = next(v for v in rp.analysis_catalog()["Ricketts"] if v.name == "Convexidad A a N-Pg")
+        self.assertIsNone(convexity.measurement.lo)
+        self.assertIsNone(convexity.measurement.hi)
+        self.assertIn("ajustar por edad", rp.reference_for(convexity))
 
     def test_downs_and_tweed_engine_conventions_are_consistent(self):
         import math
