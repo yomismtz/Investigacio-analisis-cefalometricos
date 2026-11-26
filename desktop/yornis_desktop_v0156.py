@@ -212,6 +212,11 @@ def main():
         previous.legacy.yornis_ceph_quality_v0153.install_individual(classic.YomCephClassic)
         previous.hardening.install_individual(classic.YomCephClassic)
         quality.install_individual(classic.YomCephClassic)
+        # The individual flow must install the same image-scoped mm/px guard
+        # that is already active in research mode. Install it after all other
+        # class wrappers so it guards the final calculate/load/calibration methods.
+        import yornis_calibration_gate_v0164 as calibration_gate
+        calibration_gate.install_individual(classic.YomCephClassic)
         previous.evidence.install()
         app = classic.YomCephClassic()
         app.title(f"Yornis · Yom Dental Análisis · v{APP_VERSION} · Individual")
