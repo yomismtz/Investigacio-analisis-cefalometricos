@@ -49,7 +49,7 @@ def install() -> None:
         elif analysis == "Ricketts" and name == "Convexidad A a N-Pg":
             changes.update(ref="≈2 mm a los 9 años; ajustar por edad según Ricketts, sin corte automático", lo=None, hi=None)
         elif analysis == "Ricketts" and name == "L1 a A-Pg":
-            changes.update(ref="1 mm aprox.; referencia dependiente de edad y población, sin límite fijo", lo=None, hi=None)
+            changes.update(ref="1 mm; desviación clínica ±2 mm (no DE); referencia dependiente de edad y población, sin límite fijo", lo=None, hi=None)
         elif analysis == "Ricketts" and name == "U1 a A-Pg":
             changes.update(ref="Descriptiva; sin norma universal adoptada", lo=None, hi=None)
         updated.append(replace(measurement, **changes) if changes else measurement)
@@ -107,7 +107,7 @@ def install() -> None:
                 "L1 a A-Pg (°)",
                 "acute",
                 ("L1i", "L1a", "A", "Pg"),
-                "22° ±4°",
+                "22° ±4° (banda clínica posterior; no DE original)",
                 18.0,
                 26.0,
                 "°",
