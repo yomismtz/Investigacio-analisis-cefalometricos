@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from research_db import ResearchDB
-from research_protocol import analysis_catalog, minimum_landmarks, requires_calibration, shared_landmark_summary
+from research_protocol import analysis_catalog, compute_selected, minimum_landmarks, requires_calibration, shared_landmark_summary
 
 
 class ResearchSuiteTests(unittest.TestCase):
@@ -103,6 +103,25 @@ class ResearchSuiteTests(unittest.TestCase):
         self.assertFalse(requires_calibration([angular.key]))
         self.assertTrue(requires_calibration([linear.key]))
         self.assertTrue(requires_calibration([angular.key, linear.key]))
+
+    def test_angular_measurements_calculate_without_scale_but_linear_do_not(self):
+        variables = [v for group in analysis_catalog().values() for v in group]
+        linear = next(
+            v for v in variables if v.unit.strip().lower() in {"mm", "cm"}
+            or "distance" in v.kind.lower() or "lineal" in v.kind.lower()
+        )
+        angular = next(
+            v for v in variables if v.unit.strip().lower() in {"°", "deg", "degree", "degrees"}
+            or "angle" in v.kind.lower() or "angular" in v.kind.lower()
+        )
+        keys = [angular.key, linear.key]
+        required = minimum_landmarks(keys)
+        points = {name: (float(i * 13 + 7), float(i * 9 + 3)) for i, name in enumerate(required)}
+        angle_result = compute_selected([angular.key], points, None)[0]
+        linear_result = compute_selected([linear.key], points, None)[0]
+        self.assertIsNotNone(angle_result["value"], angle_result["interpretation"])
+        self.assertIsNone(linear_result["value"])
+        self.assertIn("calibración", linear_result["interpretation"].lower())
 
     def test_invalid_calibration_values_are_rejected(self):
         cid = self.db.add_case(self.study, "bad-calibration")
