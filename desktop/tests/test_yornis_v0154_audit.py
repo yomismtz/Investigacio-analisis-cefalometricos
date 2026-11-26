@@ -97,6 +97,8 @@ class AuditHardeningTests(unittest.TestCase):
         ab_plane = measurement("Downs", "Plano A-B")
         ab_points = {"N": (0.0, 0.0), "Pg": (0.0, 10.0), "B": (0.0, 5.0), "A": (0.4, 0.0)}
         self.assertAlmostEqual(ce.compute(ab_plane, ab_points, None), -4.57, delta=0.1)
+        ab_left = {"N": (0.0, 0.0), "Pg": (0.0, 10.0), "B": (0.0, 5.0), "A": (-0.4, 0.0)}
+        self.assertAlmostEqual(ce.compute(ab_plane, ab_left, None, "left"), -4.57, delta=0.1)
 
     def test_cvm_reference_sequence_matches_published_morphology(self):
         import yornis_reference_help_v0154 as refs
