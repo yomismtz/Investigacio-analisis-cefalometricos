@@ -67,6 +67,18 @@ class AuditHardeningTests(unittest.TestCase):
         self.assertIsNone(fmia.measurement.hi)
         self.assertIn("FMA 21°–29°", rp.reference_for(fmia))
 
+    def test_ricketts_reference_table_matches_calculation_catalog(self):
+        import yornis_reference_help_v0154 as refs
+        table = next(t for t in refs.TABLES if t["id"] == "ricketts")
+        table_names = {row[0] for row in table["rows"]}
+        engine_names = {v.name for v in rp.analysis_catalog()["Ricketts"]}
+        self.assertEqual(table_names, engine_names)
+        lower_angle = next(v for v in rp.analysis_catalog()["Ricketts"] if v.name == "L1 a A-Pg (°)")
+        self.assertEqual((lower_angle.measurement.lo, lower_angle.measurement.hi), (18.0, 26.0))
+        upper_distance = next(v for v in rp.analysis_catalog()["Ricketts"] if v.name == "U1 a A-Pg")
+        self.assertIsNone(upper_distance.measurement.lo)
+        self.assertIsNone(upper_distance.measurement.hi)
+
     def test_downs_and_tweed_engine_conventions_are_consistent(self):
         import math
         import classic_engine as ce
