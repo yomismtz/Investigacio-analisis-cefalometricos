@@ -172,6 +172,7 @@ class IndividualSelectorFlowTests(unittest.TestCase):
             def load_image_file(self, _path):
                 self.image_path = _path
                 self.calibration_mode = True
+                self.start_calibration()  # simulate a legacy loader's automatic prompt
 
             def start_calibration(self):
                 self.start_count += 1
@@ -220,6 +221,7 @@ class IndividualSelectorFlowTests(unittest.TestCase):
             def load_image_file(self, _path):
                 self.image_path = _path
                 self.calibration_mode = True
+                self.start_calibration()  # simulate a legacy loader's automatic prompt
 
             def start_calibration(self):
                 self.start_count += 1
