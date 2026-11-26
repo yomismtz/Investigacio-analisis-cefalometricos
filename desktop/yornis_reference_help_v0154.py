@@ -69,7 +69,7 @@ TABLES = [
         "rows":[
             _row("FMA","25°","±4°","Patrón más horizontal que la referencia adoptada; interpretar junto con FMIA e IMPA.","Relación Frankfort-plano mandibular cercana al objetivo clásico.","Patrón más vertical que la referencia adoptada; interpretar junto con FMIA e IMPA."),
             _row("FMIA","Objetivo condicionado por FMA","No hay DE única","Si FMA 21°–29°: FMIA <68° sugiere mayor proinclinación inferior respecto al objetivo; si FMA ≥30°: comparar con 65°.","FMA 21°–29°: objetivo ≈68°; FMA ≥30°: objetivo ≈65°. Si FMA ≤20°, no aplicar un objetivo FMIA fijo.","FMIA por encima del objetivo condicional sugiere mayor retroinclinación. Con FMA ≤20°, valorar IMPA (referencia de no exceder ≈94°)."),
-            _row("IMPA","90°","±5°","Incisivo inferior más retroinclinado; valorar el FMA y la compensación dentaria.","Referencia histórica aproximada; no interpretar de forma independiente.","Incisivo inferior más proinclinado; si FMA ≤20°, considerar el límite orientativo de 94° descrito por Tweed."),
+            _row("IMPA","90°","±5°","Incisivo inferior más retroinclinado; valorar el FMA y la compensación dentaria.","Referencia histórica aproximada; no interpretar de forma independiente.","Incisivo inferior más proinclinado; si FMA ≤20°, el límite superior publicado varía por fuente/edición (≈92°–94°)."),
         ],
     },
     {
