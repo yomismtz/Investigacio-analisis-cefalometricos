@@ -17,6 +17,35 @@ class ResearchSuiteTests(unittest.TestCase):
 
     def tearDown(self): self.tmp.cleanup()
 
+    def test_research_drag_rejects_landmarks_outside_radiograph(self):
+        from types import SimpleNamespace
+        from research_ui import ResearchWorkspace
+
+        class FakeCanvas:
+            def canvasx(self, value): return value
+            def canvasy(self, value): return value
+
+        class FakeStatus:
+            def __init__(self): self.last = None
+            def config(self, **kwargs): self.last = kwargs.get("text")
+
+        fake = SimpleNamespace(
+            dragging="S",
+            image=SimpleNamespace(width=100, height=80),
+            canvas=FakeCanvas(),
+            canvas_to_image=lambda x, y: (x, y),
+            points={"S": (25.0, 30.0)},
+            status=FakeStatus(),
+            T=lambda es, en: es,
+            redraw=lambda: None,
+        )
+        ResearchWorkspace.canvas_drag(fake, SimpleNamespace(x=120, y=40))
+        self.assertEqual(fake.points["S"], (25.0, 30.0))
+        self.assertIn("dentro", fake.status.last)
+
+        ResearchWorkspace.canvas_drag(fake, SimpleNamespace(x=60, y=40))
+        self.assertEqual(fake.points["S"], (60.0, 40.0))
+
     def test_protocol_versioning_and_lock(self):
         cat = analysis_catalog()
         self.assertTrue(cat)
