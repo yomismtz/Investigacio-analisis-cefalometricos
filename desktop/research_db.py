@@ -672,6 +672,11 @@ class ResearchDB:
         # even if an old trace row was not archived by a compatibility path.
         if not image_hash or not stored_hash or image_hash != stored_hash:
             return []
+        # A result set is meaningful only when its matching trace is still
+        # current for this image and protocol. This also protects against
+        # legacy/compatibility code paths that failed to archive result rows.
+        if not self.latest_landmarks(case_id, protocol_version):
+            return []
         with self.connect() as con:
             v = con.execute(
                 "SELECT MAX(r.version) FROM results r JOIN cases c ON c.id=r.case_id "
