@@ -1,5 +1,5 @@
 name: Build Yornis v0.16.3 · Original Bird Recordings and Offline Audio
-# v0.16.5 viewport integration build trigger
+# v0.16.6 calibration, image-identity and viewport regression hardening
 
 on:
   push:
