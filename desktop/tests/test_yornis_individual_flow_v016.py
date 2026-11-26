@@ -148,6 +148,56 @@ class IndividualSelectorFlowTests(unittest.TestCase):
         finally:
             root.destroy()
 
+    def test_angular_only_individual_case_skips_mm_calibration(self):
+        import tkinter as tk
+        import yornis_calibration_gate_v0164 as gate
+
+        class AngularClassic:
+            def __init__(self, root):
+                self.canvas = tk.Canvas(root, width=20, height=20)
+                self.canvas.pack()
+                self.individual_measurements = {"Steiner": ["SNA"]}
+                self.points = {}
+                self.mm_per_px = None
+                self.start_count = 0
+                self.calculated = False
+
+            def winfo_children(self):
+                return [self.canvas]
+
+            def after_idle(self, callback):
+                callback()
+
+            def load_image_file(self, _path):
+                self.image_path = _path
+
+            def start_calibration(self):
+                self.start_count += 1
+
+            def calculate(self):
+                self.calculated = True
+
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            gate.install_individual(AngularClassic)
+            app = AngularClassic(root)
+            app.load_image_file("angular-only.png")
+            self.assertEqual(app.start_count, 0)
+            self.assertIsNone(app.mm_per_px)
+            self.assertEqual(str(app.canvas.cget("state")), "normal")
+            app.calculate()
+            self.assertTrue(app.calculated)
+        finally:
+            root.destroy()
+
+    def test_linear_individual_selection_still_requires_calibration(self):
+        import yornis_calibration_gate_v0164 as gate
+        angular = type("Angular", (), {"individual_measurements": {"Steiner": ["SNA"]}})()
+        linear = type("Linear", (), {"individual_measurements": {"Steiner": ["U1–NA (mm)"]}})()
+        self.assertFalse(gate._requires_calibration(angular))
+        self.assertTrue(gate._requires_calibration(linear))
+
     def test_real_classic_individual_click_opens_selector_dialog(self):
         import tkinter as tk
         import yomceph_desktop_v130_classic as classic
