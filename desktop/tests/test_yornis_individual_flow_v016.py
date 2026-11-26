@@ -191,6 +191,52 @@ class IndividualSelectorFlowTests(unittest.TestCase):
         finally:
             root.destroy()
 
+    def test_linear_calculation_is_blocked_until_scale_is_valid(self):
+        import tkinter as tk
+        from unittest.mock import patch
+        import yornis_calibration_gate_v0164 as gate
+
+        class LinearClassic:
+            def __init__(self, root):
+                self.canvas = tk.Canvas(root, width=20, height=20)
+                self.canvas.pack()
+                self.individual_measurements = {"Steiner": ["U1–NA (mm)"]}
+                self.points = {}
+                self.mm_per_px = None
+                self.start_count = 0
+                self.calculated = False
+
+            def winfo_children(self):
+                return [self.canvas]
+
+            def after_idle(self, callback):
+                callback()
+
+            def load_image_file(self, _path):
+                self.image_path = _path
+
+            def start_calibration(self):
+                self.start_count += 1
+
+            def calculate(self):
+                self.calculated = True
+
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            gate.install_individual(LinearClassic)
+            app = LinearClassic(root)
+            app.load_image_file("linear-measure.png")
+            self.assertEqual(app.start_count, 1)
+            with patch("tkinter.messagebox.showwarning"):
+                self.assertIsNone(app.calculate())
+            self.assertFalse(app.calculated)
+            app.mm_per_px = 0.5
+            self.assertTrue(app.calculate())
+            self.assertTrue(app.calculated)
+        finally:
+            root.destroy()
+
     def test_linear_individual_selection_still_requires_calibration(self):
         import yornis_calibration_gate_v0164 as gate
         import yornis_cervical_v0152 as cervical_module
