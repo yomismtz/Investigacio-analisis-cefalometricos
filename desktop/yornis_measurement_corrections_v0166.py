@@ -15,6 +15,9 @@ def install() -> None:
     # Ensure the cervical extension has installed its own compute wrapper first.
     import yornis_cervical_v0152  # noqa: F401
     import classic_engine as engine
+    if getattr(engine, "_yornis_measurement_corrections_v0166", False):
+        _INSTALLED = True
+        return
 
     updated = []
     for measurement in engine.MEASUREMENTS:
@@ -35,20 +38,6 @@ def install() -> None:
             changes.update(ref="14.5° ±3.5° (desviación respecto a 90°)", lo=11.0, hi=18.0)
         elif analysis == "Downs" and name == "U1 a A-Pg":
             changes.update(ref="Descriptiva; sin límite universal adoptado", lo=None, hi=None)
-        elif analysis == "Craneo-cervical" and name == "SN-OPT":
-            changes.update(
-                ref="92.2° ±6.0°; muestra histórica de varones daneses 20–30 años, no norma universal",
-                lo=None,
-                hi=None,
-            )
-        elif analysis == "Craneo-cervical" and name == "SN-CVT":
-            changes.update(
-                ref="97.7° ±5.7°; muestra histórica de varones daneses 20–30 años, no norma universal",
-                lo=None,
-                hi=None,
-            )
-        elif analysis == "Craneo-cervical" and name == "C1-C2":
-            changes.update(ref="Sin referencia primaria verificada; descriptiva", lo=None, hi=None)
         updated.append(replace(measurement, **changes) if changes else measurement)
 
     engine.MEASUREMENTS[:] = updated
