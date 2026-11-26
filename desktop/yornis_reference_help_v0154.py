@@ -45,10 +45,11 @@ TABLES = [
     {
         "id":"downs","title":"ANÁLISIS DE DOWNS","subtitle":"Normas históricas orientativas","first":"Ángulo o plano",
         "source":"Downs WB. Variations in facial relationships: their significance in treatment and prognosis. Am J Orthod. 1948;34(10):812-840. DOI 10.1016/0002-9416(48)90015-3.",
+        "note":"Muestra original: 20 sujetos blancos de 12–17 años con oclusiones excelentes. Rangos observados: convexidad −8.5° a +10°; plano A–B −9° a 0°. Son referencias históricas de esa muestra, no límites universales.",
         "rows":[
             _row("Ángulo facial","87.8°","±3.6°","Sugiere retrusión mandibular o mentón más posterior; tendencia Clase II.","Relación anteroposterior facial equilibrada.","Sugiere prognatismo mandibular o mentón adelantado; tendencia Clase III."),
-            _row("Ángulo de convexidad","0°","±4°","Perfil más recto o cóncavo; tendencia esqueletal Clase III.","Perfil blando/óseo armónico.","Perfil más convexo; tendencia esqueletal Clase II."),
-            _row("Plano A-B","-4.6°","±3.5°","Discrepancia más hacia Clase II; relación maxilomandibular más distal.","Relación maxilomandibular equilibrada.","Discrepancia más hacia Clase III; relación maxilomandibular más mesial."),
+            _row("Ángulo de convexidad","0°","±5.1°","Perfil más cóncavo; tendencia esqueletal Clase III.","Convexidad cercana a la media de la muestra.","Perfil más convexo; tendencia esqueletal Clase II."),
+            _row("Plano A-B","-4.6°","±3.7°","Discrepancia más hacia Clase II; relación maxilomandibular más distal.","Relación maxilomandibular cercana a la media de la muestra.","Discrepancia más hacia Clase III; relación maxilomandibular más mesial."),
             _row("Plano mandibular","21.9°","±3.2°","Patrón hipodivergente o braquifacial; crecimiento más horizontal.","Patrón vertical equilibrado.","Patrón hiperdivergente o dolicofacial; crecimiento más vertical."),
             _row("Eje Y","59.4°","±3.8°","Dirección de crecimiento más horizontal y hacia adelante.","Dirección de crecimiento equilibrada.","Dirección de crecimiento más vertical y hacia abajo-atrás."),
             _row("Plano oclusal a FH","9.3°","±3.8°","Plano oclusal más plano.","Inclinación del plano oclusal dentro de lo esperado.","Plano oclusal más inclinado; mayor componente vertical."),
