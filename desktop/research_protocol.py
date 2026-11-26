@@ -167,7 +167,8 @@ def reference_for(variable: Variable, sex: str = "", age: float | None = None, p
 
 def _is_linear(v: Variable) -> bool:
     u = v.unit.lower().replace(" ", "")
-    return u in {"mm", "cm"} or "distance" in v.kind.lower() or "lineal" in v.kind.lower()
+    kind = v.kind.lower()
+    return u in {"mm", "cm"} or any(term in kind for term in ("distance", "lineal", "linear", "length"))
 
 
 def requires_calibration(variable_keys: list[str]) -> bool:
