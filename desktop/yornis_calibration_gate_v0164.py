@@ -81,6 +81,7 @@ def _requires_calibration(app) -> bool:
         import yornis_cervical_v0152 as cervical
         qualitative_special.add((cervical.CVM_ANALYSIS, "Estadio CVM registrado"))
         qualitative_special.add((cervical.CVM_ANALYSIS, cervical.CVM_MEASUREMENT))
+        qualitative_special.add((cervical.POSTURE_ANALYSIS, cervical.POSTURE_MEASUREMENT))
     except Exception:
         pass
     try:
