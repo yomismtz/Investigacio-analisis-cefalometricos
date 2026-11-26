@@ -174,10 +174,19 @@ def requires_calibration(variable_keys: list[str]) -> bool:
     """Return whether the selected protocol contains at least one linear variable."""
     return any(_is_linear(variable) for variable in selected_variables(variable_keys))
 
+def is_valid_mm_per_px(value: float | None) -> bool:
+    """Accept only finite, strictly positive radiograph scales."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return False
+    return math.isfinite(number) and number > 0
+
 
 def compute_selected(variable_keys: list[str], points: dict[str, tuple[float, float]], mm_per_px: float | None, side: str = "right", sex: str = "", age: float | None = None, population: str = "") -> list[dict]:
     results: list[dict] = []
-    scale = mm_per_px or 1.0
+    valid_scale = is_valid_mm_per_px(mm_per_px)
+    scale = float(mm_per_px) if valid_scale else 1.0
     measure_objs = _measurements()
     by_key: dict[str, Any] = {}
     for m in measure_objs:
@@ -188,7 +197,7 @@ def compute_selected(variable_keys: list[str], points: dict[str, tuple[float, fl
         if not all(p in points for p in v.points):
             results.append({"analysis": v.analysis, "measurement": v.name, "value": None, "unit": v.unit, "reference": reference_for(v, sex, age, population), "interpretation": "Faltan landmarks", "missing": [p for p in v.points if p not in points]})
             continue
-        if _is_linear(v) and not mm_per_px:
+        if _is_linear(v) and not valid_scale:
             results.append({"analysis": v.analysis, "measurement": v.name, "value": None, "unit": v.unit or "mm", "reference": reference_for(v, sex, age, population), "interpretation": "Requiere calibración", "missing": []})
             continue
         try:
@@ -207,7 +216,7 @@ def trace_qc(variable_keys: list[str], points: dict[str, tuple[float, float]], m
     if missing:
         issues.append({"level": "review", "code": "missing_landmarks", "message": f"Faltan {len(missing)} landmarks: " + ", ".join(missing[:12]) + ("…" if len(missing) > 12 else "")})
     variables = selected_variables(variable_keys)
-    if any(_is_linear(v) for v in variables) and not mm_per_px:
+    if any(_is_linear(v) for v in variables) and not is_valid_mm_per_px(mm_per_px):
         issues.append({"level": "review", "code": "missing_calibration", "message": "El protocolo contiene variables lineales y no hay calibración mm/píxel."})
     placed = [(k, points[k]) for k in required if k in points]
     for i, (a, pa) in enumerate(placed):
