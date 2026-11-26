@@ -17,7 +17,7 @@ CVM_MEASUREMENT = "Estadio CVM Baccetti"
 
 LORDOSIS_POINTS = ("C1 tub post", "C1 tub ant", "C7 inf post", "C7 inf ant")
 LORDOSIS_REFERENCE = "Sin norma directa validada para esta construcción C1–C7. Registrar ángulo firmado, puntos y método; no aplicar un rango universal."
-CVM_REFERENCE = "Baccetti–Franchi–McNamara: CS1–CS6 por morfología de C2–C4; no equivale a una edad cronológica exacta."
+CVM_REFERENCE = "Baccetti–Franchi–McNamara: CS1–CS6 por morfología de C2–C4. Los intervalos temporales son aproximaciones de cohortes y no predicen con exactitud el pico individual ni equivalen a edad cronológica."
 
 _ENGINE_PATCHED = False
 _RESEARCH_INSTALLED = False
@@ -95,17 +95,17 @@ def classify_cvm(c2_concavity: str, c3_concavity: str, c4_concavity: str, c3_sha
     shapes = {c3_shape, c4_shape}
 
     if conc == (False, False, False) and shapes == {"trapezoidal"}:
-        return {"stage": 1, "phase": "Prepuberal", "timing": "El pico de crecimiento mandibular no se espera antes de ~2 años.", "reason": "Bordes inferiores planos; C3 y C4 trapezoidales."}
+        return {"stage": 1, "phase": "Prepuberal", "timing": "En la cohorte original, el pico suele ocurrir al menos ~2 años después de CS1; no es una predicción individual exacta.", "reason": "Bordes inferiores planos; C3 y C4 trapezoidales."}
     if conc == (True, False, False) and shapes == {"trapezoidal"}:
-        return {"stage": 2, "phase": "Prepuberal", "timing": "El pico de crecimiento mandibular suele aproximarse dentro de ~1 año.", "reason": "Concavidad en C2; C3 y C4 trapezoidales."}
+        return {"stage": 2, "phase": "Prepuberal", "timing": "En la cohorte original, el pico suele ocurrir dentro del año siguiente a CS2; no es una predicción individual exacta.", "reason": "Concavidad en C2; C3 y C4 trapezoidales."}
     if conc == (True, True, False) and shapes.issubset({"trapezoidal", "horizontal"}):
-        return {"stage": 3, "phase": "Circumpuberal", "timing": "El pico de crecimiento mandibular ocurre en el intervalo CS3–CS4.", "reason": "Concavidad en C2 y C3; C3/C4 trapezoidales u horizontales."}
+        return {"stage": 3, "phase": "Circumpuberal", "timing": "En el método original, el pico se sitúa alrededor del intervalo CS3–CS4; la variación individual puede ser amplia.", "reason": "Concavidad en C2 y C3; C3/C4 trapezoidales u horizontales."}
     if conc == (True, True, True) and shapes == {"horizontal"}:
-        return {"stage": 4, "phase": "Circumpuberal", "timing": "El pico de crecimiento mandibular ocurrió aproximadamente 1–2 años antes.", "reason": "Concavidad en C2–C4; C3 y C4 rectangulares horizontales."}
+        return {"stage": 4, "phase": "Circumpuberal", "timing": "En la cohorte original, el pico suele haber ocurrido aproximadamente 1–2 años antes de CS4; no fecha el pico individual.", "reason": "Concavidad en C2–C4; C3 y C4 rectangulares horizontales."}
     if conc == (True, True, True) and "cuadrada" in shapes and shapes.issubset({"horizontal", "cuadrada"}):
-        return {"stage": 5, "phase": "Postpuberal", "timing": "El pico de crecimiento mandibular terminó al menos ~1 año antes.", "reason": "Concavidad en C2–C4; al menos C3 o C4 cuadrada."}
+        return {"stage": 5, "phase": "Postpuberal", "timing": "En la cohorte original, el pico suele haber ocurrido al menos ~1 año antes de CS5; no fecha el pico individual.", "reason": "Concavidad en C2–C4; al menos C3 o C4 cuadrada."}
     if conc == (True, True, True) and "vertical" in shapes and shapes.issubset({"cuadrada", "vertical"}):
-        return {"stage": 6, "phase": "Postpuberal", "timing": "El estadio se registra al menos ~2 años después del pico de crecimiento.", "reason": "Concavidad en C2–C4; al menos C3 o C4 rectangular vertical."}
+        return {"stage": 6, "phase": "Postpuberal", "timing": "En la cohorte original, CS6 suele corresponder a ≥2 años después del pico; no fecha el pico individual.", "reason": "Concavidad en C2–C4; al menos C3 o C4 rectangular vertical."}
 
     return {
         "stage": None,
