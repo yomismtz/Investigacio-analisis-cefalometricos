@@ -166,10 +166,13 @@ def install_individual(classic_class) -> None:
             # the import completes, preventing duplicate calibration dialogs.
             if getattr(self, "_yornis_loading_image_v0164", False):
                 return None
-            # A new calibration attempt invalidates any previous scale immediately.
+            # Keep the prior image-specific calibration available if the user
+            # opens the dialog but cancels. It remains valid for this same image.
+            previous_scale = getattr(self, "mm_per_px", None)
+            previous_points = getattr(self, "calibration_points", None)
+            previous_real_mm = getattr(self, "calibration_real_mm", None)
             self.calibration_points = []
             self.calibration_real_mm = None
-            self.mm_per_px = None
             if hasattr(self, "calibration_mode"):
                 self.calibration_mode = False
             _set_classic_canvas_state(self, "disabled")
@@ -178,13 +181,22 @@ def install_individual(classic_class) -> None:
 
             # The legacy dialog returns with calibration_mode=True only when the
             # user accepted a positive real-world distance and the engine is
-            # waiting for the two image clicks. Cancellation/invalid input stays
-            # locked; merely closing the modal dialog is not calibration.
+            # waiting for the two image clicks. Only then invalidate the old
+            # scale while the new endpoints are being collected.
             accepted = (
                 bool(getattr(self, "calibration_mode", False))
                 and _positive_finite(getattr(self, "calibration_real_mm", None))
             )
-            _set_classic_canvas_state(self, "normal" if accepted else "disabled")
+            if accepted:
+                self.mm_per_px = None
+                _set_classic_canvas_state(self, "normal")
+            else:
+                self.mm_per_px = previous_scale
+                self.calibration_points = previous_points or []
+                self.calibration_real_mm = previous_real_mm
+                _set_classic_canvas_state(
+                    self, "normal" if _has_valid_scale(self) else "disabled"
+                )
             return result
         classic_class.start_calibration = start_calibration
 
