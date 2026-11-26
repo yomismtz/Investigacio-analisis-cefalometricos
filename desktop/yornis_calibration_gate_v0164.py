@@ -54,6 +54,40 @@ def _has_valid_scale(app) -> bool:
     return _positive_finite(getattr(app, "mm_per_px", None))
 
 
+def _requires_calibration(app) -> bool:
+    """Require mm/px only when the exact individual selection contains linear measures."""
+    mapping = getattr(app, "individual_measurements", None)
+    if not isinstance(mapping, dict) or not mapping:
+        # Unknown/legacy selections fail closed: never mistake pixels for mm.
+        return True
+    selected = {
+        (str(analysis), str(name))
+        for analysis, names in mapping.items()
+        for name in (names or [])
+    }
+    if not selected:
+        return True
+    try:
+        import classic_engine
+        measurements = [
+            m for m in classic_engine.MEASUREMENTS
+            if (str(m.analysis), str(m.name)) in selected
+        ]
+    except Exception:
+        return True
+    # If a selected label cannot be resolved, retain the safe calibration gate.
+    if len(measurements) != len(selected):
+        return True
+    for m in measurements:
+        unit = str(getattr(m, "unit", "") or "").lower().replace(" ", "")
+        kind = str(getattr(m, "kind", "") or "").lower()
+        if unit in {"mm", "cm"} or any(
+            term in kind for term in ("distance", "lineal", "linear", "length")
+        ):
+            return True
+    return False
+
+
 def install_individual(classic_class) -> None:
     """Require a fresh, accepted two-point calibration for every loaded image."""
     if getattr(classic_class, "_yornis_calibration_gate_v0164", False):
@@ -75,11 +109,21 @@ def install_individual(classic_class) -> None:
             _set_classic_canvas_state(self, "disabled")
             result = original_load(self, *args, **kwargs)
             _set_classic_canvas_state(self, "disabled")
-            if callable(getattr(self, "start_calibration", None)):
+            if _requires_calibration(self):
+                if callable(getattr(self, "start_calibration", None)):
+                    try:
+                        self.after_idle(self.start_calibration)
+                    except Exception:
+                        self.start_calibration()
+            else:
+                # Purely angular selections need no scale; permit guided tracing.
+                self.mm_per_px = None
+                if hasattr(self, "calibration_mode"):
+                    self.calibration_mode = False
                 try:
-                    self.after_idle(self.start_calibration)
+                    self.after_idle(lambda: _set_classic_canvas_state(self, "normal"))
                 except Exception:
-                    self.start_calibration()
+                    _set_classic_canvas_state(self, "normal")
             return result
         classic_class.load_image_file = load_image_file
 
@@ -106,6 +150,23 @@ def install_individual(classic_class) -> None:
             _set_classic_canvas_state(self, "normal" if accepted else "disabled")
             return result
         classic_class.start_calibration = start_calibration
+
+    original_calculate = getattr(classic_class, "calculate", None)
+    if callable(original_calculate):
+        def calculate(self, *args, **kwargs):
+            if _requires_calibration(self) and not _has_valid_scale(self):
+                try:
+                    from tkinter import messagebox
+                    messagebox.showwarning(
+                        "Yornis",
+                        "Las medidas lineales requieren una calibración válida de esta radiografía.",
+                        parent=self,
+                    )
+                except Exception:
+                    pass
+                return None
+            return original_calculate(self, *args, **kwargs)
+        classic_class.calculate = calculate
 
     if callable(original_finish):
         def finish_calibration(self, *args, **kwargs):
