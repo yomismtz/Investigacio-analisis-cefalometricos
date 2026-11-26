@@ -60,6 +60,9 @@ class ReferenceHelpTests(unittest.TestCase):
             self.assertTrue(table["source"])
         self.assertIn("no criterios diagnósticos", by_id["powell"]["note"])
         self.assertIn("no son límites universales", by_id["legan_burstone"]["note"])
+        self.assertIn("no existe un módulo de cálculo Legan–Burstone", by_id["legan_burstone"]["note"])
+        self.assertIn("U6-NF, L6-MP y B-Pg", by_id["burstone_cogs"]["note"])
+        self.assertIn("se calculan dentro del análisis McNamara", by_id["via_aerea"]["note"])
 
 
 if __name__ == "__main__":
