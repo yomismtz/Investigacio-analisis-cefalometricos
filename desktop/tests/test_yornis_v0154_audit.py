@@ -73,12 +73,12 @@ class AuditHardeningTests(unittest.TestCase):
         self.assertIn("CS4: rectangular horizontal", rows["Forma de cuerpos C3–C4"][1])
 
     def test_reference_tables_are_counted_and_cervical_claims_are_limited(self):
-        import yornis_reference_help_v0154 as refs
+        import yornis_reference_help_v0154_all as refs
         from pathlib import Path
-        self.assertEqual(len(refs.TABLES), 13)
+        self.assertEqual(len(refs.TABLES), 17)
         ui_source = (Path(__file__).resolve().parents[1] / "yornis_reference_help_v0156.py").read_text(encoding="utf-8")
+        self.assertIn("import yornis_reference_help_v0154_all as base", ui_source)
         self.assertIn('text=f"{len(TABLES)} tablas', ui_source)
-        self.assertNotIn("17 tablas", ui_source)
         cervical = next(table for table in refs.TABLES if table["id"] == "alineacion_cervical_c2_c4")
         self.assertIn("No diagnostica patología cervical", cervical["note"])
         self.assertNotIn("vía aérea", " ".join(str(cell) for row in cervical["rows"] for cell in row))
