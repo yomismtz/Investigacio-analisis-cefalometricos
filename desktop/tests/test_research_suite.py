@@ -104,6 +104,16 @@ class ResearchSuiteTests(unittest.TestCase):
         self.assertTrue(requires_calibration([linear.key]))
         self.assertTrue(requires_calibration([angular.key, linear.key]))
 
+    def test_invalid_calibration_values_are_rejected(self):
+        cid = self.db.add_case(self.study, "bad-calibration")
+        for value in (0, -0.25, float("nan"), float("inf"), float("-inf")):
+            with self.subTest(value=value):
+                with self.assertRaises(ValueError):
+                    self.db.update_case_calibration(cid, value)
+                with self.assertRaises(ValueError):
+                    self.db.save_trace(cid, 1, {}, [], [], value)
+        self.assertIsNone(self.db.case(cid)["case_mm_per_px"])
+
     def test_landmark_minimization(self):
         cat = analysis_catalog(); keys = []
         for _, variables in list(cat.items())[:3]:
