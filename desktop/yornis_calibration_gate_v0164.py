@@ -126,6 +126,10 @@ def install_individual(classic_class) -> None:
                 self.calibration_mode = False
             _set_classic_canvas_state(self, "disabled")
             result = original_load(self, *args, **kwargs)
+            # Some legacy loaders toggle calibration_mode themselves. Reassert
+            # a neutral state before deciding whether this selection needs mm/px.
+            if hasattr(self, "calibration_mode"):
+                self.calibration_mode = False
             _set_classic_canvas_state(self, "disabled")
             if _requires_calibration(self):
                 if callable(getattr(self, "start_calibration", None)):
