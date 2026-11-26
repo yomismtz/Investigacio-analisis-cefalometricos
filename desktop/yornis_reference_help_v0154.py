@@ -99,17 +99,17 @@ TABLES = [
     {
         "id":"mcnamara","title":"ANÁLISIS DE McNAMARA","subtitle":"Normas históricas orientativas","first":"Ángulo o plano",
         "source":"McNamara JA Jr. A method of cephalometric evaluation. Am J Orthod. 1984;86(6):449-469. DOI 10.1016/S0002-9416(84)90352-X.",
-        "note":"Las longitudes Co-A, Co-Gn, diferencia mandibular-maxilar y altura facial dependen de edad, sexo y tamaño facial; no deben forzarse a una única norma universal.",
+        "note":"Las longitudes Co-A, Co-Gn, diferencia maxilomandibular y ENA-Me dependen de edad y sexo. La tabla II de McNamara distingue dentición mixta y adulto; la tabla I presenta una muestra adulta Ann Arbor por sexo. El artículo indica que, cuando fue posible, las medidas incorporaron 8% de magnificación. No comparar medidas calibradas a dimensión real con normas radiográficas magnificadas sin armonizar esa convención.",
         "rows":[
-            _row("A-Nperp","1 mm","±2 mm","Sugiere retrusión maxilar relativa.","Posición anteroposterior maxilar adecuada.","Sugiere protrusión maxilar relativa."),
-            _row("Pg-Nperp","-4 mm","±4 mm","Sugiere retrusión mandibular/mentoniana relativa.","Posición anteroposterior mandibular adecuada.","Sugiere protrusión mandibular/mentoniana relativa."),
+            _row("A-Nperp","Mixta: 0 mm; adulto: 1 mm","Norma compuesta por etapa","Más posterior que la referencia correspondiente a dentición/edad.","Comparar con la referencia de la etapa; no usar un único valor para todas las edades.","Más anterior que la referencia correspondiente a dentición/edad."),
+            _row("Pg-Nperp","Mixta: −8 a −6 mm; adulto: −2 a +4 mm","Rangos compuestos por etapa","Más posterior que el rango correspondiente a la etapa.","Comparar con el rango de dentición/edad; el artículo también presenta medias adultas separadas por sexo.","Más anterior que el rango correspondiente a la etapa."),
             _row("Co-A","según edad/sexo","—","Longitud maxilar disminuida.","Longitud maxilar acorde con edad y sexo.","Longitud maxilar aumentada."),
             _row("Co-Gn","según edad/sexo","—","Longitud mandibular disminuida.","Longitud mandibular acorde con edad y sexo.","Longitud mandibular aumentada."),
             _row("Co-Gn − Co-A","según edad/sexo","—","Mandíbula relativamente corta respecto al maxilar; tendencia Clase II.","Relación de longitudes maxilar-mandibular equilibrada.","Mandíbula relativamente larga respecto al maxilar; tendencia Clase III."),
             _row("ENA-Me","según edad/sexo","—","Altura facial inferior reducida.","Altura facial inferior proporcional.","Altura facial inferior aumentada."),
-            _row("Plano mandibular-FH","22°","±4°","Patrón hipodivergente o más horizontal.","Patrón vertical equilibrado.","Patrón hiperdivergente o más vertical."),
-            _row("Faringe superior","17 mm","±3 mm","Espacio nasofaríngeo más reducido.","Espacio nasofaríngeo dentro de lo esperado.","Espacio nasofaríngeo más amplio."),
-            _row("Faringe inferior","13 mm","±2 mm","Espacio orofaríngeo más reducido.","Espacio orofaríngeo dentro de lo esperado.","Espacio orofaríngeo más amplio."),
+            _row("Plano mandibular-FH","Dentición mixta: 25°; adulto: 22°","Cambio aproximado −1° cada 3–4 años","Más bajo que la referencia de la etapa: tendencia más horizontal.","Comparar con dentición/edad; el adulto es una referencia compuesta.","Más alto que la referencia de la etapa: tendencia más vertical."),
+            _row("Faringe superior","♀ 17.4 mm / ♂ 17.4 mm","♀ ±3.4 / ♂ ±4.3 mm","Medida inferior a la media de la muestra adulta correspondiente; no diagnostica obstrucción.","Media de la muestra adulta Ann Arbor; interpretar junto con clínica y vía aérea.","Medida superior a la media de la muestra adulta correspondiente; no diagnostica permeabilidad."),
+            _row("Faringe inferior","♀ 11.3 mm / ♂ 13.5 mm","♀ ±3.3 / ♂ ±4.3 mm","Medida inferior a la media de la muestra adulta correspondiente; no diagnostica obstrucción.","Media de la muestra adulta Ann Arbor; interpretar junto con clínica y vía aérea.","Medida superior a la media de la muestra adulta correspondiente; no diagnostica permeabilidad."),
         ],
     },
     {
