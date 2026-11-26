@@ -91,6 +91,7 @@ class IndividualSelectorFlowTests(unittest.TestCase):
                 self.calibration_real_mm = 5.0
                 self.mm_per_px = 0.5
                 self.start_count = 0
+                self.next_scale = 0.2
 
             def winfo_children(self):
                 return [self.canvas]
@@ -107,7 +108,7 @@ class IndividualSelectorFlowTests(unittest.TestCase):
                 self.calibration_mode = self.calibration_real_mm is not None
 
             def finish_calibration(self):
-                self.mm_per_px = 0.2
+                self.mm_per_px = self.next_scale
                 self.calibration_points = []
 
         root = tk.Tk()
@@ -140,7 +141,7 @@ class IndividualSelectorFlowTests(unittest.TestCase):
 
             app.start_calibration()
             app.calibration_points = [(1.0, 1.0), (21.0, 1.0)]
-            app.mm_per_px = 0
+            app.next_scale = 0
             app.finish_calibration()
             self.assertIsNone(app.mm_per_px)
             self.assertEqual(str(app.canvas.cget("state")), "disabled")
