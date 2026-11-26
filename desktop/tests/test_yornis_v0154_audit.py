@@ -174,7 +174,7 @@ class AuditHardeningTests(unittest.TestCase):
 
     def test_cvm_timing_is_described_as_cohort_estimate(self):
         import yornis_cervical_v0152 as cervical
-        result = cervical.classify_cvm("no", "no", "no", "trapezoidal", "trapezoidal")
+        result = cervical.classify_cvm(False, False, False, "trapezoidal", "trapezoidal")
         self.assertIn("cohorte original", result["timing"])
         self.assertIn("no es una predicción individual exacta", result["timing"])
         self.assertIn("no predicen con exactitud", cervical.CVM_REFERENCE)
