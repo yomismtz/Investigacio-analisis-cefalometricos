@@ -54,7 +54,9 @@ TABLES = [
             _row("Plano mandibular","21.9°","±3.2°","Patrón hipodivergente o braquifacial; crecimiento más horizontal.","Patrón vertical equilibrado.","Patrón hiperdivergente o dolicofacial; crecimiento más vertical."),
             _row("Eje Y","59.4°","±3.8°","Dirección de crecimiento más horizontal y hacia adelante.","Dirección de crecimiento equilibrada.","Dirección de crecimiento más vertical y hacia abajo-atrás."),
             _row("Plano oclusal a FH","9.3°","±3.8°","Plano oclusal más plano.","Inclinación del plano oclusal dentro de lo esperado.","Plano oclusal más inclinado; mayor componente vertical."),
-            _row("Incisivo inferior a plano oclusal","14.5°","±3.5°","Incisivo inferior retroinclinado.","Inclinación del incisivo inferior adecuada.","Incisivo inferior proinclinado."),
+            _row("L1/plano oclusal (desviación respecto a 90°)","14.5°","±3.5°","Desviación menor que la media histórica; interpretar la orientación del incisivo y la construcción angular.","Desviación cercana a la media histórica de Downs.","Desviación mayor que la media histórica; interpretar la orientación del incisivo y la construcción angular."),
+            _row("L1/plano mandibular","91.4°","±3.8°","Ángulo inferior a la media de la muestra original.","Ángulo cercano a la media histórica de Downs.","Ángulo superior a la media de la muestra original."),
+            _row("U1 a A-Pg","Descriptiva","Sin norma adoptada","No clasificar como protrusión/retrusión con un umbral universal.","Registrar distancia firmada y signo anatómico.","No clasificar como protrusión/retrusión con un umbral universal."),
         ],
     },
     {
