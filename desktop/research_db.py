@@ -611,15 +611,41 @@ class ResearchDB:
         case = self.case(case_id)
         if not case:
             raise KeyError(case_id)
+        normalized_points = {}
+        for name, coordinate in points.items():
+            try:
+                x, y = float(coordinate[0]), float(coordinate[1])
+            except (TypeError, ValueError, IndexError, OverflowError) as exc:
+                raise ValueError(f"Coordenadas inválidas para el landmark {name}.") from exc
+            if not math.isfinite(x) or not math.isfinite(y):
+                raise ValueError(f"Coordenadas no finitas para el landmark {name}.")
+            normalized_points[str(name)] = (x, y)
+        normalized_results = []
+        for result in results:
+            item = dict(result)
+            value = item.get("value")
+            if value is not None:
+                try:
+                    value = float(value)
+                except (TypeError, ValueError, OverflowError):
+                    value = None
+                if value is not None and not math.isfinite(value):
+                    value = None
+                item["value"] = value
+                if value is None:
+                    item["interpretation"] = (
+                        str(item.get("interpretation", "")) + " · Resultado no finito/no numérico; requiere revisión."
+                    ).strip(" ·")
+            normalized_results.append(item)
         image_hash = str(case["file_hash"] or "")
         image_revision = int(case["image_revision"] or 1)
         with self.connect() as con:
             lv = con.execute("SELECT COALESCE(MAX(version),0)+1 FROM landmarks WHERE case_id=? AND protocol_version=?", (case_id, protocol_version)).fetchone()[0]
             rv = con.execute("SELECT COALESCE(MAX(version),0)+1 FROM results WHERE case_id=? AND protocol_version=?", (case_id, protocol_version)).fetchone()[0]
             stamp = now_iso()
-            for name, (x, y) in points.items():
+            for name, (x, y) in normalized_points.items():
                 con.execute("INSERT INTO landmarks(case_id,protocol_version,name,x,y,version,created_at,image_hash,image_revision) VALUES(?,?,?,?,?,?,?,?,?)", (case_id, protocol_version, name, float(x), float(y), lv, stamp, image_hash, image_revision))
-            for r in results:
+            for r in normalized_results:
                 con.execute(
                     "INSERT INTO results(case_id,protocol_version,analysis,measurement,value,unit,reference_text,interpretation,version,created_at,image_hash,image_revision) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
                     (case_id, protocol_version, str(r.get("analysis", "")), str(r.get("measurement", "")), r.get("value"), str(r.get("unit", "")), str(r.get("reference", "")), str(r.get("interpretation", "")), rv, stamp, image_hash, image_revision),
@@ -628,7 +654,7 @@ class ResearchDB:
                 con.execute("UPDATE cases SET case_mm_per_px=?,updated_at=? WHERE id=?", (mm_per_px, stamp, case_id))
             con.execute("UPDATE cases SET last_opened_at=?,updated_at=? WHERE id=?", (stamp, stamp, case_id))
         self.refresh_case_status(case_id, selected_measurements)
-        self.audit(case["study_id"], "trace_saved", case_id=case_id, landmark_version=lv, result_version=rv, landmark_count=len(points), result_count=len(results))
+        self.audit(case["study_id"], "trace_saved", case_id=case_id, landmark_version=lv, result_version=rv, landmark_count=len(normalized_points), result_count=len(normalized_results))
 
     @staticmethod
     def _active_image_hash(case) -> str:
