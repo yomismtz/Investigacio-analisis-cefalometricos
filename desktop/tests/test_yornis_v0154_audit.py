@@ -74,9 +74,11 @@ class AuditHardeningTests(unittest.TestCase):
 
     def test_reference_tables_are_counted_and_cervical_claims_are_limited(self):
         import yornis_reference_help_v0154 as refs
-        import yornis_reference_help_v0156 as reference_ui
+        from pathlib import Path
         self.assertEqual(len(refs.TABLES), 13)
-        self.assertNotIn("17 tablas", reference_ui.__dict__.get("TABLE_COUNT_LABEL", ""))
+        ui_source = (Path(__file__).resolve().parents[1] / "yornis_reference_help_v0156.py").read_text(encoding="utf-8")
+        self.assertIn('text=f"{len(TABLES)} tablas', ui_source)
+        self.assertNotIn("17 tablas", ui_source)
         cervical = next(table for table in refs.TABLES if table["id"] == "alineacion_cervical_c2_c4")
         self.assertIn("No diagnostica patología cervical", cervical["note"])
         self.assertNotIn("vía aérea", " ".join(str(cell) for row in cervical["rows"] for cell in row))
