@@ -42,8 +42,10 @@ class ReferenceHelpTests(unittest.TestCase):
         self.assertIn("otorrinolaringológica", by_id["via_aerea"]["note"])
 
         cranio = {row[0]: row for row in by_id["craneo_cervical"]["rows"]}
-        self.assertIn("Sin umbral universal", cranio["SN-OPT"][1])
+        self.assertIn("92.18°", cranio["SN-OPT"][1])
         self.assertIn("Sin referencia verificada", cranio["Espacio C1–C2"][1])
+        self.assertIn("120 varones daneses", by_id["craneo_cervical"]["note"])
+        self.assertIn("no umbrales universales", by_id["craneo_cervical"]["note"])
 
         lordosis = {row[0]: row for row in by_id["lordosis_c1_c7"]["rows"]}
         self.assertIn("Sin norma directa validada", lordosis["Ángulo de lordosis C1–C7"][1])
