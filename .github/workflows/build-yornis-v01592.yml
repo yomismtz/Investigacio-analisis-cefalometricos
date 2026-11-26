@@ -197,8 +197,7 @@ jobs:
         shell: pwsh
         run: Get-ChildItem desktop\*.py | ForEach-Object { python -m py_compile $_.FullName; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } }
 
-      - name: Unit and regression tests (known radiograph replacement regression)
-        continue-on-error: true
+      - name: Unit and regression tests (required)
         shell: pwsh
         run: python -m unittest discover -s desktop/tests -p "test_*.py" -v
 
