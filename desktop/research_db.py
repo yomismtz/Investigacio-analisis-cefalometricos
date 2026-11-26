@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import math
 import os
 import random
 import shutil
@@ -408,6 +409,13 @@ class ResearchDB:
 
     def update_case_calibration(self, case_id: int, mm_per_px: float | None):
         """Persist a case-specific radiograph calibration immediately."""
+        if mm_per_px is not None:
+            try:
+                mm_per_px = float(mm_per_px)
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise ValueError("La calibración debe ser un número finito y positivo.") from exc
+            if not math.isfinite(mm_per_px) or mm_per_px <= 0:
+                raise ValueError("La calibración debe ser un número finito y positivo.")
         with self.connect() as con:
             row = con.execute("SELECT study_id FROM cases WHERE id=?", (case_id,)).fetchone()
             if row is None:
@@ -593,6 +601,13 @@ class ResearchDB:
 
     # ---------- Results / landmarks / autosave ----------
     def save_trace(self, case_id: int, protocol_version: int, points: dict[str, tuple[float, float]], results: list[dict], selected_measurements: list[str], mm_per_px: float | None = None):
+        if mm_per_px is not None:
+            try:
+                mm_per_px = float(mm_per_px)
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise ValueError("La calibración debe ser un número finito y positivo.") from exc
+            if not math.isfinite(mm_per_px) or mm_per_px <= 0:
+                raise ValueError("La calibración debe ser un número finito y positivo.")
         case = self.case(case_id)
         if not case:
             raise KeyError(case_id)
