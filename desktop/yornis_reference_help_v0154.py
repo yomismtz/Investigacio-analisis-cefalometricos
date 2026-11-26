@@ -196,7 +196,7 @@ TABLES = [
     {
         "id":"cvm","title":"MADURACIÓN VERTEBRAL CERVICAL (CVM)","subtitle":"Baccetti–Franchi–McNamara · referencia orientativa","first":"Parámetro",
         "source":"Franchi L, Baccetti T, McNamara JA Jr. Mandibular growth as related to cervical vertebral maturation and body height. AJODO. 2000;118:335-340. PMID 10982936; Baccetti T, Franchi L, McNamara JA Jr. Angle Orthod. 2002;72(4):316-323. PMID 12169031.",
-        "note":"CS1–CS2: prepuberales; CS3–CS4: circumpuberales; CS5–CS6: postpuberales. La clasificación es ordinal y depende de concavidades C2–C4 y forma de C3–C4; no estima edad cronológica exacta ni garantiza por sí sola el momento individual del pico. La reproducibilidad puede variar.",
+        "note":"CS1–CS2: prepuberales; CS3–CS4: circumpuberales; CS5–CS6: postpuberales. La clasificación es ordinal y depende de concavidades C2–C4 y forma de C3–C4; no estima edad cronológica exacta. Los intervalos temporales son aproximaciones de cohortes, no predicciones individuales del pico. La reproducibilidad puede variar.",
         "rows":[
             _row("Fase de maduración","CS1–CS2 prepuberal; CS3–CS4 circumpuberal; CS5–CS6 postpuberal","ordinal","CS1–CS2: fase prepuberal.","CS3–CS4: fase circumpuberal; describir el estadio específico.","CS5–CS6: fase postpuberal; no equivale a ausencia absoluta de crecimiento."),
             _row("Concavidad borde inferior C2","Aparece desde CS2 y persiste","cualitativa","Ausente en CS2 o posterior: hallazgo discordante; revisar estadio y calidad de imagen.","Concavidad compatible con CS2–CS6.","La presencia aislada no permite asignar un estadio más avanzado."),
