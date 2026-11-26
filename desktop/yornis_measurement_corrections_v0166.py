@@ -24,7 +24,11 @@ def install() -> None:
         changes = {}
         analysis = str(measurement.analysis)
         name = str(measurement.name).replace("–", "-").replace("—", "-")
-        if analysis == "Tweed" and name == "FMIA":
+        if analysis == "Steiner" and name == "SN-GoGn":
+            # Steiner reports the 32° mean; ±5° is a later commonly used band,
+            # not a standard deviation published in the original paper.
+            changes.update(ref="32° ±5° (banda posterior de uso común; Steiner publicó la media sin DE)", lo=27.0, hi=37.0)
+        elif analysis == "Tweed" and name == "FMIA":
             changes.update(
                 ref=(
                     "Objetivo condicional: ≈68° si FMA 21°–29°; "
