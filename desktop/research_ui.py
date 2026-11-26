@@ -13,7 +13,7 @@ from PIL import Image, ImageOps, ImageTk
 
 import yornis_calibration as calibration
 
-from research_db import MAX_CASES, RESEARCH_DIR, ResearchDB
+from research_db import MAX_CASES, RESEARCH_DIR, ResearchDB, now_iso
 from research_export import export_audit_csv, export_case_pdf, export_excel, export_json_bundle, export_long_csv, export_study_pdf, export_wide_csv
 from research_protocol import EXCLUSION_REASONS_EN, EXCLUSION_REASONS_ES, analysis_catalog, compute_selected, minimum_landmarks, requires_calibration, is_valid_mm_per_px, shared_landmark_summary, trace_qc
 from yomceph_theme import PALETTE, RESEARCH_STATUS, SEMANTIC, TRACING
@@ -614,7 +614,7 @@ class ResearchWorkspace(tk.Tk):
         # geometric or landmark-confidence alerts.
         with self.db.connect() as con:
             con.execute("UPDATE cases SET review_flag=?,status=CASE WHEN ? THEN 'incomplete' ELSE status END,updated_at=? WHERE id=?",
-                        (int(bool(blocking)), int(bool(blocking)), __import__("research_db").now_iso(), self.case_id))
+                        (int(bool(blocking)), int(bool(blocking)), now_iso(), self.case_id))
         if blocking:
             self.db.audit(self.study_id,"trace_quality_review_required",case_id=self.case_id,
                           issue_codes=[item["code"] for item in blocking])
