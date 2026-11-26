@@ -22,7 +22,7 @@ class YornisFinalPolishTests(unittest.TestCase):
         self.assertEqual(len(yornis_theme.theme_names()), 10)
         self.assertEqual(set(yornis_theme.theme_names()), set(assistant.BIRD_PROFILES))
         self.assertEqual(len(refs.TABLES), 17)
-        self.assertEqual(len(engine.MEASUREMENTS), 102)
+        self.assertEqual(len(engine.MEASUREMENTS), 106)
 
     def test_evidence_safeguards_are_preserved(self):
         import yornis_evidence_v0155 as evidence
