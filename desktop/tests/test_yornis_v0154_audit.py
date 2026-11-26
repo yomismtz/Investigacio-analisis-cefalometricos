@@ -284,6 +284,59 @@ class AuditHardeningTests(unittest.TestCase):
         current = next(r for r in latest if r["analysis"] == cv.CVM_ANALYSIS)
         self.assertEqual(current["value"], 2.0)
 
+    def test_cvm_and_alignment_outcomes_are_bound_to_the_active_radiograph(self):
+        cv_key = next(v.key for v in rp.analysis_catalog()[cv.CVM_ANALYSIS])
+        pv = self._save_protocol([cv_key])
+        cid = self.db.add_case(self.study, "cervical-image-scope")
+        self.db.case_protocol_version(cid, pv)
+
+        class Workspace:
+            pass
+
+        workspace = Workspace()
+        workspace.case_id = cid
+        workspace.db = self.db
+        workspace.protocol_version = pv
+
+        cv._save_cvm(
+            workspace,
+            {"stage": 2, "phase": "Prepuberal", "timing": "cohorte"},
+            {"c2": "si", "c3": "no", "c4": "no"},
+        )
+        al._save_alignment(workspace, al.classify_alignment("Lordosis normal"))
+        current = self.db.latest_results(cid, pv)
+        self.assertEqual(
+            {row["analysis"] for row in current},
+            {cv.CVM_ANALYSIS, al.ALIGNMENT_ANALYSIS},
+        )
+
+        radiograph = self.root / "cervical-swap.img"
+        radiograph.write_bytes(b"first radiograph")
+        self.db.attach_image(cid, radiograph, copy_image=False)
+        self.assertEqual(self.db.latest_results(cid, pv), [])
+
+        with self.db.connect() as con:
+            stale = con.execute(
+                "SELECT cvm_stage,alignment_code,image_hash,image_revision "
+                "FROM cervical_assessments WHERE case_id=? AND protocol_version=?",
+                (cid, pv),
+            ).fetchone()
+        self.assertIsNone(stale["cvm_stage"])
+        self.assertIsNone(stale["alignment_code"])
+        self.assertTrue(str(stale["image_hash"]).startswith("historical:"))
+        self.assertLess(int(stale["image_revision"]), 0)
+
+        cv._save_cvm(
+            workspace,
+            {"stage": 3, "phase": "Circumpuberal", "timing": "cohorte"},
+            {"c2": "si", "c3": "si", "c4": "no"},
+        )
+        al._save_alignment(workspace, al.classify_alignment("Rectificación"))
+        refreshed = self.db.latest_results(cid, pv)
+        by_analysis = {row["analysis"]: row for row in refreshed}
+        self.assertEqual(by_analysis[cv.CVM_ANALYSIS]["value"], 3.0)
+        self.assertEqual(by_analysis[al.ALIGNMENT_ANALYSIS]["value"], 2.0)
+
     def test_backup_is_consistent_study_scoped_and_restorable(self):
         other = self.db.create_study("Other study")
         self._save_protocol([])
