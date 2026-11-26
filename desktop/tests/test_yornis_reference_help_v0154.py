@@ -32,6 +32,24 @@ class ReferenceHelpTests(unittest.TestCase):
         }
         self.assertEqual(ids, expected)
 
+    def test_extra_reference_tables_do_not_overstate_airway_or_cervical_norms(self):
+        by_id = {t["id"]: t for t in refs.TABLES}
+
+        airway = {row[0]: row for row in by_id["via_aerea"]["rows"]}
+        self.assertIn("17.4 mm", airway["Vía aérea superior (nasofaringe)"][1])
+        self.assertIn("≤5 mm", airway["Vía aérea superior (nasofaringe)"][3])
+        self.assertIn(">15 mm", airway["Vía aérea inferior (orofaringe)"][5])
+        self.assertIn("otorrinolaringológica", by_id["via_aerea"]["note"])
+
+        cranio = {row[0]: row for row in by_id["craneo_cervical"]["rows"]}
+        self.assertIn("Sin umbral universal", cranio["SN-OPT"][1])
+        self.assertIn("Sin referencia verificada", cranio["Espacio C1–C2"][1])
+
+        lordosis = {row[0]: row for row in by_id["lordosis_c1_c7"]["rows"]}
+        self.assertIn("Sin norma directa validada", lordosis["Ángulo de lordosis C1–C7"][1])
+        self.assertIn("No aplicar como corte universal", by_id["lordosis_c1_c7"]["note"])
+        self.assertNotIn("40° ±5°", by_id["lordosis_c1_c7"]["source"])
+
     def test_last_four_tables_have_clinical_context(self):
         by_id = {t["id"]: t for t in refs.TABLES}
         for table_id in ("powell", "via_aerea", "craneo_cervical", "lordosis_c1_c7"):
