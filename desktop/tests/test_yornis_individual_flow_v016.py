@@ -127,8 +127,23 @@ class IndividualSelectorFlowTests(unittest.TestCase):
 
             app.cancel_calibration = False
             app.start_calibration()
+            app.calibration_points = [(1.0, 1.0), (21.0, 1.0)]
             app.finish_calibration()
             self.assertEqual(str(app.canvas.cget("state")), "normal")
+
+            app.start_calibration()
+            app.calibration_points = [(4.0, 4.0), (4.0, 4.0)]
+            app.mm_per_px = 0.2
+            app.finish_calibration()
+            self.assertIsNone(app.mm_per_px)
+            self.assertEqual(str(app.canvas.cget("state")), "disabled")
+
+            app.start_calibration()
+            app.calibration_points = [(1.0, 1.0), (21.0, 1.0)]
+            app.mm_per_px = 0
+            app.finish_calibration()
+            self.assertIsNone(app.mm_per_px)
+            self.assertEqual(str(app.canvas.cget("state")), "disabled")
         finally:
             root.destroy()
 
