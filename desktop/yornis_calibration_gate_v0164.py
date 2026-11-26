@@ -263,25 +263,40 @@ def install_database() -> None:
         image_hash = self._active_image_hash(case)
         stored_hash = str(case["file_hash"] or "")
         image_revision = int(case["image_revision"] or 1)
-        if not image_hash or not stored_hash or image_hash != stored_hash:
-            return []
+        rows = current_latest(self, case_id, protocol_version) or []
+
+        # CVM and C2-C4 alignment are explicitly entered categorical outcomes,
+        # not automatic landmark calculations. Keep them visible for image-less
+        # cases, but bind them to the current image/revision whenever one exists.
+        manual_analyses = {
+            "CVM C2–C4",
+            "Postura vertebral vertical C2–C4",
+        }
+        has_current_image = bool(image_hash and stored_hash and image_hash == stored_hash)
+        if not has_current_image:
+            return [
+                row for row in rows
+                if str(row["analysis"] or "") in manual_analyses
+                and not str(row["image_hash"] or "")
+            ]
+
         with self.connect() as con:
             current_trace = con.execute(
                 "SELECT 1 FROM landmarks l JOIN cases c ON c.id=l.case_id "
                 "WHERE l.case_id=? AND l.protocol_version=? AND l.image_hash=? "
                 "AND l.image_hash=c.file_hash AND l.image_revision=c.image_revision LIMIT 1",
                 (case_id, protocol_version, image_hash),
-            ).fetchone()
-        if current_trace is None:
-            return []
-        rows = current_latest(self, case_id, protocol_version)
+            ).fetchone() is not None
+
         current = []
-        for row in rows or []:
+        for row in rows:
             try:
-                if (
+                same_image = (
                     str(row["image_hash"] or "") == image_hash
                     and int(row["image_revision"] or 0) == image_revision
-                ):
+                )
+                is_manual = str(row["analysis"] or "") in manual_analyses
+                if same_image and (is_manual or current_trace):
                     current.append(row)
             except (KeyError, IndexError, TypeError, ValueError):
                 continue
