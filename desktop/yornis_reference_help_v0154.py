@@ -137,7 +137,7 @@ TABLES = [
     {
         "id":"burstone_cogs","title":"ANÁLISIS DE BURSTONE COGS","subtitle":"Normas históricas orientativas","first":"Ángulo o plano",
         "source":"Burstone CJ, James RB, Legan H, Murphy GA, Norton LA. Cephalometrics for orthognathic surgery. J Oral Surg. 1978;36(4):269-277. PMID 273073.",
-        "note":"H/M = hombres/mujeres. Son referencias de la muestra histórica de planificación quirúrgica, no límites diagnósticos universales. Las medidas lineales dependen de magnificación, calibración, edad y población.",
+        "note":"H/M = hombres/mujeres. Son referencias de la muestra histórica de planificación quirúrgica, no límites diagnósticos universales. Las medidas lineales dependen de magnificación, calibración, edad y población. Las filas U6-NF, L6-MP y B-Pg // MP se muestran como referencia y no se calculan automáticamente en esta versión.",
         "rows":[
             _row("Ar-Ptm // HP","H 37 mm / M 33 mm","±3 mm","Base posterior maxilar corta.","Base posterior maxilar proporcional.","Base posterior maxilar larga."),
             _row("Ptm-N // HP","H 53 mm / M 50 mm","±3 mm","Tercio medio superior corto.","Longitud del tercio medio dentro de lo esperado.","Tercio medio superior largo."),
@@ -165,9 +165,9 @@ TABLES = [
         ],
     },
     {
-        "id":"legan_burstone","title":"ANÁLISIS DE LEGAN–BURSTONE","subtitle":"Normas históricas orientativas","first":"Parámetro",
+        "id":"legan_burstone","title":"ANÁLISIS DE LEGAN–BURSTONE","subtitle":"Tabla de referencia; cálculo no activo en esta versión","first":"Parámetro",
         "source":"Legan HL, Burstone CJ. Soft tissue cephalometric analysis for orthognathic surgery. J Oral Surg. 1980;38(10):744-751. PMID 6932485.",
-        "note":"Normas históricas de tejidos blandos para planificación ortognática; no son límites universales. Correlacionar con edad, sexo, origen poblacional, espesor de tejidos blandos, postura labial y protocolo de adquisición.",
+        "note":"Normas históricas de tejidos blandos para planificación ortognática; no son límites universales. Correlacionar con edad, sexo, origen poblacional, espesor de tejidos blandos, postura labial y protocolo de adquisición. Esta tabla es de consulta: no existe un módulo de cálculo Legan–Burstone activo en esta versión.",
         "rows":[
             _row("Convexidad facial (G'-Sn-Pg')","12°","±4°","Perfil más plano o cóncavo.","Convexidad facial equilibrada.","Perfil más convexo."),
             _row("Prognatismo maxilar","6 mm","±3 mm","Maxila blanda relativamente retruida.","Posición maxilar de tejidos blandos equilibrada.","Maxila blanda relativamente protrusiva."),
