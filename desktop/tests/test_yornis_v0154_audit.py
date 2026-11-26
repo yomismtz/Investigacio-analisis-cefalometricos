@@ -109,6 +109,15 @@ class AuditHardeningTests(unittest.TestCase):
             next(v for v in rp.analysis_catalog()["Steiner"] if v.name == "SNA")
         ))
 
+    def test_ricketts_and_jarabak_static_norms_warn_about_growth_and_size(self):
+        import yornis_reference_help_v0154 as refs
+        ricketts = next(table for table in refs.TABLES if table["id"] == "ricketts")
+        jarabak = next(table for table in refs.TABLES if table["id"] == "bjork_jarabak")
+        self.assertIn("ajusta por edad", ricketts["note"])
+        self.assertIn("no se automatiza esa corrección", ricketts["note"])
+        self.assertIn("edad, sexo y tamaño corporal", jarabak["note"])
+        self.assertIn("no son umbrales universales", jarabak["note"])
+
     def test_hp_measurements_request_construction_landmarks(self):
         candidates = [v for vs in rp.analysis_catalog().values() for v in vs if str(v.kind).lower().startswith("hp_")]
         self.assertTrue(candidates)
