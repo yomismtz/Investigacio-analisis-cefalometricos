@@ -713,12 +713,19 @@ class ResearchDB:
         # even if an old trace row was not archived by a compatibility path.
         if not image_hash or not stored_hash or image_hash != stored_hash:
             return []
-        # A result set is meaningful only when its matching trace is still
-        # current for this image and protocol. This also protects against
-        # legacy/compatibility code paths that failed to archive result rows.
-        if not self.latest_landmarks(case_id, protocol_version):
-            return []
+        # Enforce trace/result identity in SQL itself. Do not rely only on the
+        # Python latest_landmarks helper: compatibility layers may wrap it, and
+        # a result must never be current unless at least one landmark row belongs
+        # to the same image hash AND image revision.
         with self.connect() as con:
+            current_trace = con.execute(
+                "SELECT 1 FROM landmarks l JOIN cases c ON c.id=l.case_id "
+                "WHERE l.case_id=? AND l.protocol_version=? AND l.image_hash=? "
+                "AND l.image_hash=c.file_hash AND l.image_revision=c.image_revision LIMIT 1",
+                (case_id, protocol_version, image_hash),
+            ).fetchone()
+            if current_trace is None:
+                return []
             v = con.execute(
                 "SELECT MAX(r.version) FROM results r JOIN cases c ON c.id=r.case_id "
                 "WHERE r.case_id=? AND r.protocol_version=? AND r.image_hash=? "
@@ -731,6 +738,9 @@ class ResearchDB:
                 "SELECT r.* FROM results r JOIN cases c ON c.id=r.case_id "
                 "WHERE r.case_id=? AND r.protocol_version=? AND r.version=? "
                 "AND r.image_hash=? AND r.image_hash=c.file_hash AND r.image_revision=c.image_revision "
+                "AND EXISTS (SELECT 1 FROM landmarks l WHERE l.case_id=r.case_id "
+                "AND l.protocol_version=r.protocol_version AND l.image_hash=c.file_hash "
+                "AND l.image_revision=c.image_revision) "
                 "ORDER BY r.analysis,r.measurement",
                 (case_id, protocol_version, v, image_hash),
             ).fetchall()
