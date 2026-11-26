@@ -147,6 +147,13 @@ class AuditHardeningTests(unittest.TestCase):
         from pathlib import Path
         steiner = next(table for table in refs.TABLES if table["id"] == "steiner")
         self.assertIn("sin desviación estándar original", steiner["note"])
+        table_names = {row[0] for row in steiner["rows"]}
+        engine_names = {v.name for v in rp.analysis_catalog()["Steiner"]}
+        self.assertEqual(table_names, engine_names)
+        pog_nb = next(v for v in rp.analysis_catalog()["Steiner"] if v.name == "Pog a NB")
+        self.assertIsNone(pog_nb.measurement.lo)
+        self.assertIsNone(pog_nb.measurement.hi)
+        self.assertIn("2 mm", rp.reference_for(pog_nb))
         ui_source = (Path(__file__).resolve().parents[1] / "yornis_reference_help_v0156.py").read_text(encoding="utf-8")
         self.assertIn('"Referencia", "DE / rango"', ui_source)
         self.assertIn("banda posterior, no DE original", rp.reference_for(
