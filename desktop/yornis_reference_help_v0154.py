@@ -69,7 +69,8 @@ TABLES = [
     },
     {
         "id":"ricketts","title":"ANÁLISIS DE RICKETTS","subtitle":"Normas históricas orientativas","first":"Ángulo o plano",
-        "source":"Ricketts RM. A foundation for cephalometric communication. Am J Orthod. 1960;46(5):330-357. DOI 10.1016/0002-9416(60)90047-6.",
+        "source":"Ricketts RM. A foundation for cephalometric communication. Am J Orthod. 1960;46(5):330-357. DOI 10.1016/0002-9416(60)90047-6; Ricketts RM. Perspectives in the clinical application of cephalometrics. Angle Orthod. 1981;51(2):115-150.",
+        "note":"La tabla es un resumen estático. Ricketts ajusta por edad varias referencias, en particular profundidad facial y convexidad; los valores no deben aplicarse sin más a todas las edades. En esta versión no se automatiza esa corrección: registrar edad y comparar con la tabla de crecimiento correspondiente antes de clasificar.",
         "rows":[
             _row("Eje facial","90°","±3.5°","Sugiere patrón dolicofacial y crecimiento mandibular más hacia abajo-atrás.","Dirección de crecimiento facial equilibrada.","Sugiere patrón braquifacial y crecimiento más hacia adelante."),
             _row("Profundidad facial","87°","±3°","Sugiere retrusión mandibular relativa.","Posición anteroposterior mandibular adecuada.","Sugiere protrusión mandibular relativa."),
@@ -82,6 +83,7 @@ TABLES = [
     {
         "id":"bjork_jarabak","title":"ANÁLISIS DE BJÖRK–JARABAK","subtitle":"Normas históricas orientativas","first":"Parámetro",
         "source":"Björk A. Prediction of mandibular growth rotation. Am J Orthod. 1969;55(6):585-599. DOI 10.1016/0002-9416(69)90036-0; Jarabak JR, Fizzell JA. Technique and Treatment with Light-wire Edgewise Appliances. 1972.",
+        "note":"Las longitudes S-Go y N-Me dependen de edad, sexo y tamaño corporal; 81 mm y 112 mm no son umbrales universales. El índice porcentual y los ángulos deben interpretarse con el patrón de crecimiento y la muestra de referencia, no como diagnóstico aislado.",
         "rows":[
             _row("Ángulo silla","123°","±5°","Puede asociarse a tendencia de prognatismo mandibular o base craneal anterior más cerrada.","Relación craneomandibular dentro de lo esperado.","Puede asociarse a retrognatismo mandibular o base craneal más abierta."),
             _row("Ángulo articular","143°","±6°","Sugiere crecimiento mandibular más hacia adelante y rotación anterior.","Relación articular equilibrada.","Sugiere crecimiento mandibular más hacia abajo-atrás y rotación posterior."),
