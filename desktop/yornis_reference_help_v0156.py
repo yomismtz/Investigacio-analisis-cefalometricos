@@ -60,7 +60,7 @@ def open_reference_help(root, initial: str | None = None) -> None:
     ttk.Label(left_head, text="Referencias cefalométricas", style="Title.TLabel").pack(anchor="w")
     ttk.Label(
         left_head,
-        text="17 tablas · referencias históricas, de muestra y por edad/sexo cuando existe evidencia compatible",
+        text=f"{len(TABLES)} tablas · referencias históricas, de muestra y por edad/sexo cuando existe evidencia compatible",
         style="Caption.TLabel",
     ).pack(anchor="w", pady=(3, 0))
     ttk.Button(header, text="Cerrar  Esc", style="Ghost.TButton", command=win.destroy).pack(side="right", padx=(12, 0))
