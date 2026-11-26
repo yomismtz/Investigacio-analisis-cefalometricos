@@ -133,6 +133,27 @@ class ResearchSuiteTests(unittest.TestCase):
                     self.db.save_trace(cid, 1, {}, [], [], value)
         self.assertIsNone(self.db.case(cid)["case_mm_per_px"])
 
+    def test_non_finite_results_are_sanitized_and_never_complete_a_case(self):
+        image = Path(self.tmp.name) / "finite-check.png"
+        image.write_bytes(b"radiograph fixture")
+        cid = self.db.add_case(self.study, "finite-check", image_path=str(image), copy_image=False)
+        variable = next(v for group in analysis_catalog().values() for v in group)
+        version = self.db.save_protocol(
+            self.study,
+            {"selected_variables": [variable.key], "required_landmarks": list(variable.points)},
+        )
+        points = {name: (float(i * 13 + 7), float(i * i * 11 + 3)) for i, name in enumerate(variable.points)}
+        self.db.save_trace(
+            cid, version, points,
+            [{"analysis": variable.analysis, "measurement": variable.name, "value": float("nan"),
+              "unit": variable.unit, "reference": "", "interpretation": "test"}],
+            [variable.name], 0.25,
+        )
+        saved = self.db.latest_results(cid, version)
+        self.assertEqual(len(saved), 1)
+        self.assertIsNone(saved[0]["value"])
+        self.assertNotEqual(self.db.case(cid)["status"], "complete")
+
     def test_landmark_minimization(self):
         cat = analysis_catalog(); keys = []
         for _, variables in list(cat.items())[:3]:
