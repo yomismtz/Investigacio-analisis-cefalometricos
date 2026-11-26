@@ -55,7 +55,7 @@ class AuditHardeningTests(unittest.TestCase):
         return self.db.save_protocol(self.study, cfg)
 
     def test_calculation_engine_contains_102_numeric_measurements(self):
-        self.assertEqual(len(engine.MEASUREMENTS), 102)
+        self.assertEqual(len(engine.MEASUREMENTS), 103)
 
     def test_reference_catalog_count_and_fma_norm_are_consistent(self):
         import yornis_reference_help_v0154 as refs
