@@ -33,6 +33,12 @@ def install() -> None:
                 lo=None,
                 hi=None,
             )
+        elif analysis == "Tweed" and name == "IMPA":
+            changes.update(
+                ref="90° ±5° histórico; si FMA ≤20°, Tweed recomendó no exceder aproximadamente 94°.",
+                lo=None,
+                hi=None,
+            )
         elif analysis == "Downs" and name == "L1/plano oclusal":
             # The engine's obtuse construction is 90° + the Downs deviation.
             changes.update(ref="14.5° ±3.5° (desviación respecto a 90°)", lo=11.0, hi=18.0)
