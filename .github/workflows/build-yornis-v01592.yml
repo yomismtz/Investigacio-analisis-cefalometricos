@@ -1,5 +1,5 @@
 name: Build Yornis v0.16.3 · Original Bird Recordings and Offline Audio
-# v0.16.6: calibration, image identity, finite geometry, review gating and viewport coordinates
+# v0.16.6.1: final regression coverage for calibration, image identity and finite geometry
 
 on:
   push:
