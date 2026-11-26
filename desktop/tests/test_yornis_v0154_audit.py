@@ -98,6 +98,17 @@ class AuditHardeningTests(unittest.TestCase):
         self.assertIn("8% de magnificación", mcnamara["note"])
         self.assertIn("♀ 11.3 mm / ♂ 13.5 mm", rows["Faringe inferior"][1])
 
+    def test_steiner_bands_are_not_mislabeled_as_original_standard_deviations(self):
+        import yornis_reference_help_v0154 as refs
+        from pathlib import Path
+        steiner = next(table for table in refs.TABLES if table["id"] == "steiner")
+        self.assertIn("sin desviación estándar original", steiner["note"])
+        ui_source = (Path(__file__).resolve().parents[1] / "yornis_reference_help_v0156.py").read_text(encoding="utf-8")
+        self.assertIn('"Referencia", "DE / rango"', ui_source)
+        self.assertIn("banda posterior, no DE original", rp.reference_for(
+            next(v for v in rp.analysis_catalog()["Steiner"] if v.name == "SNA")
+        ))
+
     def test_hp_measurements_request_construction_landmarks(self):
         candidates = [v for vs in rp.analysis_catalog().values() for v in vs if str(v.kind).lower().startswith("hp_")]
         self.assertTrue(candidates)
