@@ -54,6 +54,24 @@ class AuditHardeningTests(unittest.TestCase):
         cfg = {"selected_variables": list(keys), "population": "cohorte de prueba"}
         return self.db.save_protocol(self.study, cfg)
 
+    def test_reference_catalog_count_and_fma_norm_are_consistent(self):
+        import yornis_reference_help_v0154 as refs
+        self.assertEqual(len(refs.TABLES), len({table["id"] for table in refs.TABLES}))
+        tweed = next(table for table in refs.TABLES if table["id"] == "tweed")
+        fma = next(row for row in tweed["rows"] if row[0] == "FMA")
+        self.assertEqual((fma[1], fma[2]), ("25°", "±5°"))
+        variable = next(v for v in rp.analysis_catalog()["Tweed"] if v.name == "FMA")
+        self.assertEqual(rp.reference_for(variable), "25° ±5°")
+
+    def test_cvm_reference_sequence_matches_published_morphology(self):
+        import yornis_reference_help_v0154 as refs
+        cvm = next(table for table in refs.TABLES if table["id"] == "cvm")
+        rows = {row[0]: row for row in cvm["rows"]}
+        self.assertIn("CS2", rows["Concavidad borde inferior C2"][1])
+        self.assertIn("CS3", rows["Concavidad borde inferior C3"][1])
+        self.assertIn("CS4", rows["Concavidad borde inferior C4"][1])
+        self.assertIn("CS4: rectangular horizontal", rows["Forma de cuerpos C3–C4"][1])
+
     def test_hp_measurements_request_construction_landmarks(self):
         candidates = [v for vs in rp.analysis_catalog().values() for v in vs if str(v.kind).lower().startswith("hp_")]
         self.assertTrue(candidates)
