@@ -42,14 +42,14 @@ _EXTRA_TABLES = [
     },
     {
         "id":"lordosis_c1_c7","title":"LORDOSIS CERVICAL C1–C7","subtitle":"Referencia orientativa postural","first":"Ángulo o plano",
-        "source":"Referencias cefalométricas cervicales y la referencia usada por la app (media 40°, rango 35–45°).",
+        "source":"Hardacker JW, Shuford RF, Capicotto PN, Pryor PW. Radiographic standing cervical segmental alignment in adult volunteers without neck symptoms. Spine. 1997;22(13):1472-1480. DOI 10.1097/00007632-199707010-00009. Muestra: 100 adultos; lordosis cervical total media −40.0° ±9.7° con su método de medición.",
         "rows":[
-            ("Ángulo de lordosis C1–C7","40°","±5°","Lordosis disminuida; compatible con rectificación. Si el valor es negativo, considerar inversión/cifosis.","Curvatura cervical dentro del rango orientativo fisiológico.","Lordosis aumentada; compatible con hiperlordosis cervical."),
-            ("Rango orientativo","35°–45°","referencial","Por debajo de 35°: valorar postura, técnica radiográfica y compensación cervical.","Entre 35° y 45°: referencia usada por la app.","Por encima de 45°: mayor curvatura cervical."),
-            ("Implicación postural","Curvatura funcional","cualitativa","Puede asociarse con postura de cabeza adelantada, rigidez o adaptación respiratoria.","Compatible con alineación cervical fisiológica en esta proyección.","Puede asociarse con extensión cefálica y adaptación postural."),
-            ("Interpretación clínica","Orientativa","cualitativa","Requiere correlación con síntomas, función y resto del análisis cráneo-cervical.","No sugiere alteración marcada de la curva en esta medición aislada.","Confirmar con clínica y revisar el resto de la columna cervical."),
+            ("Ángulo de lordosis C1–C7","Sin norma directa validada para esta construcción","No aplica","Describir la dirección y magnitud; no clasificar como rectificación patológica con un corte fijo.","Registrar método, puntos terminales y signo del ángulo; no aplicar 35–45° como rango universal.","Describir la dirección y magnitud; no clasificar como hiperlordosis patológica con un corte fijo."),
+            ("Rango orientativo","No hay intervalo universal","No aplica","No utilizar el antiguo intervalo 35°–45° como umbral de normalidad.","La literatura reporta valores dependientes del método y de los niveles vertebrales incluidos.","No utilizar el antiguo intervalo 35°–45° como umbral de normalidad."),
+            ("Implicación postural","Descripción radiográfica","cualitativa","No inferir síntomas, postura habitual ni adaptación respiratoria desde una imagen aislada.","La posición durante la adquisición puede modificar la curvatura observada.","No inferir síntomas, postura habitual ni adaptación respiratoria desde una imagen aislada."),
+            ("Interpretación clínica","No diagnóstica","cualitativa","Requiere método reproducible y correlación clínica si existe indicación.","La referencia Hardacker es C0–C7 y no debe trasladarse automáticamente a una medición C1–C7.","Confirmar niveles, método, signo y contexto antes de comparar."),
         ],
-        "note":"Outcome orientativo; no sustituye evaluación radiológica específica.",
+        "note":"Se retira el antiguo rango 40°±5°/35°–45° por falta de una fuente que coincida con la construcción C1–C7 de esta tabla. Hardacker et al. informaron −40.0°±9.7° para lordosis cervical total en 100 adultos, pero su construcción y convención de signo deben comprobarse antes de trasladar esa cifra. No aplicar como corte universal.",
     },
 ]
 
