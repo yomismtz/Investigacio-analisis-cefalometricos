@@ -188,25 +188,25 @@ TABLES = [
     {
         "id":"cvm","title":"MADURACIÓN VERTEBRAL CERVICAL (CVM)","subtitle":"Baccetti–Franchi–McNamara · referencia orientativa","first":"Parámetro",
         "source":"Franchi L, Baccetti T, McNamara JA Jr. Mandibular growth as related to cervical vertebral maturation and body height. AJODO. 2000;118:335-340. PMID 10982936; Baccetti T, Franchi L, McNamara JA Jr. Angle Orthod. 2002;72(4):316-323. PMID 12169031.",
-        "note":"CS1–CS2: prepuberales; CS3: cercano al pico; CS4: postpico inmediato; CS5–CS6: maduración avanzada. CVM no equivale a edad cronológica exacta.",
+        "note":"CS1–CS2: prepuberales; CS3–CS4: circumpuberales; CS5–CS6: postpuberales. La clasificación es ordinal y depende de concavidades C2–C4 y forma de C3–C4; no estima edad cronológica exacta ni garantiza por sí sola el momento individual del pico. La reproducibilidad puede variar.",
         "rows":[
-            _row("Maduración cervical global","Concordante con edad/sexo","cualitativa","Estadio menor al esperado: maduración retrasada; mayor potencial de crecimiento remanente.","Maduración acorde con edad, sexo y fase de crecimiento.","Estadio mayor al esperado: maduración avanzada; menor potencial de crecimiento remanente."),
+            _row("Fase de maduración","CS1–CS2 prepuberal; CS3–CS4 circumpuberal; CS5–CS6 postpuberal","ordinal","CS1–CS2: fase prepuberal.","CS3–CS4: fase circumpuberal; describir el estadio específico.","CS5–CS6: fase postpuberal; no equivale a ausencia absoluta de crecimiento."),
             _row("Concavidad borde inferior C2","Aparece desde CS2 y persiste","cualitativa","Ausente en CS2 o posterior: hallazgo discordante; revisar estadio y calidad de imagen.","Concavidad compatible con CS2–CS6.","La presencia aislada no permite asignar un estadio más avanzado."),
             _row("Concavidad borde inferior C3","Aparece desde CS3 y persiste","cualitativa","Ausente en CS3 o posterior: hallazgo discordante; revisar estadio y calidad de imagen.","Concavidad compatible con CS3–CS6.","La presencia aislada no permite asignar un estadio más avanzado."),
             _row("Concavidad borde inferior C4","Aparece desde CS4 y persiste","cualitativa","Ausente en CS4 o posterior: hallazgo discordante; revisar estadio y calidad de imagen.","Concavidad compatible con CS4–CS6.","La presencia aislada no permite asignar un estadio más avanzado."),
-            _row("Forma de cuerpos C3–C4","CS1–CS3: predominantemente trapezoidal; CS4: rectangular horizontal; CS5: cuadrada; CS6: rectangular vertical","cualitativa","Morfología menos madura que la esperada para el estadio asignado.","Morfología compatible con el estadio asignado; valorar formas transicionales.","Morfología más madura que la esperada; revisar la asignación del estadio."),
+            _row("Forma de cuerpos C3–C4","CS1–CS3: predominantemente trapezoidal; CS4: rectangular horizontal; CS5: uno o ambos cuadrados; CS6: uno o ambos rectangulares verticales","cualitativa","Morfología menos madura que la esperada para el estadio asignado.","Morfología compatible con el estadio asignado; registrar patrones transicionales.","Morfología más madura que la esperada; revisar la asignación del estadio."),
             _row("Pico de crecimiento mandibular","Entre CS3 y CS4","cualitativa","Si aún no alcanza CS3: pico puberal no iniciado.","CS3–CS4 compatible con cercanía o paso del pico de crecimiento.","Si ya está en CS5–CS6: crecimiento puberal prácticamente concluido."),
         ],
     },
     {
         "id":"alineacion_cervical_c2_c4","title":"ALINEACIÓN CERVICAL C2–C4","subtitle":"Outcome especial orientativo","first":"Parámetro",
         "source":"Solow B, Tallgren A. Head posture and craniofacial morphology. Am J Phys Anthropol. 1976;44(3):417-435. DOI 10.1002/ajpa.1330440306; Dentoalveolar morphology in relation to craniocervical posture. Angle Orthod. 1977;47(3):157-164.",
-        "note":"Outcome postural orientativo; no sustituye una evaluación clínica o radiológica específica de columna cervical.",
+        "note":"Descripción morfológica/postural orientativa en una telerradiografía lateral. No diagnostica patología cervical, obstrucción de vía aérea ni disfunción postural; la posición de la cabeza durante la toma y la proyección pueden modificar la apariencia.",
         "rows":[
             _row("Curvatura global C2–C4","Lordosis cervical suave","cualitativa","Rectificación o cifosis relativa.","Curvatura fisiológica equilibrada.","Hiperlordosis cervical."),
             _row("Continuidad de la línea posterior vertebral","Trazo continuo y armónico","cualitativa","Escalones o quiebres posteriores; desalineación relativa.","Alineación posterior continua.","Curvatura posterior acentuada."),
             _row("Relación cabeza–columna cervical","Posición cefálica neutra","cualitativa","Flexión relativa de la cabeza.","Relación cráneo-cervical equilibrada.","Extensión relativa de la cabeza."),
-            _row("Implicación postural","Compatible con postura funcional","cualitativa","Puede asociarse a compensación postural, vía aérea reducida o patrón vertical aumentado.","Sin alteración postural evidente en esta proyección.","Puede asociarse a extensión cefálica y adaptación postural."),
+            _row("Implicación postural","Describir posición cefálica observada","cualitativa","Puede observarse flexión cefálica relativa; correlacionar con la posición durante la adquisición.","La proyección no permite concluir por sí sola normalidad postural.","Puede observarse extensión cefálica relativa; correlacionar con la posición durante la adquisición."),
         ],
     },
 ]
