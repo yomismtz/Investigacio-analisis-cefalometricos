@@ -104,7 +104,8 @@ def install() -> None:
         if measurement.analysis == "Downs" and measurement.name == "L1/plano oclusal":
             return original_compute(measurement, points, mm_per_px, face_direction) - 90.0
         if measurement.kind == "signed_ab_plane":
-            anterior = (1.0, 0.0) if face_direction == "right" else (-1.0, 0.0)
+            is_right = str(face_direction).strip().casefold() in {"right", "r", "derecha"}
+            anterior = (1.0, 0.0) if is_right else (-1.0, 0.0)
             facial_raw = engine.vec(points["Pg"], points["N"])
             ab_raw = engine.vec(points["B"], points["A"])
             if not all(math.isfinite(v) for v in (*facial_raw, *ab_raw)):
@@ -115,7 +116,7 @@ def install() -> None:
             ab = engine.oriented_axis(ab_raw, anterior)
             cross = ab[0] * facial[1] - ab[1] * facial[0]
             dot = ab[0] * facial[0] + ab[1] * facial[1]
-            side_sign = 1.0 if face_direction == "right" else -1.0
+            side_sign = 1.0 if is_right else -1.0
             return side_sign * math.degrees(math.atan2(cross, dot))
         return original_compute(measurement, points, mm_per_px, face_direction)
 
