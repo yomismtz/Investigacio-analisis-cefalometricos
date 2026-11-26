@@ -149,6 +149,27 @@ class AuditHardeningTests(unittest.TestCase):
         self.assertIn("edad, sexo y tamaño corporal", jarabak["note"])
         self.assertIn("no son umbrales universales", jarabak["note"])
 
+    def test_c1_c7_lordosis_is_descriptive_without_unvalidated_thresholds(self):
+        import classic_engine as ce
+        import yornis_cervical_v0152 as cervical
+        measurement = next(
+            m for m in ce.MEASUREMENTS
+            if m.analysis == cervical.POSTURE_ANALYSIS and m.name == cervical.POSTURE_MEASUREMENT
+        )
+        self.assertIsNone(measurement.lo)
+        self.assertIsNone(measurement.hi)
+        label, explanation = cervical.posture_classification(40.0)
+        self.assertIn("descriptiva", label.lower())
+        self.assertIn("No se aplica un umbral universal", explanation)
+        self.assertNotIn("35–45", cervical.LORDOSIS_REFERENCE)
+
+    def test_cvm_timing_is_described_as_cohort_estimate(self):
+        import yornis_cervical_v0152 as cervical
+        result = cervical.classify_cvm("no", "no", "no", "trapezoidal", "trapezoidal")
+        self.assertIn("cohorte original", result["timing"])
+        self.assertIn("no es una predicción individual exacta", result["timing"])
+        self.assertIn("no predicen con exactitud", cervical.CVM_REFERENCE)
+
     def test_hp_measurements_request_construction_landmarks(self):
         candidates = [v for vs in rp.analysis_catalog().values() for v in vs if str(v.kind).lower().startswith("hp_")]
         self.assertTrue(candidates)
