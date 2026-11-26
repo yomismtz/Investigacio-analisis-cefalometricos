@@ -253,11 +253,22 @@ def _save_cvm(workspace, result: dict, features: dict) -> None:
             "ON CONFLICT(case_id,protocol_version) DO UPDATE SET image_hash=excluded.image_hash,image_revision=excluded.image_revision,cvm_stage=excluded.cvm_stage,cvm_phase=excluded.cvm_phase,features_json=excluded.features_json,updated_at=excluded.updated_at",
             (workspace.case_id, version, image_hash, image_revision, result.get("stage"), result.get("phase", ""), json.dumps(features, ensure_ascii=False), _now()),
         )
-        con.execute("DELETE FROM results WHERE case_id=? AND protocol_version=? AND analysis=? AND measurement=?", (workspace.case_id, version, CVM_ANALYSIS, CVM_MEASUREMENT))
         if result.get("stage"):
+            next_version = con.execute(
+                "SELECT COALESCE(MAX(version),0)+1 FROM results "
+                "WHERE case_id=? AND protocol_version=? AND analysis=? AND measurement=?",
+                (workspace.case_id, version, CVM_ANALYSIS, CVM_MEASUREMENT),
+            ).fetchone()[0]
             con.execute(
-                "INSERT INTO results(case_id,protocol_version,analysis,measurement,value,unit,reference_text,interpretation,image_hash,image_revision,version,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,1,?)",
-                (workspace.case_id, version, CVM_ANALYSIS, CVM_MEASUREMENT, float(result["stage"]), "CS", CVM_REFERENCE, f"{result['phase']}. {result['timing']}", image_hash, image_revision, _now()),
+                "INSERT INTO results(case_id,protocol_version,analysis,measurement,value,unit,reference_text,interpretation,image_hash,image_revision,version,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+                (workspace.case_id, version, CVM_ANALYSIS, CVM_MEASUREMENT, float(result["stage"]), "CS", CVM_REFERENCE, f"{result['phase']}. {result['timing']}", image_hash, image_revision, int(next_version), _now()),
+            )
+        else:
+            con.execute(
+                "UPDATE results SET image_hash='historical:incomplete-cvm-review',image_revision=-ABS(COALESCE(image_revision,1)) "
+                "WHERE case_id=? AND protocol_version=? AND analysis=? AND measurement=? "
+                "AND image_hash=? AND image_revision=?",
+                (workspace.case_id, version, CVM_ANALYSIS, CVM_MEASUREMENT, image_hash, image_revision),
             )
     try:
         row = db.case(workspace.case_id)
