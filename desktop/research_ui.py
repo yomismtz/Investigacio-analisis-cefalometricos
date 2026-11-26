@@ -610,8 +610,19 @@ class ResearchWorkspace(tk.Tk):
         issues.extend(calibration.confidence_quality_issues(self.landmarks,self.points,self.landmark_confidence))
         blocking=[x for x in issues if x["level"]!="ok"]
         self.db.save_trace(self.case_id,self.protocol["version"],self.points,results,[k.split("::",1)[1] for k in self.protocol.get("selected_variables",[])],self.mm_per_px)
+        # Do not label a trace complete while the operator still has unresolved
+        # geometric or landmark-confidence alerts.
+        with self.db.connect() as con:
+            con.execute("UPDATE cases SET review_flag=?,status=CASE WHEN ? THEN 'incomplete' ELSE status END,updated_at=? WHERE id=?",
+                        (int(bool(blocking)), int(bool(blocking)), __import__("research_db").now_iso(), self.case_id))
+        if blocking:
+            self.db.audit(self.study_id,"trace_quality_review_required",case_id=self.case_id,
+                          issue_codes=[item["code"] for item in blocking])
+        else:
+            self.db.audit(self.study_id,"trace_quality_review_cleared",case_id=self.case_id)
         status=self.db.case(self.case_id)["status"];self.refresh_cases();self.refresh_dashboard();self.autosave()
-        if status=="complete":messagebox.showinfo("Yornis",self.T("Caso completo. Se marcó automáticamente en verde menta.","Case complete. It was automatically marked mint green."))
+        if status=="complete" and not blocking:messagebox.showinfo("Yornis",self.T("Caso completo. Se marcó automáticamente en verde menta.","Case complete. It was automatically marked mint green."))
+        elif blocking:messagebox.showwarning("Yornis",self.T("Trazado guardado, pero requiere revisión de calidad. Resuelve las alertas antes de considerar completo el caso.","Trace saved, but quality review is required. Resolve the alerts before considering the case complete."))
         else:messagebox.showwarning("Yornis",self.T("El caso se guardó pero aún no cumple todos los resultados del protocolo.","The case was saved but does not yet contain every protocol outcome."))
     def start_review(self):
         if not self.case_id or not self.landmarks:return
