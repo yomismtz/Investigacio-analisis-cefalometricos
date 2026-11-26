@@ -62,6 +62,10 @@ class AuditHardeningTests(unittest.TestCase):
         self.assertEqual((fma[1], fma[2]), ("25°", "±4°"))
         variable = next(v for v in rp.analysis_catalog()["Tweed"] if v.name == "FMA")
         self.assertEqual(rp.reference_for(variable), "25° ±4°")
+        fmia = next(v for v in rp.analysis_catalog()["Tweed"] if v.name == "FMIA")
+        self.assertIsNone(fmia.measurement.lo)
+        self.assertIsNone(fmia.measurement.hi)
+        self.assertIn("FMA 21°–29°", rp.reference_for(fmia))
 
     def test_downs_and_tweed_engine_conventions_are_consistent(self):
         import math
