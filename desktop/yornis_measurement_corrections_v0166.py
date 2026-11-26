@@ -35,7 +35,7 @@ def install() -> None:
             )
         elif analysis == "Tweed" and name == "IMPA":
             changes.update(
-                ref="90° ±5° histórico; si FMA ≤20°, Tweed recomendó no exceder aproximadamente 94°.",
+                ref="90° ±5° histórico; con FMA ≤20°, el límite superior publicado para IMPA varía según fuente/edición (≈92°–94°); no aplicar un corte automático.",
                 lo=None,
                 hi=None,
             )
