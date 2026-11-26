@@ -59,9 +59,40 @@ class AuditHardeningTests(unittest.TestCase):
         self.assertEqual(len(refs.TABLES), len({table["id"] for table in refs.TABLES}))
         tweed = next(table for table in refs.TABLES if table["id"] == "tweed")
         fma = next(row for row in tweed["rows"] if row[0] == "FMA")
-        self.assertEqual((fma[1], fma[2]), ("25°", "±5°"))
+        self.assertEqual((fma[1], fma[2]), ("25°", "±4°"))
         variable = next(v for v in rp.analysis_catalog()["Tweed"] if v.name == "FMA")
-        self.assertEqual(rp.reference_for(variable), "25° ±5°")
+        self.assertEqual(rp.reference_for(variable), "25° ±4°")
+
+    def test_downs_and_tweed_engine_conventions_are_consistent(self):
+        import math
+        import classic_engine as ce
+        import yornis_measurement_corrections_v0166 as corrections
+        corrections.install()
+
+        def measurement(analysis, name):
+            return next(m for m in ce.MEASUREMENTS if m.analysis == analysis and m.name == name)
+
+        fma = measurement("Tweed", "FMA")
+        fmia = measurement("Tweed", "FMIA")
+        self.assertEqual((fma.lo, fma.hi), (21, 29))
+        self.assertIsNone(fmia.lo)
+        self.assertIsNone(fmia.hi)
+        self.assertIn("FMA 21°–29°", fmia.ref)
+
+        l1_occl = measurement("Downs", "L1/plano oclusal")
+        angle = math.radians(75.5)
+        points = {"L1i": (0.0, 0.0), "L1a": (1.0, 0.0), "OcP": (0.0, 0.0), "OcA": (math.cos(angle), math.sin(angle))}
+        self.assertAlmostEqual(ce.compute(l1_occl, points, None), 14.5, places=5)
+
+        convexity = measurement("Downs", "Ángulo de convexidad")
+        anterior = {"N": (0.0, 0.0), "A": (1.0, 5.0), "Pg": (0.0, 10.0)}
+        posterior = {"N": (0.0, 0.0), "A": (-1.0, 5.0), "Pg": (0.0, 10.0)}
+        self.assertGreater(ce.compute(convexity, anterior, None), 0)
+        self.assertLess(ce.compute(convexity, posterior, None), 0)
+
+        ab_plane = measurement("Downs", "Plano A-B")
+        ab_points = {"N": (0.0, 0.0), "Pg": (0.0, 10.0), "B": (0.0, 5.0), "A": (0.4, 0.0)}
+        self.assertAlmostEqual(ce.compute(ab_plane, ab_points, None), -4.57, delta=0.1)
 
     def test_cvm_reference_sequence_matches_published_morphology(self):
         import yornis_reference_help_v0154 as refs
