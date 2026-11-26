@@ -147,9 +147,9 @@ def protocol_config(title: str, variable_keys: list[str], include_criteria: list
 # Norm/reference layer deliberately independent from geometry. The engine value
 # is preserved even when no reference is available for age/sex/population.
 REFERENCE_OVERRIDES: dict[str, dict[str, str]] = {
-    "Steiner::SNA": {"default": "82° ±2°"},
-    "Steiner::SNB": {"default": "80° ±2°"},
-    "Steiner::ANB": {"default": "2° ±2°"},
+    "Steiner::SNA": {"default": "82° (media de Steiner; ±2° es banda posterior, no DE original)"},
+    "Steiner::SNB": {"default": "80° (media de Steiner; ±2° es banda posterior, no DE original)"},
+    "Steiner::ANB": {"default": "2° (media de Steiner; ±2° es banda posterior, no DE original)"},
     "Tweed::FMA": {"default": "25° ±5°"},
     "Tweed::FMIA": {"default": "65° ±5°"},
     "Tweed::IMPA": {"default": "90° ±5°"},
