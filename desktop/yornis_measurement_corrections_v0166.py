@@ -46,6 +46,8 @@ def install() -> None:
             changes.update(ref="Descriptiva; sin límite universal adoptado", lo=None, hi=None)
         elif analysis == "Steiner" and name == "Pog a NB":
             changes.update(ref="2 mm aprox.; media histórica sin banda validada", lo=None, hi=None)
+        elif analysis == "Ricketts" and name == "Convexidad A a N-Pg":
+            changes.update(ref="≈2 mm a los 9 años; ajustar por edad según Ricketts, sin corte automático", lo=None, hi=None)
         elif analysis == "Ricketts" and name == "L1 a A-Pg":
             changes.update(ref="1 mm aprox.; referencia dependiente de edad y población, sin límite fijo", lo=None, hi=None)
         elif analysis == "Ricketts" and name == "U1 a A-Pg":
