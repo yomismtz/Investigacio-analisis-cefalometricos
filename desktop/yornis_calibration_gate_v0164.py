@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Mandatory image-specific calibration guard for Yornis research cases."""
+"""Image-specific calibration guard: require mm/px only for selected linear measures."""
 
 import math
 
@@ -107,7 +107,7 @@ def _requires_calibration(app) -> bool:
 
 
 def install_individual(classic_class) -> None:
-    """Require a fresh, accepted two-point calibration for every loaded image."""
+    """Require a fresh accepted calibration only when the selected measurements are linear."""
     if getattr(classic_class, "_yornis_calibration_gate_v0164", False):
         return
 
