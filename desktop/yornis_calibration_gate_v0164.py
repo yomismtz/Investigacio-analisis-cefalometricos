@@ -125,7 +125,11 @@ def install_individual(classic_class) -> None:
             if hasattr(self, "calibration_mode"):
                 self.calibration_mode = False
             _set_classic_canvas_state(self, "disabled")
-            result = original_load(self, *args, **kwargs)
+            self._yornis_loading_image_v0164 = True
+            try:
+                result = original_load(self, *args, **kwargs)
+            finally:
+                self._yornis_loading_image_v0164 = False
             # Some legacy loaders toggle calibration_mode themselves. Reassert
             # a neutral state before deciding whether this selection needs mm/px.
             if hasattr(self, "calibration_mode"):
@@ -151,6 +155,11 @@ def install_individual(classic_class) -> None:
 
     if callable(original_start):
         def start_calibration(self, *args, **kwargs):
+            # Suppress a legacy loader's automatic prompt while its image import
+            # is running. The load wrapper makes one selection-aware decision after
+            # the import completes, preventing duplicate calibration dialogs.
+            if getattr(self, "_yornis_loading_image_v0164", False):
+                return None
             # A new calibration attempt invalidates any previous scale immediately.
             self.calibration_points = []
             self.calibration_real_mm = None
