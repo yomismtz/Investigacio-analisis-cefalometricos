@@ -75,15 +75,15 @@ TABLES = [
     {
         "id":"ricketts","title":"ANÁLISIS DE RICKETTS","subtitle":"Normas históricas orientativas","first":"Ángulo o plano",
         "source":"Ricketts RM. A foundation for cephalometric communication. Am J Orthod. 1960;46(5):330-357. DOI 10.1016/0002-9416(60)90047-6; Ricketts RM. Perspectives in the clinical application of cephalometrics. Angle Orthod. 1981;51(2):115-150.",
-        "note":"La tabla es un resumen estático. Ricketts ajusta por edad varias referencias, en particular profundidad facial y convexidad; los valores no deben aplicarse sin más a todas las edades. En esta versión no se automatiza esa corrección: registrar edad y comparar con la tabla de crecimiento correspondiente antes de clasificar.",
+        "note":"La tabla es un resumen estático. Ricketts ajusta por edad varias referencias, en particular profundidad facial y convexidad; los valores no deben aplicarse sin más a todas las edades. La banda ±4° para L1-A-Pg es una convención clínica posterior, no una DE original. La distancia L1-A-Pg de 1 mm se acompaña de una desviación clínica aproximada de ±2 mm (no DE). En esta versión no se automatiza la corrección por edad: registrar edad y comparar con la tabla de crecimiento correspondiente antes de clasificar.",
         "rows":[
             _row("Eje facial Ba-N / Pt-Gn","90°","±3.5°","Sugiere patrón dolicofacial y crecimiento mandibular más hacia abajo-atrás.","Dirección de crecimiento facial equilibrada.","Sugiere patrón braquifacial y crecimiento más hacia adelante."),
             _row("Profundidad facial FH/N-Pg","87°","±3°","Sugiere retrusión mandibular relativa.","Referencia estática; aplicar corrección por edad antes de clasificar.","Sugiere protrusión mandibular relativa."),
             _row("Profundidad maxilar FH/N-A","90°","±3°","Sugiere retrusión maxilar relativa.","Referencia estática; considerar edad y protocolo Ricketts.","Sugiere protrusión maxilar relativa."),
             _row("Convexidad A a N-Pg","2 mm","±2 mm","Perfil óseo más plano o cóncavo; tendencia Clase III.","Convexidad esqueletal equilibrada; aplicar corrección por edad.","Perfil más convexo; tendencia Clase II."),
             _row("U1 a A-Pg","Descriptiva","Sin norma universal","Registrar distancia firmada; no clasificar con un corte no validado.","Describir relación del incisivo superior con A-Pg.","Registrar distancia firmada; no clasificar con un corte no validado."),
-            _row("L1 a A-Pg (°)","22°","±4°","Incisivo inferior retroinclinado respecto a A-Pg.","Inclinación del incisivo inferior cercana a la referencia histórica.","Incisivo inferior proinclinado respecto a A-Pg."),
-            _row("L1 a A-Pg","1 mm","No publicada","Incisivo inferior más retruido respecto a A-Pg.","Media histórica aproximada; referencia dependiente de edad y población.","Incisivo inferior más protrusivo respecto a A-Pg."),
+            _row("L1 a A-Pg (°)","22°","±4° (banda clínica; no DE original)","Incisivo inferior retroinclinado respecto a A-Pg.","Inclinación del incisivo inferior cercana a la referencia histórica.","Incisivo inferior proinclinado respecto a A-Pg."),
+            _row("L1 a A-Pg","1 mm","±2 mm clínicos (no DE)","Incisivo inferior más retruido respecto a A-Pg.","Media histórica aproximada; referencia dependiente de edad y población.","Incisivo inferior más protrusivo respecto a A-Pg."),
         ],
     },
     {
