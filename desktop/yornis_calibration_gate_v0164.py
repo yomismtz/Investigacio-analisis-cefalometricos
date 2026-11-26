@@ -234,6 +234,41 @@ def install_database() -> None:
         def attach_image_with_calibration_reset(self, case_id, image_path, copy_image=True):
             result = current_attach(self, case_id, image_path, copy_image)
             self.update_case_calibration(case_id, None)
+            # The cervical assessment snapshot is case/protocol scoped. Archive
+            # its image identity and clear active classifications on image swap;
+            # the historical result rows and audit events remain preserved.
+            with self.connect() as con:
+                exists = con.execute(
+                    "SELECT 1 FROM sqlite_master WHERE type='table' AND name='cervical_assessments'"
+                ).fetchone()
+                if exists:
+                    cols = {row[1] for row in con.execute("PRAGMA table_info(cervical_assessments)").fetchall()}
+                    if "image_hash" not in cols:
+                        con.execute("ALTER TABLE cervical_assessments ADD COLUMN image_hash TEXT DEFAULT ''")
+                        cols.add("image_hash")
+                    if "image_revision" not in cols:
+                        con.execute("ALTER TABLE cervical_assessments ADD COLUMN image_revision INTEGER NOT NULL DEFAULT 1")
+                        cols.add("image_revision")
+                    assignments = [
+                        "image_hash='historical:' || COALESCE(NULLIF(image_hash,''),'legacy-unidentified')",
+                        "image_revision=-ABS(COALESCE(image_revision,1))",
+                    ]
+                    for column, expression in (
+                        ("lordosis_angle", "NULL"),
+                        ("posture_class", "'Stale: radiograph changed'"),
+                        ("cvm_stage", "NULL"),
+                        ("cvm_phase", "'Stale: radiograph changed'"),
+                        ("features_json", "'{}'"),
+                        ("alignment_code", "NULL"),
+                        ("alignment_class", "'Stale: radiograph changed'"),
+                        ("alignment_notes", "''"),
+                    ):
+                        if column in cols:
+                            assignments.append(f"{column}={expression}")
+                    con.execute(
+                        "UPDATE cervical_assessments SET " + ",".join(assignments) + " WHERE case_id=?",
+                        (case_id,),
+                    )
             case = self.case(case_id)
             if case:
                 self.audit(
