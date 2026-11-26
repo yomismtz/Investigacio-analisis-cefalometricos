@@ -145,7 +145,7 @@ class AuditHardeningTests(unittest.TestCase):
         self.assertIn("20 sujetos blancos de 12–17 años", downs["note"])
         self.assertIn("L1/plano oclusal", downs_rows)
         self.assertIn("L1/plano mandibular", downs_rows)
-        self.assertIn("U1 a A-Pg", downs_rows)
+        self.assertIn("U1 a A–Pg", downs_rows)
         engine_downs = {m.name for m in engine.MEASUREMENTS if m.analysis == "Downs"}
         self.assertEqual(set(downs_rows), engine_downs)
 
