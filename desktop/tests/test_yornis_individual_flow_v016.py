@@ -195,7 +195,11 @@ class IndividualSelectorFlowTests(unittest.TestCase):
         import yornis_calibration_gate_v0164 as gate
         angular = type("Angular", (), {"individual_measurements": {"Steiner": ["SNA"]}})()
         linear = type("Linear", (), {"individual_measurements": {"Steiner": ["U1–NA (mm)"]}})()
+        cvm = type("CVM", (), {"individual_measurements": {"CVM C2–C4": ["Estadio CVM registrado"]}})()
+        cervical = type("Cervical", (), {"individual_measurements": {"Postura cervical C1–C7": ["Lordosis cervical C1–C7"]}})()
         self.assertFalse(gate._requires_calibration(angular))
+        self.assertFalse(gate._requires_calibration(cvm))
+        self.assertFalse(gate._requires_calibration(cervical))
         self.assertTrue(gate._requires_calibration(linear))
 
     def test_real_classic_individual_click_opens_selector_dialog(self):
