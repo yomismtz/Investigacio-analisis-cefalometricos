@@ -186,7 +186,7 @@ def open_reference_help(root, initial: str | None = None) -> None:
         for child in table_host.winfo_children():
             child.destroy()
         headers = (
-            table.get("first", "Parámetro"), "Referencia", "DE",
+            table.get("first", "Parámetro"), "Referencia", "DE / rango",
             "Menor a referencia", "Dentro de referencia", "Mayor a referencia",
         )
         header_bg = (t["panel_alt"], t["panel_alt"], t["panel_alt"], "#FFF3BF", "#DDF6E8", "#F8DDE5")
