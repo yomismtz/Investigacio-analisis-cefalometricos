@@ -86,6 +86,48 @@ class AuditHardeningTests(unittest.TestCase):
         self.assertIsNone(convexity.measurement.hi)
         self.assertIn("ajustar por edad", rp.reference_for(convexity))
 
+    def test_steiner_sn_gogn_angle_uses_the_correct_two_lines_and_is_scale_invariant(self):
+        import math
+
+        measurement = next(
+            m for m in engine.MEASUREMENTS
+            if m.analysis == "Steiner" and "GoGn" in m.name
+        )
+        self.assertEqual(set(measurement.pts), {"S", "N", "Go", "Gn"})
+
+        # SN is vertical (90° to horizontal); Go-Gn is 58° to horizontal.
+        # The smaller inter-plane angle is therefore exactly 32°.
+        theta = math.radians(58.0)
+        points = {
+            "S": (0.0, 0.0),
+            "N": (0.0, 100.0),
+            "Go": (100.0, 0.0),
+            "Gn": (100.0 + 100.0 * math.cos(theta), 100.0 * math.sin(theta)),
+        }
+        value = engine.compute(measurement, points, None, "right")
+        self.assertAlmostEqual(value, 32.0, places=5)
+
+        scaled = {name: (x * 7.0, y * 7.0) for name, (x, y) in points.items()}
+        self.assertAlmostEqual(engine.compute(measurement, scaled, None, "right"), 32.0, places=5)
+
+        mirrored = {name: (-x, y) for name, (x, y) in points.items()}
+        self.assertAlmostEqual(engine.compute(measurement, mirrored, None, "left"), 32.0, places=5)
+
+    def test_steiner_anb_equals_sna_minus_snb_for_consistent_geometry(self):
+        sna = next(m for m in engine.MEASUREMENTS if m.analysis == "Steiner" and m.name == "SNA")
+        snb = next(m for m in engine.MEASUREMENTS if m.analysis == "Steiner" and m.name == "SNB")
+        anb = next(m for m in engine.MEASUREMENTS if m.analysis == "Steiner" and m.name == "ANB")
+        points = {
+            "S": (0.0, 0.0),
+            "N": (0.0, 100.0),
+            "A": (50.0, 0.0),
+            "B": (30.0, 0.0),
+        }
+        a = engine.compute(sna, points, None, "right")
+        b = engine.compute(snb, points, None, "right")
+        ab = engine.compute(anb, points, None, "right")
+        self.assertAlmostEqual(ab, a - b, places=5)
+
     def test_downs_and_tweed_engine_conventions_are_consistent(self):
         import math
         import classic_engine as ce
