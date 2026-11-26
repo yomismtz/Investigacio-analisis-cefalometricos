@@ -107,7 +107,7 @@ TABLES = [
         "note":"Las longitudes Co-A, Co-Gn, diferencia maxilomandibular y ENA-Me dependen de edad y sexo. La tabla II de McNamara distingue dentición mixta y adulto; la tabla I presenta una muestra adulta Ann Arbor por sexo. El artículo indica que, cuando fue posible, las medidas incorporaron 8% de magnificación. No comparar medidas calibradas a dimensión real con normas radiográficas magnificadas sin armonizar esa convención.",
         "rows":[
             _row("A-Nperp","Mixta: 0 mm; adulto: 1 mm","Norma compuesta por etapa","Más posterior que la referencia correspondiente a dentición/edad.","Comparar con la referencia de la etapa; no usar un único valor para todas las edades.","Más anterior que la referencia correspondiente a dentición/edad."),
-            _row("Pg-Nperp","Mixta: −8 a −6 mm; adulto: −2 a +4 mm","Rangos compuestos por etapa","Más posterior que el rango correspondiente a la etapa.","Comparar con el rango de dentición/edad; el artículo también presenta medias adultas separadas por sexo.","Más anterior que el rango correspondiente a la etapa."),
+            _row("Pg-Nperp","Mixta: −8 a −6 mm; adulto: −2 a +4 mm","Rangos por etapa; cambio anual ≈+0.5 mm","Más posterior que el rango correspondiente a la etapa.","Comparar con el rango de dentición/edad; el artículo también presenta medias adultas separadas por sexo.","Más anterior que el rango correspondiente a la etapa."),
             _row("Co-A","según edad/sexo","—","Longitud maxilar disminuida.","Longitud maxilar acorde con edad y sexo.","Longitud maxilar aumentada."),
             _row("Co-Gn","según edad/sexo","—","Longitud mandibular disminuida.","Longitud mandibular acorde con edad y sexo.","Longitud mandibular aumentada."),
             _row("Co-Gn − Co-A","según edad/sexo","—","Mandíbula relativamente corta respecto al maxilar; tendencia Clase II.","Relación de longitudes maxilar-mandibular equilibrada.","Mandíbula relativamente larga respecto al maxilar; tendencia Clase III."),
@@ -161,6 +161,7 @@ TABLES = [
     {
         "id":"legan_burstone","title":"ANÁLISIS DE LEGAN–BURSTONE","subtitle":"Normas históricas orientativas","first":"Parámetro",
         "source":"Legan HL, Burstone CJ. Soft tissue cephalometric analysis for orthognathic surgery. J Oral Surg. 1980;38(10):744-751. PMID 6932485.",
+        "note":"Normas históricas de tejidos blandos para planificación ortognática; no son límites universales. Correlacionar con edad, sexo, origen poblacional, espesor de tejidos blandos, postura labial y protocolo de adquisición.",
         "rows":[
             _row("Convexidad facial (G'-Sn-Pg')","12°","±4°","Perfil más plano o cóncavo.","Convexidad facial equilibrada.","Perfil más convexo."),
             _row("Prognatismo maxilar","6 mm","±3 mm","Maxila blanda relativamente retruida.","Posición maxilar de tejidos blandos equilibrada.","Maxila blanda relativamente protrusiva."),
