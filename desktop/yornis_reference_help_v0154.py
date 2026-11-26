@@ -101,7 +101,7 @@ TABLES = [
     {
         "id":"wits","title":"ANÁLISIS DE WITS","subtitle":"Norma histórica orientativa","first":"Ángulo o plano",
         "source":"Jacobson A. The Wits appraisal of jaw disharmony. Am J Orthod. 1975;67(2):125-138. DOI 10.1016/0002-9416(75)90065-2.",
-        "note":"Se mide proyectando los puntos A y B perpendicularmente sobre el plano oclusal funcional.",
+        "note":"Se mide proyectando A y B perpendicularmente sobre el plano oclusal funcional. El resultado depende de su inclinación, erupción y compensación dentaria. Las medias por sexo son referencias históricas, no diagnóstico aislado ni norma universal.",
         "rows":[
             _row("Wits appraisal","♀ 0 mm / ♂ -1 mm","±2 mm","Valor más negativo: discrepancia sagital hacia Clase III; mandíbula relativamente adelantada o maxilar retruido.","Relación sagital maxilomandibular equilibrada al proyectar A y B sobre el plano oclusal.","Valor más positivo: discrepancia sagital hacia Clase II; maxilar relativamente adelantado o mandíbula retruida."),
         ],
@@ -125,7 +125,7 @@ TABLES = [
     {
         "id":"holdaway","title":"ANÁLISIS DE HOLDAWAY","subtitle":"Normas históricas orientativas","first":"Ángulo o plano",
         "source":"Holdaway RA. A soft-tissue cephalometric analysis and its use in orthodontic treatment planning. Parts I-II. Am J Orthod. 1983;84(1):1-28; 1984;85(4):279-293.",
-        "note":"El ángulo H debe interpretarse junto con la convexidad esquelética; Holdaway no propuso una lectura aislada de una sola cifra para todos los perfiles.",
+        "note":"El ángulo H debe interpretarse junto con la convexidad esquelética. Las referencias de tejidos blandos dependen también de grosor labial, prominencia nasal/mentoniana, edad, sexo y población; no son límites diagnósticos universales.",
         "rows":[
             _row("Ángulo H","10°","±4°","Perfil más plano o menos convexo; labios más retruidos respecto a la línea H.","Relación labial y convexidad facial equilibrada.","Perfil más convexo y/o labios más protrusivos respecto a la línea H."),
             _row("Ángulo facial de tejidos blandos","91°","±7°","Mentón blando más retruido.","Proyección de tejidos blandos del mentón dentro de lo esperado.","Mentón blando más prominente."),
@@ -136,7 +136,7 @@ TABLES = [
     {
         "id":"burstone_cogs","title":"ANÁLISIS DE BURSTONE COGS","subtitle":"Normas históricas orientativas","first":"Ángulo o plano",
         "source":"Burstone CJ, James RB, Legan H, Murphy GA, Norton LA. Cephalometrics for orthognathic surgery. J Oral Surg. 1978;36(4):269-277. PMID 273073.",
-        "note":"H/M = hombres/mujeres. Son referencias de la muestra histórica, no límites diagnósticos universales.",
+        "note":"H/M = hombres/mujeres. Son referencias de la muestra histórica de planificación quirúrgica, no límites diagnósticos universales. Las medidas lineales dependen de magnificación, calibración, edad y población.",
         "rows":[
             _row("Ar-Ptm // HP","H 37 mm / M 33 mm","±3 mm","Base posterior maxilar corta.","Base posterior maxilar proporcional.","Base posterior maxilar larga."),
             _row("Ptm-N // HP","H 53 mm / M 50 mm","±3 mm","Tercio medio superior corto.","Longitud del tercio medio dentro de lo esperado.","Tercio medio superior largo."),
