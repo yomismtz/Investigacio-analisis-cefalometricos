@@ -437,13 +437,13 @@ class ResearchWorkspace(tk.Tk):
             x,y=self.image_to_canvas(self.calibration_clicks[0]);self.canvas.create_oval(x-6,y-6,x+6,y+6,fill=PALETTE["mint_300"])
     def current_landmark(self):return self.landmarks[self.landmark_index] if self.landmarks else ""
     def pick_landmark(self,e=None):
-        if requires_calibration(self.protocol.get("selected_variables",[])) and not self.mm_per_px:
+        if requires_calibration(self.protocol.get("selected_variables",[])) and not is_valid_mm_per_px(self.mm_per_px):
             self.status.config(text=self.T("Calibración obligatoria: coloca los dos puntos de referencia antes de seleccionar landmarks.","Calibration required: place both reference points before selecting landmarks."))
             return
         s=self.landmark_list.curselection();
         if s:self.landmark_index=s[0];self.update_trace_progress();self.redraw();self.center_on_current()
     def step_landmark(self,delta):
-        if requires_calibration(self.protocol.get("selected_variables",[])) and not self.mm_per_px:
+        if requires_calibration(self.protocol.get("selected_variables",[])) and not is_valid_mm_per_px(self.mm_per_px):
             self.status.config(text=self.T("Calibración obligatoria: coloca los dos puntos de referencia antes de recorrer o marcar landmarks.","Calibration required: place both reference points before navigating or placing landmarks."))
             return
         if not self.landmarks:return
@@ -503,7 +503,7 @@ class ResearchWorkspace(tk.Tk):
                 self.status.config(text=self.T(f"Calibración guardada: {self.pending_mm:g} mm entre los dos puntos · escala {self.mm_per_px:.6f} mm/píxel.",f"Calibration saved: {self.pending_mm:g} mm between the two points · scale {self.mm_per_px:.6f} mm/pixel."))
                 self.autosave()
             self.redraw();return
-        if requires_calibration(self.protocol.get("selected_variables",[])) and not self.mm_per_px:
+        if requires_calibration(self.protocol.get("selected_variables",[])) and not is_valid_mm_per_px(self.mm_per_px):
             self.status.config(text=self.T("Primero calibra la radiografía con dos puntos de distancia conocida.","Calibrate the radiograph with two points of known distance first."))
             return
         cx,cy=self.canvas.canvasx(e.x),self.canvas.canvasy(e.y)
@@ -586,7 +586,7 @@ class ResearchWorkspace(tk.Tk):
     def calculate_preview(self):
         self.results_tree.delete(*self.results_tree.get_children())
         if not self.case_id:return []
-        if requires_calibration(self.protocol.get("selected_variables",[])) and not self.mm_per_px:
+        if requires_calibration(self.protocol.get("selected_variables",[])) and not is_valid_mm_per_px(self.mm_per_px):
             self.status.config(text=self.T("No se puede analizar: primero completa la calibración con dos puntos.","Analysis blocked: complete the two-point calibration first."))
             return []
         c=self.db.case(self.case_id);results=compute_selected(self.protocol.get("selected_variables",[]),self.points,self.mm_per_px,sex=c["sex"],age=c["age"])
@@ -601,7 +601,7 @@ class ResearchWorkspace(tk.Tk):
         messagebox.showinfo(self.T("Control de calidad","Quality control"),"\n\n".join(("✓ " if x["level"]=="ok" else "◆ ")+x["message"] for x in issues))
     def calculate_and_save(self):
         if not self.case_id:return
-        if requires_calibration(self.protocol.get("selected_variables",[])) and not self.mm_per_px:
+        if requires_calibration(self.protocol.get("selected_variables",[])) and not is_valid_mm_per_px(self.mm_per_px):
             messagebox.showwarning("Yornis",self.T("Este protocolo contiene medidas lineales. Calibra la radiografía antes de calcular o guardar.","This protocol contains linear measurements. Calibrate the radiograph before calculating or saving."),parent=self)
             self.start_calibration()
             return
@@ -614,7 +614,7 @@ class ResearchWorkspace(tk.Tk):
         else:messagebox.showwarning("Yornis",self.T("El caso se guardó pero aún no cumple todos los resultados del protocolo.","The case was saved but does not yet contain every protocol outcome."))
     def start_review(self):
         if not self.case_id or not self.landmarks:return
-        if requires_calibration(self.protocol.get("selected_variables",[])) and not self.mm_per_px:
+        if requires_calibration(self.protocol.get("selected_variables",[])) and not is_valid_mm_per_px(self.mm_per_px):
             self.status.config(text=self.T("La revisión de este protocolo requiere calibrar la radiografía.","Reviewing this protocol requires radiograph calibration."))
             self.start_calibration()
             return
