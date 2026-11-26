@@ -203,8 +203,10 @@ def compute_selected(variable_keys: list[str], points: dict[str, tuple[float, fl
             continue
         try:
             obj = by_key[v.key]
-            value = engine.compute(obj, points, scale, side)
-            results.append({"analysis": v.analysis, "measurement": v.name, "value": float(value), "unit": v.unit, "reference": reference_for(v, sex, age, population), "interpretation": "Valor geométrico calculado; interpretar con la norma seleccionada", "missing": []})
+            value = float(engine.compute(obj, points, scale, side))
+            if not math.isfinite(value):
+                raise ValueError("El resultado geométrico no es finito")
+            results.append({"analysis": v.analysis, "measurement": v.name, "value": value, "unit": v.unit, "reference": reference_for(v, sex, age, population), "interpretation": "Valor geométrico calculado; interpretar con la norma seleccionada", "missing": []})
         except Exception as exc:
             results.append({"analysis": v.analysis, "measurement": v.name, "value": None, "unit": v.unit, "reference": reference_for(v, sex, age, population), "interpretation": f"No calculable: {exc}", "missing": []})
     return results
