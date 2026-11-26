@@ -82,6 +82,10 @@ class AuditHardeningTests(unittest.TestCase):
         self.assertIsNone(fmia.lo)
         self.assertIsNone(fmia.hi)
         self.assertIn("FMA 21°–29°", fmia.ref)
+        impa = measurement("Tweed", "IMPA")
+        self.assertIsNone(impa.lo)
+        self.assertIsNone(impa.hi)
+        self.assertIn("FMA ≤20°", impa.ref)
 
         l1_occl = measurement("Downs", "L1/plano oclusal")
         angle = math.radians(75.5)
