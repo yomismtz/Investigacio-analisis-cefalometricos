@@ -83,6 +83,21 @@ class AuditHardeningTests(unittest.TestCase):
         self.assertIn("No diagnostica patología cervical", cervical["note"])
         self.assertNotIn("vía aérea", " ".join(str(cell) for row in cervical["rows"] for cell in row))
 
+    def test_downs_and_mcnamara_reference_values_match_primary_sources(self):
+        import yornis_reference_help_v0154 as refs
+        downs = next(table for table in refs.TABLES if table["id"] == "downs")
+        downs_rows = {row[0]: row for row in downs["rows"]}
+        self.assertEqual(downs_rows["Ángulo de convexidad"][2], "±5.1°")
+        self.assertEqual(downs_rows["Plano A-B"][2], "±3.7°")
+        self.assertIn("20 sujetos blancos de 12–17 años", downs["note"])
+
+        mcnamara = next(table for table in refs.TABLES if table["id"] == "mcnamara")
+        rows = {row[0]: row for row in mcnamara["rows"]}
+        self.assertIn("Mixta: −8 a −6 mm", rows["Pg-Nperp"][1])
+        self.assertIn("adulto: −2 a +4 mm", rows["Pg-Nperp"][1])
+        self.assertIn("8% de magnificación", mcnamara["note"])
+        self.assertIn("♀ 11.3 mm / ♂ 13.5 mm", rows["Faringe inferior"][1])
+
     def test_hp_measurements_request_construction_landmarks(self):
         candidates = [v for vs in rp.analysis_catalog().values() for v in vs if str(v.kind).lower().startswith("hp_")]
         self.assertTrue(candidates)
