@@ -336,6 +336,23 @@ class AuditHardeningTests(unittest.TestCase):
         by_analysis = {row["analysis"]: row for row in refreshed}
         self.assertEqual(by_analysis[cv.CVM_ANALYSIS]["value"], 3.0)
         self.assertEqual(by_analysis[al.ALIGNMENT_ANALYSIS]["value"], 2.0)
+        with self.db.connect() as con:
+            cvm_history = con.execute(
+                "SELECT version,image_hash,image_revision FROM results "
+                "WHERE case_id=? AND protocol_version=? AND analysis=? AND measurement=? ORDER BY version",
+                (cid, pv, cv.CVM_ANALYSIS, cv.CVM_MEASUREMENT),
+            ).fetchall()
+            alignment_history = con.execute(
+                "SELECT version,image_hash,image_revision FROM results "
+                "WHERE case_id=? AND protocol_version=? AND analysis=? AND measurement=? ORDER BY version",
+                (cid, pv, al.ALIGNMENT_ANALYSIS, al.ALIGNMENT_MEASUREMENT),
+            ).fetchall()
+        for history in (cvm_history, alignment_history):
+            self.assertEqual([row["version"] for row in history], [1, 2])
+            self.assertTrue(str(history[0]["image_hash"]).startswith("historical:"))
+            self.assertLess(int(history[0]["image_revision"]), 0)
+            self.assertTrue(str(history[1]["image_hash"]))
+            self.assertGreater(int(history[1]["image_revision"]), 0)
 
     def test_backup_is_consistent_study_scoped_and_restorable(self):
         other = self.db.create_study("Other study")
