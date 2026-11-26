@@ -6,7 +6,7 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from research_db import ResearchDB
-from research_protocol import analysis_catalog, minimum_landmarks, shared_landmark_summary
+from research_protocol import analysis_catalog, minimum_landmarks, requires_calibration, shared_landmark_summary
 
 
 class ResearchSuiteTests(unittest.TestCase):
@@ -85,6 +85,24 @@ class ResearchSuiteTests(unittest.TestCase):
             self.assertEqual(con.execute("SELECT COUNT(*) FROM results WHERE case_id=?", (cid,)).fetchone()[0], 1)
         events = self.db.audit_rows(self.study)
         self.assertTrue(any(row["event"] == "image_attached" for row in events))
+
+    def test_only_linear_protocols_require_calibration(self):
+        variables = [v for group in analysis_catalog().values() for v in group]
+        linear = next(
+            (v for v in variables if v.unit.strip().lower() in {"mm", "cm"}
+             or "distance" in v.kind.lower() or "lineal" in v.kind.lower()),
+            None,
+        )
+        angular = next(
+            (v for v in variables if v.unit.strip().lower() in {"°", "deg", "degree", "degrees"}
+             or "angle" in v.kind.lower() or "angular" in v.kind.lower()),
+            None,
+        )
+        self.assertIsNotNone(linear, "El catálogo debe contener al menos una variable lineal")
+        self.assertIsNotNone(angular, "El catálogo debe contener al menos una variable angular")
+        self.assertFalse(requires_calibration([angular.key]))
+        self.assertTrue(requires_calibration([linear.key]))
+        self.assertTrue(requires_calibration([angular.key, linear.key]))
 
     def test_landmark_minimization(self):
         cat = analysis_catalog(); keys = []
