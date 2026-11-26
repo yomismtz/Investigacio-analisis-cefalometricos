@@ -61,7 +61,7 @@ TABLES = [
     },
     {
         "id":"tweed","title":"ANÁLISIS DE TWEED","subtitle":"Normas históricas orientativas","first":"Ángulo o plano",
-        "source":"Tweed CH. The diagnostic facial triangle in the control of treatment objectives. Am J Orthod. 1969;55(6):651-667. DOI 10.1016/0002-9416(69)90041-4.",
+        "source":"Tweed CH. Was the development of the diagnostic facial triangle as an accurate analysis based on fact or fancy? Am J Orthod. 1962;48:823-840; Tweed CH. The diagnostic facial triangle in the control of treatment objectives. Am J Orthod. 1969;55(6):651-667. DOI 10.1016/0002-9416(69)90041-4.",
         "note":"FMA 25° ±4° es la referencia clásica. FMIA no tiene un objetivo único: el objetivo cambia con FMA (aprox. 68° cuando FMA está entre 21° y 29°; 65° cuando FMA ≥30°). Con FMA ≤20°, valorar IMPA y evitar aplicar un objetivo fijo de FMIA; Tweed señala no exceder aproximadamente 94° de IMPA. Interpretar el triángulo completo, no cada ángulo de forma aislada.",
         "rows":[
             _row("FMA","25°","±4°","Patrón más horizontal que la referencia adoptada; interpretar junto con FMIA e IMPA.","Relación Frankfort-plano mandibular cercana al objetivo clásico.","Patrón más vertical que la referencia adoptada; interpretar junto con FMIA e IMPA."),
