@@ -153,7 +153,6 @@ REFERENCE_OVERRIDES: dict[str, dict[str, str]] = {
     "Steiner::SNB": {"default": "80° (media de Steiner; ±2° es banda posterior, no DE original)"},
     "Steiner::ANB": {"default": "2° (media de Steiner; ±2° es banda posterior, no DE original)"},
     "Tweed::FMA": {"default": "25° ±4°"},
-    "Tweed::FMIA": {"default": "65° ±5°"},
     "Tweed::FMIA": {"default": "Objetivo condicional: ≈68° si FMA 21°–29°; ≈65° si FMA ≥30°; si FMA ≤20°, valorar IMPA y no aplicar FMIA fijo."},
     "Tweed::IMPA": {"default": "90° ±5°; con FMA ≤20°, Tweed recomendó no exceder aproximadamente 94°."},
     "Wits::AO-BO": {"default": "Interpretar con sexo, población y convención de signo del protocolo"},
