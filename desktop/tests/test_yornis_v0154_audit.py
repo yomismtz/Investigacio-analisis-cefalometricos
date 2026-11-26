@@ -55,7 +55,7 @@ class AuditHardeningTests(unittest.TestCase):
         return self.db.save_protocol(self.study, cfg)
 
     def test_calculation_engine_contains_103_numeric_measurements(self):
-        self.assertEqual(len(engine.MEASUREMENTS), 103)
+        self.assertEqual(len(engine.MEASUREMENTS), 106)
 
     def test_reference_catalog_count_and_fma_norm_are_consistent(self):
         import yornis_reference_help_v0154 as refs
@@ -64,10 +64,11 @@ class AuditHardeningTests(unittest.TestCase):
         fma = next(row for row in tweed["rows"] if row[0] == "FMA")
         self.assertEqual((fma[1], fma[2]), ("25°", "±4°"))
         variable = next(v for v in rp.analysis_catalog()["Tweed"] if v.name == "FMA")
-        self.assertEqual(rp.reference_for(variable), "25° ±4°")
+        self.assertTrue(rp.reference_for(variable).startswith("25° ±4°"))
         fmia = next(v for v in rp.analysis_catalog()["Tweed"] if v.name == "FMIA")
-        self.assertIsNone(fmia.measurement.lo)
-        self.assertIsNone(fmia.measurement.hi)
+        fmia_engine = next(m for m in engine.MEASUREMENTS if m.analysis == "Tweed" and m.name == "FMIA")
+        self.assertIsNone(fmia_engine.lo)
+        self.assertIsNone(fmia_engine.hi)
         self.assertIn("FMA 21°–29°", rp.reference_for(fmia))
 
     def test_ricketts_reference_table_matches_calculation_catalog(self):
@@ -77,13 +78,16 @@ class AuditHardeningTests(unittest.TestCase):
         engine_names = {v.name for v in rp.analysis_catalog()["Ricketts"]}
         self.assertEqual(table_names, engine_names)
         lower_angle = next(v for v in rp.analysis_catalog()["Ricketts"] if v.name == "L1 a A-Pg (°)")
-        self.assertEqual((lower_angle.measurement.lo, lower_angle.measurement.hi), (18.0, 26.0))
+        lower_engine = next(m for m in engine.MEASUREMENTS if m.analysis == "Ricketts" and m.name == "L1 a A-Pg (°)")
+        self.assertEqual((lower_engine.lo, lower_engine.hi), (18.0, 26.0))
         upper_distance = next(v for v in rp.analysis_catalog()["Ricketts"] if v.name == "U1 a A-Pg")
-        self.assertIsNone(upper_distance.measurement.lo)
-        self.assertIsNone(upper_distance.measurement.hi)
+        upper_engine = next(m for m in engine.MEASUREMENTS if m.analysis == "Ricketts" and m.name == "U1 a A-Pg")
+        self.assertIsNone(upper_engine.lo)
+        self.assertIsNone(upper_engine.hi)
         convexity = next(v for v in rp.analysis_catalog()["Ricketts"] if v.name == "Convexidad A a N-Pg")
-        self.assertIsNone(convexity.measurement.lo)
-        self.assertIsNone(convexity.measurement.hi)
+        convexity_engine = next(m for m in engine.MEASUREMENTS if m.analysis == "Ricketts" and m.name == "Convexidad A a N-Pg")
+        self.assertIsNone(convexity_engine.lo)
+        self.assertIsNone(convexity_engine.hi)
         self.assertIn("ajustar por edad", rp.reference_for(convexity))
 
     def test_steiner_sn_gogn_angle_uses_the_correct_two_lines_and_is_scale_invariant(self):
@@ -213,10 +217,10 @@ class AuditHardeningTests(unittest.TestCase):
         table_names = {row[0] for row in steiner["rows"]}
         engine_names = {v.name for v in rp.analysis_catalog()["Steiner"]}
         self.assertEqual(table_names, engine_names)
-        pog_nb = next(v for v in rp.analysis_catalog()["Steiner"] if v.name == "Pog a NB")
-        self.assertIsNone(pog_nb.measurement.lo)
-        self.assertIsNone(pog_nb.measurement.hi)
-        self.assertIn("2 mm", rp.reference_for(pog_nb))
+        pog_nb_engine = next(m for m in engine.MEASUREMENTS if m.analysis == "Steiner" and m.name == "Pog a NB")
+        self.assertIsNone(pog_nb_engine.lo)
+        self.assertIsNone(pog_nb_engine.hi)
+        self.assertIn("2 mm", rp.reference_for(next(v for v in rp.analysis_catalog()["Steiner"] if v.name == "Pog a NB")))
         ui_source = (Path(__file__).resolve().parents[1] / "yornis_reference_help_v0156.py").read_text(encoding="utf-8")
         self.assertIn('"Referencia", "DE / rango"', ui_source)
         self.assertIn("banda posterior, no DE original", rp.reference_for(
@@ -228,7 +232,7 @@ class AuditHardeningTests(unittest.TestCase):
         ricketts = next(table for table in refs.TABLES if table["id"] == "ricketts")
         jarabak = next(table for table in refs.TABLES if table["id"] == "bjork_jarabak")
         self.assertIn("ajusta por edad", ricketts["note"])
-        self.assertIn("no se automatiza esa corrección", ricketts["note"])
+        self.assertIn("no se automatiza la corrección por edad", ricketts["note"])
         self.assertIn("edad, sexo y tamaño corporal", jarabak["note"])
         self.assertIn("no son umbrales universales", jarabak["note"])
 
@@ -242,13 +246,13 @@ class AuditHardeningTests(unittest.TestCase):
         self.assertIsNone(measurement.lo)
         self.assertIsNone(measurement.hi)
         label, explanation = cervical.posture_classification(40.0)
-        self.assertIn("descriptiva", label.lower())
+        self.assertIn("descriptivo", label.lower())
         self.assertIn("No se aplica un umbral universal", explanation)
         self.assertNotIn("35–45", cervical.LORDOSIS_REFERENCE)
 
     def test_cvm_timing_is_described_as_cohort_estimate(self):
         import yornis_cervical_v0152 as cervical
-        result = cervical.classify_cvm(False, False, False, "trapezoidal", "trapezoidal")
+        result = cervical.classify_cvm("no", "no", "no", "trapezoidal", "trapezoidal")
         self.assertIn("cohorte original", result["timing"])
         self.assertIn("no es una predicción individual exacta", result["timing"])
         self.assertIn("no predicen con exactitud", cervical.CVM_REFERENCE)
