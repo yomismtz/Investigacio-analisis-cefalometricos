@@ -15,7 +15,7 @@ import yornis_calibration as calibration
 
 from research_db import MAX_CASES, RESEARCH_DIR, ResearchDB
 from research_export import export_audit_csv, export_case_pdf, export_excel, export_json_bundle, export_long_csv, export_study_pdf, export_wide_csv
-from research_protocol import EXCLUSION_REASONS_EN, EXCLUSION_REASONS_ES, analysis_catalog, compute_selected, minimum_landmarks, requires_calibration, shared_landmark_summary, trace_qc
+from research_protocol import EXCLUSION_REASONS_EN, EXCLUSION_REASONS_ES, analysis_catalog, compute_selected, minimum_landmarks, requires_calibration, is_valid_mm_per_px, shared_landmark_summary, trace_qc
 from yomceph_theme import PALETTE, RESEARCH_STATUS, SEMANTIC, TRACING
 
 try:
@@ -404,7 +404,7 @@ class ResearchWorkspace(tk.Tk):
         needs_calibration=requires_calibration(self.protocol.get("selected_variables",[]))
         self.mm_per_px=c["case_mm_per_px"]
         self.calibration_mode=False; self.calibration_clicks=[]; self.pending_mm=0.0
-        if self.mm_per_px or not needs_calibration:
+        if is_valid_mm_per_px(self.mm_per_px) or not needs_calibration:
             self.points=self.load_autosave(cid) or self.db.latest_landmarks(cid,self.protocol["version"])
         else:
             self.points={}
@@ -416,9 +416,9 @@ class ResearchWorkspace(tk.Tk):
         self.trace_case_title.config(text=f"#{c['case_number']} · {c['study_code']}")
         if bool(s["blind_mode"]):self.trace_meta.config(text=self.T("Modo ciego activo: edad/sexo ocultos","Blind mode active: age/sex hidden"))
         else:self.trace_meta.config(text=f"{self.T('Sexo','Sex')}: {c['sex'] or '—'} · {self.T('Edad','Age')}: {c['age'] if c['age'] is not None else '—'}")
-        self.calib_label.config(text=(f"{self.mm_per_px:.6f} mm/px" if self.mm_per_px else self.T("Falta calibrar la radiografía","Radiograph calibration required")))
+        self.calib_label.config(text=(f"{self.mm_per_px:.6f} mm/px" if is_valid_mm_per_px(self.mm_per_px) else self.T("Falta calibrar la radiografía","Radiograph calibration required")))
         self.tabs.select(self.trace_tab); self.fit_image(); self.update_trace_progress(); self.calculate_preview()
-        if needs_calibration and not self.mm_per_px:self.after(180,self.start_calibration)
+        if needs_calibration and not is_valid_mm_per_px(self.mm_per_px):self.after(180,self.start_calibration)
 
     def fit_image(self):
         if self.image is None:return
@@ -548,11 +548,11 @@ class ResearchWorkspace(tk.Tk):
     def start_calibration(self):
         if self.image is None:return
         case=self.db.case(self.case_id) if self.case_id is not None else None
-        if self.mm_per_px and case is not None and case["case_mm_per_px"] is not None:
+        if is_valid_mm_per_px(self.mm_per_px) and case is not None and case["case_mm_per_px"] is not None:
             if not messagebox.askyesno(self.T("Recalibrar radiografía","Recalibrate radiograph"),self.T("Esta radiografía ya tiene una calibración guardada. ¿Deseas sustituirla?","This radiograph already has a saved calibration. Replace it?"),parent=self):return
         mm=simpledialog.askfloat(self.T("Calibrar Yornis","Calibrate Yornis"),self.T("Antes de marcar: indica cuántos MILÍMETROS REALES hay entre los dos puntos de referencia que vas a colocar. Después, marca primero un extremo y luego el otro extremo de ESA MISMA distancia. Ejemplo: si hay 25 mm entre ellos, escribe 25.","Before marking: enter how many REAL MILLIMETERS separate the two reference points you will place. Then mark the first endpoint and the other endpoint of THAT SAME distance. Example: if they are 25 mm apart, enter 25."),minvalue=.01,parent=self)
         if mm is None:
-            if not self.mm_per_px:self.status.config(text=self.T("Calibración pendiente: no puedes colocar puntos todavía.","Calibration pending: you cannot place landmarks yet."))
+            if not is_valid_mm_per_px(self.mm_per_px):self.status.config(text=self.T("Calibración pendiente: no puedes colocar puntos todavía.","Calibration pending: you cannot place landmarks yet."))
             return
         self.pending_mm=float(mm);self.calibration_mode=True;self.calibration_clicks=[]
         self.status.config(text=self.T("Paso 2 de 2: marca el PRIMER extremo de la distancia que acabas de indicar.","Step 2 of 2: mark the FIRST endpoint of the distance you entered."))
