@@ -46,6 +46,10 @@ def install() -> None:
             changes.update(ref="Descriptiva; sin límite universal adoptado", lo=None, hi=None)
         elif analysis == "Steiner" and name == "Pog a NB":
             changes.update(ref="2 mm aprox.; media histórica sin banda validada", lo=None, hi=None)
+        elif analysis == "Ricketts" and name == "L1 a A-Pg":
+            changes.update(ref="1 mm aprox.; referencia dependiente de edad y población, sin límite fijo", lo=None, hi=None)
+        elif analysis == "Ricketts" and name == "U1 a A-Pg":
+            changes.update(ref="Descriptiva; sin norma universal adoptada", lo=None, hi=None)
         updated.append(replace(measurement, **changes) if changes else measurement)
 
     engine.MEASUREMENTS[:] = updated
@@ -92,6 +96,20 @@ def install() -> None:
                 None,
                 "°",
                 "Steiner 1953",
+            )
+        )
+    if ("Ricketts", "L1 a A-Pg (°)") not in names:
+        engine.MEASUREMENTS.append(
+            engine.Measurement(
+                "Ricketts",
+                "L1 a A-Pg (°)",
+                "acute",
+                ("L1i", "L1a", "A", "Pg"),
+                "22° ±4°",
+                18.0,
+                26.0,
+                "°",
+                "Ricketts 1960",
             )
         )
 
