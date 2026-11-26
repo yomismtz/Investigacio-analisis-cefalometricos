@@ -516,7 +516,13 @@ class ResearchWorkspace(tk.Tk):
     def canvas_drag(self,e):
         if self.dragging and self.image is not None:
             cx,cy=self.canvas.canvasx(e.x),self.canvas.canvasy(e.y)
-            self.points[self.dragging]=self.canvas_to_image(cx,cy);self.redraw()
+            point=self.canvas_to_image(cx,cy)
+            # A landmark must remain on the radiograph while being dragged.
+            # Keep its last valid position instead of saving off-image geometry.
+            if not calibration.point_inside_image(point,self.image.width,self.image.height):
+                self.status.config(text=self.T("El landmark debe permanecer dentro de la radiografía.","The landmark must remain inside the radiograph."))
+                return
+            self.points[self.dragging]=point;self.redraw()
     def canvas_release(self,e):
         if self.dragging:self.autosave();self.dragging=None;self.update_trace_progress()
     def pan_begin(self,e):self.pan_state=(e.x,e.y,self.offx,self.offy)
