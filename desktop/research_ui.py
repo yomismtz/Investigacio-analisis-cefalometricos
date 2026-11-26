@@ -15,7 +15,7 @@ import yornis_calibration as calibration
 
 from research_db import MAX_CASES, RESEARCH_DIR, ResearchDB
 from research_export import export_audit_csv, export_case_pdf, export_excel, export_json_bundle, export_long_csv, export_study_pdf, export_wide_csv
-from research_protocol import EXCLUSION_REASONS_EN, EXCLUSION_REASONS_ES, analysis_catalog, compute_selected, minimum_landmarks, shared_landmark_summary, trace_qc
+from research_protocol import EXCLUSION_REASONS_EN, EXCLUSION_REASONS_ES, analysis_catalog, compute_selected, minimum_landmarks, requires_calibration, shared_landmark_summary, trace_qc
 from yomceph_theme import PALETTE, RESEARCH_STATUS, SEMANTIC, TRACING
 
 try:
@@ -398,16 +398,16 @@ class ResearchWorkspace(tk.Tk):
         try:self.image=self.load_pil(c["image_path"]); self.image_path=c["image_path"]
         except Exception as e:messagebox.showerror("Yornis",str(e));return
         self.case_id=cid; self.landmarks=minimum_landmarks(self.protocol["selected_variables"]); self.landmark_notes={}; self.landmark_confidence={}
-        # Calibration belongs to this exact image. Until it exists, discard any
-        # stale autosave coordinates and keep all analysis landmarks locked.
+        # Calibration is image-specific and mandatory only when this protocol
+        # contains linear measurements. Angular-only protocols can be traced
+        # without an artificial mm/pixel requirement.
+        needs_calibration=requires_calibration(self.protocol.get("selected_variables",[]))
         self.mm_per_px=c["case_mm_per_px"]
         self.calibration_mode=False; self.calibration_clicks=[]; self.pending_mm=0.0
-        if self.mm_per_px:
+        if self.mm_per_px or not needs_calibration:
             self.points=self.load_autosave(cid) or self.db.latest_landmarks(cid,self.protocol["version"])
         else:
             self.points={}
-            try:self.autosave_path(cid).unlink(missing_ok=True)
-            except Exception:pass
         self.landmark_index=0; self.undo_stack=[]; self.redo_stack=[]
         s=self.db.study(self.study_id)
         self.db.mark_in_progress(cid); self.landmark_list.delete(0,"end")
@@ -418,7 +418,7 @@ class ResearchWorkspace(tk.Tk):
         else:self.trace_meta.config(text=f"{self.T('Sexo','Sex')}: {c['sex'] or '—'} · {self.T('Edad','Age')}: {c['age'] if c['age'] is not None else '—'}")
         self.calib_label.config(text=(f"{self.mm_per_px:.6f} mm/px" if self.mm_per_px else self.T("Falta calibrar la radiografía","Radiograph calibration required")))
         self.tabs.select(self.trace_tab); self.fit_image(); self.update_trace_progress(); self.calculate_preview()
-        if not self.mm_per_px:self.after(180,self.start_calibration)
+        if needs_calibration and not self.mm_per_px:self.after(180,self.start_calibration)
 
     def fit_image(self):
         if self.image is None:return
@@ -437,13 +437,13 @@ class ResearchWorkspace(tk.Tk):
             x,y=self.image_to_canvas(self.calibration_clicks[0]);self.canvas.create_oval(x-6,y-6,x+6,y+6,fill=PALETTE["mint_300"])
     def current_landmark(self):return self.landmarks[self.landmark_index] if self.landmarks else ""
     def pick_landmark(self,e=None):
-        if not self.mm_per_px:
+        if requires_calibration(self.protocol.get("selected_variables",[])) and not self.mm_per_px:
             self.status.config(text=self.T("Calibración obligatoria: coloca los dos puntos de referencia antes de seleccionar landmarks.","Calibration required: place both reference points before selecting landmarks."))
             return
         s=self.landmark_list.curselection();
         if s:self.landmark_index=s[0];self.update_trace_progress();self.redraw();self.center_on_current()
     def step_landmark(self,delta):
-        if not self.mm_per_px:
+        if requires_calibration(self.protocol.get("selected_variables",[])) and not self.mm_per_px:
             self.status.config(text=self.T("Calibración obligatoria: coloca los dos puntos de referencia antes de recorrer o marcar landmarks.","Calibration required: place both reference points before navigating or placing landmarks."))
             return
         if not self.landmarks:return
@@ -503,7 +503,7 @@ class ResearchWorkspace(tk.Tk):
                 self.status.config(text=self.T(f"Calibración guardada: {self.pending_mm:g} mm entre los dos puntos · escala {self.mm_per_px:.6f} mm/píxel.",f"Calibration saved: {self.pending_mm:g} mm between the two points · scale {self.mm_per_px:.6f} mm/pixel."))
                 self.autosave()
             self.redraw();return
-        if not self.mm_per_px:
+        if requires_calibration(self.protocol.get("selected_variables",[])) and not self.mm_per_px:
             self.status.config(text=self.T("Primero calibra la radiografía con dos puntos de distancia conocida.","Calibrate the radiograph with two points of known distance first."))
             return
         near=self.nearest_point(e.x,e.y);k=near or self.current_landmark()
@@ -556,14 +556,23 @@ class ResearchWorkspace(tk.Tk):
         p=RESEARCH_DIR/f"study_{self.study_id:04d}"/"autosave";p.mkdir(parents=True,exist_ok=True);return p/f"case_{cid:04d}.json"
     def autosave(self):
         if not self.case_id:return
-        data={"case_id":self.case_id,"protocol_version":self.protocol.get("version"),"points":self.points,"mm_per_px":self.mm_per_px,"landmark_index":self.landmark_index,"landmark_notes":self.landmark_notes,"landmark_confidence":self.landmark_confidence};self.autosave_path(self.case_id).write_text(json.dumps(data,ensure_ascii=False),encoding="utf-8")
+        case=self.db.case(self.case_id)
+        if not case:return
+        data={"case_id":self.case_id,"protocol_version":self.protocol.get("version"),"image_hash":str(case["file_hash"] or ""),"image_revision":int(case["image_revision"] or 1),"points":self.points,"mm_per_px":self.mm_per_px,"landmark_index":self.landmark_index,"landmark_notes":self.landmark_notes,"landmark_confidence":self.landmark_confidence}
+        self.autosave_path(self.case_id).write_text(json.dumps(data,ensure_ascii=False),encoding="utf-8")
     def load_autosave(self,cid):
         p=self.autosave_path(cid)
         if not p.exists():return {}
         try:
-            d=json.loads(p.read_text(encoding="utf-8"));
-            if d.get("protocol_version")!=self.protocol.get("version"):return {}
-            self.mm_per_px=d.get("mm_per_px") or self.mm_per_px;self.landmark_notes={k:str(v) for k,v in d.get("landmark_notes",{}).items()};self.landmark_confidence={}
+            d=json.loads(p.read_text(encoding="utf-8"))
+            case=self.db.case(cid)
+            if not case:return {}
+            if d.get("case_id")!=cid or d.get("protocol_version")!=self.protocol.get("version"):return {}
+            # Legacy autosaves without image identity are ignored because their
+            # coordinates cannot safely be associated with the current image.
+            if d.get("image_hash")!=str(case["file_hash"] or ""):return {}
+            if d.get("image_revision")!=int(case["image_revision"] or 1):return {}
+            self.landmark_notes={k:str(v) for k,v in d.get("landmark_notes",{}).items()};self.landmark_confidence={}
             for k,v in d.get("landmark_confidence",{}).items():
                 try:self.landmark_confidence[str(k)]=calibration.normalize_landmark_confidence(v)
                 except ValueError:continue
@@ -572,7 +581,7 @@ class ResearchWorkspace(tk.Tk):
     def calculate_preview(self):
         self.results_tree.delete(*self.results_tree.get_children())
         if not self.case_id:return []
-        if not self.mm_per_px:
+        if requires_calibration(self.protocol.get("selected_variables",[])) and not self.mm_per_px:
             self.status.config(text=self.T("No se puede analizar: primero completa la calibración con dos puntos.","Analysis blocked: complete the two-point calibration first."))
             return []
         c=self.db.case(self.case_id);results=compute_selected(self.protocol.get("selected_variables",[]),self.points,self.mm_per_px,sex=c["sex"],age=c["age"])
@@ -587,8 +596,8 @@ class ResearchWorkspace(tk.Tk):
         messagebox.showinfo(self.T("Control de calidad","Quality control"),"\n\n".join(("✓ " if x["level"]=="ok" else "◆ ")+x["message"] for x in issues))
     def calculate_and_save(self):
         if not self.case_id:return
-        if not self.mm_per_px:
-            messagebox.showwarning("Yornis",self.T("Calibración obligatoria. Marca los dos puntos de referencia y completa la distancia real en milímetros antes de calcular o guardar.","Calibration is required. Mark both reference points and enter their real distance in millimeters before calculating or saving."),parent=self)
+        if requires_calibration(self.protocol.get("selected_variables",[])) and not self.mm_per_px:
+            messagebox.showwarning("Yornis",self.T("Este protocolo contiene medidas lineales. Calibra la radiografía antes de calcular o guardar.","This protocol contains linear measurements. Calibrate the radiograph before calculating or saving."),parent=self)
             self.start_calibration()
             return
         results=self.calculate_preview();issues=trace_qc(self.protocol.get("selected_variables",[]),self.points,self.mm_per_px)
@@ -600,8 +609,8 @@ class ResearchWorkspace(tk.Tk):
         else:messagebox.showwarning("Yornis",self.T("El caso se guardó pero aún no cumple todos los resultados del protocolo.","The case was saved but does not yet contain every protocol outcome."))
     def start_review(self):
         if not self.case_id or not self.landmarks:return
-        if not self.mm_per_px:
-            self.status.config(text=self.T("La revisión está bloqueada hasta completar la calibración de dos puntos.","Review is locked until the two-point calibration is complete."))
+        if requires_calibration(self.protocol.get("selected_variables",[])) and not self.mm_per_px:
+            self.status.config(text=self.T("La revisión de este protocolo requiere calibrar la radiografía.","Reviewing this protocol requires radiograph calibration."))
             self.start_calibration()
             return
         self.landmark_index=0;self.step_landmark(0);self.status.config(text=self.T("Modo revisión: usa ←/→ para recorrer landmarks.","Review mode: use ←/→ to move through landmarks."))
