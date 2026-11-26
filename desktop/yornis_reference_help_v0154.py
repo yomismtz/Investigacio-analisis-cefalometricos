@@ -337,7 +337,7 @@ def open_reference_help(root, initial: str | None = None) -> None:
             child.destroy()
         t = TABLES[state["index"]]
         title_var.set(t["title"] + " · " + t["subtitle"])
-        headers = (t.get("first", "Parámetro"), "Norma", "DE", "Si está menor a la norma", "Si está en la norma", "Si está mayor a la norma")
+        headers = (t.get("first", "Parámetro"), "Norma", "DE / rango", "Si está menor a la norma", "Si está en la norma", "Si está mayor a la norma")
         header_bg = (COLORS["header"], COLORS["header"], COLORS["header"], COLORS["low"], COLORS["normal"], COLORS["high"])
         for c, text in enumerate(headers):
             _cell(table_host, text, 0, c, header_bg[c], header=True)
