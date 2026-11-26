@@ -2,6 +2,8 @@ from __future__ import annotations
 
 """Mandatory image-specific calibration guard for Yornis research cases."""
 
+import math
+
 from research_db import ResearchDB
 
 
@@ -29,8 +31,31 @@ def _set_classic_canvas_state(app, state: str) -> None:
             pass
 
 
+def _positive_finite(value) -> bool:
+    """Accept only a real, finite, strictly positive calibration value."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return False
+    return math.isfinite(number) and number > 0
+
+
+def _has_two_distinct_calibration_points(app) -> bool:
+    points = getattr(app, "calibration_points", None)
+    if not isinstance(points, (list, tuple)) or len(points) < 2:
+        return False
+    try:
+        return points[0] != points[1]
+    except Exception:
+        return False
+
+
+def _has_valid_scale(app) -> bool:
+    return _positive_finite(getattr(app, "mm_per_px", None))
+
+
 def install_individual(classic_class) -> None:
-    """Require a fresh two-point calibration each time Individual loads an image."""
+    """Require a fresh, accepted two-point calibration for every loaded image."""
     if getattr(classic_class, "_yornis_calibration_gate_v0164", False):
         return
 
@@ -44,10 +69,10 @@ def install_individual(classic_class) -> None:
             self.calibration_points = []
             self.calibration_real_mm = None
             self.points = {}
-            if hasattr(self, "mm_per_px"):
-                self.mm_per_px = None
+            self.mm_per_px = None
             if hasattr(self, "calibration_mode"):
                 self.calibration_mode = False
+            _set_classic_canvas_state(self, "disabled")
             result = original_load(self, *args, **kwargs)
             _set_classic_canvas_state(self, "disabled")
             if callable(getattr(self, "start_calibration", None)):
@@ -60,26 +85,50 @@ def install_individual(classic_class) -> None:
 
     if callable(original_start):
         def start_calibration(self, *args, **kwargs):
-            # The image canvas is enabled only for the two calibration clicks.
-            _set_classic_canvas_state(self, "normal")
-            # The distance dialog is modal and must close before the user can
-            # click the radiograph. Do not infer calibration readiness from a
-            # private attribute name: the legacy engine stores this value in
-            # its own state. Keep the image canvas enabled for the two clicks;
-            # finish_calibration() will decide whether tracing can continue.
+            # A new calibration attempt invalidates any previous scale immediately.
+            self.calibration_points = []
+            self.calibration_real_mm = None
+            self.mm_per_px = None
+            if hasattr(self, "calibration_mode"):
+                self.calibration_mode = False
+            _set_classic_canvas_state(self, "disabled")
+
             result = original_start(self, *args, **kwargs)
-            _set_classic_canvas_state(self, "normal")
+
+            # The legacy dialog returns with calibration_mode=True only when the
+            # user accepted a positive real-world distance and the engine is
+            # waiting for the two image clicks. Cancellation/invalid input stays
+            # locked; merely closing the modal dialog is not calibration.
+            accepted = (
+                bool(getattr(self, "calibration_mode", False))
+                and _positive_finite(getattr(self, "calibration_real_mm", None))
+            )
+            _set_classic_canvas_state(self, "normal" if accepted else "disabled")
             return result
         classic_class.start_calibration = start_calibration
 
     if callable(original_finish):
         def finish_calibration(self, *args, **kwargs):
-            result = original_finish(self, *args, **kwargs)
-            calibrated = bool(getattr(self, "mm_per_px", None)) or (
-                bool(getattr(self, "calibration_real_mm", None))
-                and len(getattr(self, "calibration_points", []) or []) >= 2
+            # Do not call the legacy calculation with missing, coincident, or
+            # invalid calibration points: some versions divide by zero here.
+            ready = (
+                _positive_finite(getattr(self, "calibration_real_mm", None))
+                and _has_two_distinct_calibration_points(self)
             )
-            _set_classic_canvas_state(self, "normal" if calibrated else "disabled")
+            if not ready:
+                self.mm_per_px = None
+                if hasattr(self, "calibration_mode"):
+                    self.calibration_mode = False
+                _set_classic_canvas_state(self, "disabled")
+                return None
+
+            result = original_finish(self, *args, **kwargs)
+            valid = _has_valid_scale(self)
+            if not valid:
+                self.mm_per_px = None
+                if hasattr(self, "calibration_mode"):
+                    self.calibration_mode = False
+            _set_classic_canvas_state(self, "normal" if valid else "disabled")
             return result
         classic_class.finish_calibration = finish_calibration
 
@@ -94,8 +143,6 @@ def install_database() -> None:
 
     def attach_image_with_calibration_reset(self, case_id, image_path, copy_image=True):
         result = current(self, case_id, image_path, copy_image)
-        # The image importer (including the pseudonymizing hardening layer) owns
-        # file naming and hashing. This wrapper only clears the old image scale.
         self.update_case_calibration(case_id, None)
         case = self.case(case_id)
         if case:
