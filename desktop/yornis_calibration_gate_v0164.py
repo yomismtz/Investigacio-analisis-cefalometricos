@@ -68,6 +68,8 @@ def _requires_calibration(app) -> bool:
     if not selected:
         return True
     try:
+        import yornis_measurement_corrections_v0166 as corrections
+        corrections.install()
         import classic_engine
         measurements = [
             m for m in classic_engine.MEASUREMENTS
