@@ -75,8 +75,23 @@ def _requires_calibration(app) -> bool:
         ]
     except Exception:
         return True
-    # If a selected label cannot be resolved, retain the safe calibration gate.
-    if len(measurements) != len(selected):
+    # CVM and C2-C4 visual alignment are qualitative outcomes, not mm measures.
+    qualitative_special = set()
+    try:
+        import yornis_cervical_v0152 as cervical
+        qualitative_special.add((cervical.CVM_ANALYSIS, "Estadio CVM registrado"))
+        qualitative_special.add((cervical.CVM_ANALYSIS, cervical.CVM_MEASUREMENT))
+    except Exception:
+        pass
+    try:
+        import yornis_alignment_v0152 as alignment
+        qualitative_special.add((alignment.ALIGNMENT_ANALYSIS, alignment.ALIGNMENT_MEASUREMENT))
+    except Exception:
+        pass
+    matched = {(str(m.analysis), str(m.name)) for m in measurements}
+    unresolved = selected - matched - qualitative_special
+    # If any selected label cannot be resolved, retain the safe calibration gate.
+    if unresolved:
         return True
     for m in measurements:
         unit = str(getattr(m, "unit", "") or "").lower().replace(" ", "")
