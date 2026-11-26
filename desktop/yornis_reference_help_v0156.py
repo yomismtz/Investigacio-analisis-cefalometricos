@@ -3,7 +3,7 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
 
-import yornis_reference_help_v0154 as base
+import yornis_reference_help_v0154_all as base
 import yornis_theme
 import yornis_quality_ui_v0156 as quality
 
