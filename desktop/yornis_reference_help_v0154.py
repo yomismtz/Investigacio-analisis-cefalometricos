@@ -60,11 +60,11 @@ TABLES = [
     {
         "id":"tweed","title":"ANÁLISIS DE TWEED","subtitle":"Normas históricas orientativas","first":"Ángulo o plano",
         "source":"Tweed CH. The diagnostic facial triangle in the control of treatment objectives. Am J Orthod. 1969;55(6):651-667. DOI 10.1016/0002-9416(69)90041-4.",
-        "note":"FMA 25° ±5° se presenta como intervalo clínico de referencia; no debe asumirse como desviación estándar universal. Interpretar el triángulo FMA–FMIA–IMPA de forma conjunta y según el protocolo.",
+        "note":"FMA 25° ±4° es la referencia clásica. FMIA no tiene un objetivo único: el objetivo cambia con FMA (aprox. 68° cuando FMA está entre 21° y 29°; 65° cuando FMA ≥30°). Con FMA ≤20°, valorar IMPA y evitar aplicar un objetivo fijo de FMIA; Tweed señala no exceder aproximadamente 94° de IMPA. Interpretar el triángulo completo, no cada ángulo de forma aislada.",
         "rows":[
-            _row("FMA","25°","±5°","Patrón hipodivergente o braquifacial; crecimiento más horizontal y tendencia a sobremordida profunda.","Relación Frankfort-plano mandibular equilibrada.","Patrón hiperdivergente o dolicofacial; crecimiento más vertical y tendencia a mordida abierta."),
-            _row("FMIA","65°","±5°","Incisivo inferior más proinclinado/protrusivo respecto a Frankfort.","Inclinación del incisivo inferior dentro de lo esperado.","Incisivo inferior más retroinclinado o retraído."),
-            _row("IMPA","90°","±5°","Incisivo inferior retroinclinado; posible compensación dentaria en Clase III o apiñamiento.","Inclinación del incisivo inferior equilibrada respecto al plano mandibular.","Incisivo inferior proinclinado; posible compensación en Clase II o protrusión dentoalveolar inferior."),
+            _row("FMA","25°","±4°","Patrón más horizontal que la referencia adoptada; interpretar junto con FMIA e IMPA.","Relación Frankfort-plano mandibular cercana al objetivo clásico.","Patrón más vertical que la referencia adoptada; interpretar junto con FMIA e IMPA."),
+            _row("FMIA","Objetivo condicionado por FMA","No hay DE única","Si FMA 21°–29°: FMIA <68° sugiere mayor proinclinación inferior respecto al objetivo; si FMA ≥30°: comparar con 65°.","FMA 21°–29°: objetivo ≈68°; FMA ≥30°: objetivo ≈65°. Si FMA ≤20°, no aplicar un objetivo FMIA fijo.","FMIA por encima del objetivo condicional sugiere mayor retroinclinación. Con FMA ≤20°, valorar IMPA (referencia de no exceder ≈94°)."),
+            _row("IMPA","90°","±5°","Incisivo inferior más retroinclinado; valorar el FMA y la compensación dentaria.","Referencia histórica aproximada; no interpretar de forma independiente.","Incisivo inferior más proinclinado; si FMA ≤20°, considerar el límite orientativo de 94° descrito por Tweed."),
         ],
     },
     {
