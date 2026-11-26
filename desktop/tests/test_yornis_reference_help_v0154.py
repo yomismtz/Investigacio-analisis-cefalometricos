@@ -56,6 +56,8 @@ class ReferenceHelpTests(unittest.TestCase):
             table = by_id[table_id]
             self.assertGreaterEqual(len(table["rows"]), 4)
             self.assertTrue(table["source"])
+        self.assertIn("no criterios diagnósticos", by_id["powell"]["note"])
+        self.assertIn("no son límites universales", by_id["legan_burstone"]["note"])
 
 
 if __name__ == "__main__":
