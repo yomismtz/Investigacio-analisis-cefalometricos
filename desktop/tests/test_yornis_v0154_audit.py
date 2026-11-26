@@ -98,6 +98,8 @@ class AuditHardeningTests(unittest.TestCase):
             if m.analysis == "Steiner" and "GoGn" in m.name
         )
         self.assertEqual(set(measurement.pts), {"S", "N", "Go", "Gn"})
+        self.assertEqual((measurement.lo, measurement.hi), (27.0, 37.0))
+        self.assertIn("32° ±5°", measurement.ref)
 
         # SN is vertical (90° to horizontal); Go-Gn is 58° to horizontal.
         # The smaller inter-plane angle is therefore exactly 32°.
