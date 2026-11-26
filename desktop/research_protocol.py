@@ -4,6 +4,8 @@ import math
 from dataclasses import asdict, dataclass
 from typing import Any
 
+import yornis_measurement_corrections_v0166 as measurement_corrections
+measurement_corrections.install()
 import classic_engine as engine
 
 EXCLUSION_REASONS_ES = [
