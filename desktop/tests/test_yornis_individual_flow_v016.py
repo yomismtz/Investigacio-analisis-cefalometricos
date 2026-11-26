@@ -193,10 +193,11 @@ class IndividualSelectorFlowTests(unittest.TestCase):
 
     def test_linear_individual_selection_still_requires_calibration(self):
         import yornis_calibration_gate_v0164 as gate
+        import yornis_cervical_v0152 as cervical_module
         angular = type("Angular", (), {"individual_measurements": {"Steiner": ["SNA"]}})()
         linear = type("Linear", (), {"individual_measurements": {"Steiner": ["U1–NA (mm)"]}})()
-        cvm = type("CVM", (), {"individual_measurements": {"CVM C2–C4": ["Estadio CVM registrado"]}})()
-        cervical = type("Cervical", (), {"individual_measurements": {"Postura cervical C1–C7": ["Lordosis cervical C1–C7"]}})()
+        cvm = type("CVM", (), {"individual_measurements": {cervical_module.CVM_ANALYSIS: [cervical_module.CVM_MEASUREMENT]}})()
+        cervical = type("Cervical", (), {"individual_measurements": {cervical_module.POSTURE_ANALYSIS: [cervical_module.POSTURE_MEASUREMENT]}})()
         self.assertFalse(gate._requires_calibration(angular))
         self.assertFalse(gate._requires_calibration(cvm))
         self.assertFalse(gate._requires_calibration(cervical))
