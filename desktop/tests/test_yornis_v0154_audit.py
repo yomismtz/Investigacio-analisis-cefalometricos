@@ -121,6 +121,9 @@ class AuditHardeningTests(unittest.TestCase):
         self.assertEqual(downs_rows["Ángulo de convexidad"][2], "±5.1°")
         self.assertEqual(downs_rows["Plano A-B"][2], "±3.7°")
         self.assertIn("20 sujetos blancos de 12–17 años", downs["note"])
+        self.assertIn("L1/plano oclusal", downs_rows)
+        self.assertIn("L1/plano mandibular", downs_rows)
+        self.assertIn("U1 a A-Pg", downs_rows)
 
         mcnamara = next(table for table in refs.TABLES if table["id"] == "mcnamara")
         rows = {row[0]: row for row in mcnamara["rows"]}
