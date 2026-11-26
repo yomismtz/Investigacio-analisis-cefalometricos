@@ -52,6 +52,27 @@ class ReferenceHelpTests(unittest.TestCase):
         self.assertIn("No aplicar como corte universal", by_id["lordosis_c1_c7"]["note"])
         self.assertNotIn("40° ±5°", by_id["lordosis_c1_c7"]["source"])
 
+    def test_reference_source_has_no_duplicate_dictionary_keys(self):
+        import ast
+        source_path = Path(__file__).resolve().parents[1] / "yornis_reference_help_v0154_all.py"
+        tree = ast.parse(source_path.read_text(encoding="utf-8"))
+        duplicates = []
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Dict):
+                continue
+            keys = [key.value for key in node.keys if isinstance(key, ast.Constant) and isinstance(key.value, str)]
+            repeated = sorted({key for key in keys if keys.count(key) > 1})
+            if repeated:
+                duplicates.append((getattr(node, "lineno", 0), repeated))
+        self.assertFalse(duplicates, f"Duplicate dictionary keys silently overwrite reference data: {duplicates}")
+
+    def test_cvm_reference_table_uses_baccetti_concavity_sequence(self):
+        cvm = next(table for table in refs.TABLES if table["id"] == "cvm")
+        rows = {row[0]: row for row in cvm["rows"]}
+        self.assertIn("desde CS2", rows["Concavidad borde inferior C2"][1])
+        self.assertIn("desde CS3", rows["Concavidad borde inferior C3"][1])
+        self.assertIn("desde CS4", rows["Concavidad borde inferior C4"][1])
+
     def test_last_four_tables_have_clinical_context(self):
         by_id = {t["id"]: t for t in refs.TABLES}
         for table_id in ("powell", "via_aerea", "craneo_cervical", "lordosis_c1_c7"):
