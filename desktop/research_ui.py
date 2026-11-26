@@ -416,7 +416,8 @@ class ResearchWorkspace(tk.Tk):
         self.trace_case_title.config(text=f"#{c['case_number']} · {c['study_code']}")
         if bool(s["blind_mode"]):self.trace_meta.config(text=self.T("Modo ciego activo: edad/sexo ocultos","Blind mode active: age/sex hidden"))
         else:self.trace_meta.config(text=f"{self.T('Sexo','Sex')}: {c['sex'] or '—'} · {self.T('Edad','Age')}: {c['age'] if c['age'] is not None else '—'}")
-        self.calib_label.config(text=(f"{self.mm_per_px:.6f} mm/px" if is_valid_mm_per_px(self.mm_per_px) else self.T("Falta calibrar la radiografía","Radiograph calibration required")))
+        calibration_label=(f"{self.mm_per_px:.6f} mm/px" if is_valid_mm_per_px(self.mm_per_px) else (self.T("Calibración requerida para medidas lineales","Calibration required for linear measurements") if needs_calibration else self.T("No necesaria para medidas angulares","Not required for angular measurements")))
+        self.calib_label.config(text=calibration_label)
         self.tabs.select(self.trace_tab); self.fit_image(); self.update_trace_progress(); self.calculate_preview()
         if needs_calibration and not is_valid_mm_per_px(self.mm_per_px):self.after(180,self.start_calibration)
 
@@ -552,7 +553,7 @@ class ResearchWorkspace(tk.Tk):
             if not messagebox.askyesno(self.T("Recalibrar radiografía","Recalibrate radiograph"),self.T("Esta radiografía ya tiene una calibración guardada. ¿Deseas sustituirla?","This radiograph already has a saved calibration. Replace it?"),parent=self):return
         mm=simpledialog.askfloat(self.T("Calibrar Yornis","Calibrate Yornis"),self.T("Antes de marcar: indica cuántos MILÍMETROS REALES hay entre los dos puntos de referencia que vas a colocar. Después, marca primero un extremo y luego el otro extremo de ESA MISMA distancia. Ejemplo: si hay 25 mm entre ellos, escribe 25.","Before marking: enter how many REAL MILLIMETERS separate the two reference points you will place. Then mark the first endpoint and the other endpoint of THAT SAME distance. Example: if they are 25 mm apart, enter 25."),minvalue=.01,parent=self)
         if mm is None:
-            if not is_valid_mm_per_px(self.mm_per_px):self.status.config(text=self.T("Calibración pendiente: no puedes colocar puntos todavía.","Calibration pending: you cannot place landmarks yet."))
+            if requires_calibration(self.protocol.get("selected_variables",[])) and not is_valid_mm_per_px(self.mm_per_px):self.status.config(text=self.T("Calibración pendiente: no puedes colocar puntos todavía.","Calibration pending: you cannot place landmarks yet."))
             return
         self.pending_mm=float(mm);self.calibration_mode=True;self.calibration_clicks=[]
         self.status.config(text=self.T("Paso 2 de 2: marca el PRIMER extremo de la distancia que acabas de indicar.","Step 2 of 2: mark the FIRST endpoint of the distance you entered."))
