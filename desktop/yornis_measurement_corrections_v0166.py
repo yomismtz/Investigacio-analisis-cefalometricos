@@ -82,11 +82,18 @@ def install() -> None:
             return original_compute(measurement, points, mm_per_px, face_direction) - 90.0
         if measurement.kind == "signed_ab_plane":
             anterior = (1.0, 0.0) if face_direction == "right" else (-1.0, 0.0)
-            facial = engine.oriented_axis(engine.vec(points["Pg"], points["N"]), anterior)
-            ab = engine.oriented_axis(engine.vec(points["B"], points["A"]), anterior)
+            facial_raw = engine.vec(points["Pg"], points["N"])
+            ab_raw = engine.vec(points["B"], points["A"])
+            if not all(math.isfinite(v) for v in (*facial_raw, *ab_raw)):
+                raise ValueError("Landmarks no finitos para el plano A-B de Downs")
+            if math.hypot(*facial_raw) < 1e-9 or math.hypot(*ab_raw) < 1e-9:
+                raise ValueError("No se puede calcular el plano A-B con una línea de longitud cero")
+            facial = engine.oriented_axis(facial_raw, anterior)
+            ab = engine.oriented_axis(ab_raw, anterior)
             cross = ab[0] * facial[1] - ab[1] * facial[0]
             dot = ab[0] * facial[0] + ab[1] * facial[1]
-            return math.degrees(math.atan2(cross, dot))
+            side_sign = 1.0 if face_direction == "right" else -1.0
+            return side_sign * math.degrees(math.atan2(cross, dot))
         return original_compute(measurement, points, mm_per_px, face_direction)
 
     engine.compute = compute
