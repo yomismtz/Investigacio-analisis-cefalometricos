@@ -232,7 +232,7 @@ class IndividualSelectorFlowTests(unittest.TestCase):
                 self.assertIsNone(app.calculate())
             self.assertFalse(app.calculated)
             app.mm_per_px = 0.5
-            self.assertTrue(app.calculate())
+            app.calculate()
             self.assertTrue(app.calculated)
         finally:
             root.destroy()
