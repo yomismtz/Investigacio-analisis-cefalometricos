@@ -55,10 +55,18 @@ _EXTRA_TABLES = [
     },
 ]
 
-existing = {t.get('id') for t in _base.TABLES}
+# Replace by id instead of merely skipping existing entries. Other UI
+# compatibility modules may have populated a partial table earlier in the
+# same Python process; the canonical clinical table must win deterministically.
 for item in _EXTRA_TABLES:
-    if item['id'] not in existing:
+    existing_index = next(
+        (index for index, table in enumerate(_base.TABLES) if table.get("id") == item["id"]),
+        None,
+    )
+    if existing_index is None:
         _base.TABLES.append(item)
+    else:
+        _base.TABLES[existing_index] = item
 
 TABLES = _base.TABLES
 DISCLAIMER = _base.DISCLAIMER
