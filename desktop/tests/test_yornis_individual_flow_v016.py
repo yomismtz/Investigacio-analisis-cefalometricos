@@ -132,6 +132,13 @@ class IndividualSelectorFlowTests(unittest.TestCase):
             app.finish_calibration()
             self.assertEqual(str(app.canvas.cget("state")), "normal")
 
+            # Cancelling a recalibration on the same image must preserve the
+            # already accepted image-specific scale and keep tracing enabled.
+            app.cancel_calibration = True
+            app.start_calibration()
+            self.assertAlmostEqual(app.mm_per_px, 0.2)
+            self.assertEqual(str(app.canvas.cget("state")), "normal")
+
             app.start_calibration()
             app.calibration_points = [(4.0, 4.0), (4.0, 4.0)]
             app.mm_per_px = 0.2
