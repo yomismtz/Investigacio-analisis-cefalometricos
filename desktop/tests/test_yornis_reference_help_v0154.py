@@ -36,20 +36,19 @@ class ReferenceHelpTests(unittest.TestCase):
         by_id = {t["id"]: t for t in refs.TABLES}
 
         airway = {row[0]: row for row in by_id["via_aerea"]["rows"]}
-        self.assertIn("17.4 mm", airway["Vía aérea superior (nasofaringe)"][1])
-        self.assertIn("≤5 mm", airway["Vía aérea superior (nasofaringe)"][3])
-        self.assertIn(">15 mm", airway["Vía aérea inferior (orofaringe)"][5])
-        self.assertIn("otorrinolaringológica", by_id["via_aerea"]["note"])
+        self.assertIn("7.500 mm", airway["McNamara superior · 6 años"][1])
+        self.assertIn("17 mm", airway["McNamara superior · referencia histórica de la app"][1])
+        self.assertIn("se calculan dentro del análisis McNamara", by_id["via_aerea"]["note"])
+        self.assertIn("no diagnostica obstrucción ni apnea", by_id["via_aerea"]["note"])
 
         cranio = {row[0]: row for row in by_id["craneo_cervical"]["rows"]}
-        self.assertIn("92.18°", cranio["SN-OPT"][1])
-        self.assertIn("Sin referencia verificada", cranio["Espacio C1–C2"][1])
-        self.assertIn("120 varones daneses", by_id["craneo_cervical"]["note"])
-        self.assertIn("no umbrales universales", by_id["craneo_cervical"]["note"])
+        self.assertIn("101.72°", cranio["SN-OPT · control pediátrico 9–16 años"][1])
+        self.assertIn("120 varones daneses", by_id["craneo_cervical"]["source"])
+        self.assertIn("no como normalidad universal", by_id["craneo_cervical"]["note"])
 
         lordosis = {row[0]: row for row in by_id["lordosis_c1_c7"]["rows"]}
-        self.assertIn("Sin norma directa validada", lordosis["Ángulo de lordosis C1–C7"][1])
-        self.assertIn("No aplicar como corte universal", by_id["lordosis_c1_c7"]["note"])
+        self.assertIn("50.7°", lordosis["C1–C7 · 6–19 años · ambos sexos"][1])
+        self.assertIn("No se aplica un umbral universal", by_id["lordosis_c1_c7"]["note"])
         self.assertNotIn("40° ±5°", by_id["lordosis_c1_c7"]["source"])
 
     def test_reference_source_has_no_duplicate_dictionary_keys(self):
