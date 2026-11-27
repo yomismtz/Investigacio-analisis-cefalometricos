@@ -35,6 +35,8 @@ import yornis_audit_hardening_v0154 as hard
 hard.install_global()
 import yornis_calibration_gate_v0164 as calibration_gate
 calibration_gate.install_database()
+import yornis_image_identity_v0163 as image_identity_guard
+image_identity_guard.install_cervical_result_identity()
 
 import classic_engine as engine
 import research_protocol as rp
