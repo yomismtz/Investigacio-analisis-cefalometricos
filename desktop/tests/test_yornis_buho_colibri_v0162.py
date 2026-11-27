@@ -78,6 +78,13 @@ class BuhoColibriPaletteTests(unittest.TestCase):
                         self.assertEqual((wav.getnchannels(), wav.getsampwidth()), (1, 2))
                         self.assertGreater(wav.getnframes(), 1000)
 
+    def test_every_palette_has_a_matching_yom_dental_logo(self):
+        self.assertEqual(set(yornis_theme.BRAND_LOGO_FILES), set(yornis_theme.theme_names()))
+        for bird in yornis_theme.theme_names():
+            logo = yornis_theme.brand_logo_path(bird)
+            self.assertIsNotNone(logo)
+            self.assertTrue(logo.is_file(), f"Missing YOM Dental palette logo for {bird}")
+
     def test_two_original_vector_mascots_are_available(self):
         for bird in NEW_BIRDS:
             svg = DESKTOP / "assets" / "birds" / f"{bird}.svg"
