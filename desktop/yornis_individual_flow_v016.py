@@ -4,6 +4,8 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 
 import research_workflow as workflow
+import yornis_virtual_assistant_v0157 as assistant
+import yornis_theme
 
 _ORIGINAL_SELECTED_NAMES = workflow.selected_names
 
@@ -93,7 +95,9 @@ def _open_individual_selector(self) -> None:
     dialog = tk.Toplevel(self)
     dialog.title(_tr(self, "Yornis · Caso individual · Selección", "Yornis · Individual case · Selection"))
     dialog.geometry("1040x790")
-    dialog.minsize(900, 680)
+    dialog.minsize(720, 540)
+    dialog.resizable(True, True)
+    dialog._yornis_analysis_mascots = []
     dialog.transient(self)
     dialog.grab_set()
 
@@ -129,7 +133,7 @@ def _open_individual_selector(self) -> None:
     ttk.Label(steps, text="→", style="Caption.TLabel").pack(side="left", padx=8)
     ttk.Label(steps, text=_tr(self, "2  Medidas / ángulos", "2  Measurements / angles"), style="IndividualStep.TLabel").pack(side="left")
     ttk.Label(steps, text="→", style="Caption.TLabel").pack(side="left", padx=8)
-    ttk.Label(steps, text=_tr(self, "3  Puntos", "3  Landmarks"), style="IndividualStep.TLabel").pack(side="left")
+    ttk.Label(steps, text=_tr(self, "3  Puntos anatómicos + calibración", "3  Anatomical points + calibration"), style="IndividualStep.TLabel").pack(side="left")
 
     body = ttk.Frame(root)
     body.pack(fill="both", expand=True)
@@ -237,6 +241,9 @@ def _open_individual_selector(self) -> None:
         left.pack(side="left", fill="x", expand=True)
         title_row = ttk.Frame(left, style="Panel.TFrame")
         title_row.pack(fill="x")
+        mascot = assistant.make_avatar_photo(dialog, 32, yornis_theme.current_theme_name())
+        dialog._yornis_analysis_mascots.append(mascot)
+        ttk.Label(title_row, image=mascot).pack(side="left", padx=(0, 7))
         ttk.Checkbutton(title_row, variable=analysis_vars[analysis]).pack(side="left", padx=(0, 6))
         ttk.Label(title_row, text=analysis, style="IndividualTitle.TLabel").pack(side="left")
         ttk.Label(left, text=_tr(self, "Selecciona el análisis y después define sus resultados.", "Select the analysis, then define its outcomes."), style="IndividualBody.TLabel").pack(anchor="w", pady=(4, 0))

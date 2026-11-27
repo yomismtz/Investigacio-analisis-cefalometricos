@@ -88,30 +88,47 @@ def _protocol_version(workspace) -> int:
 def _save_alignment(workspace, result: dict, notes: str = "") -> None:
     if not getattr(workspace, "case_id", None) or not hasattr(workspace, "db"):
         return
-    if result.get("code") is None:
-        return
     db = workspace.db
     _ensure_columns(db)
     version = _protocol_version(workspace)
+    image_hash, image_revision = cervical._image_identity(db, workspace.case_id)
+    if result.get("code") is None:
+        with db.connect() as con:
+            con.execute(
+                "UPDATE results SET image_hash='historical:incomplete-alignment-review',image_revision=-ABS(COALESCE(image_revision,1)) "
+                "WHERE case_id=? AND protocol_version=? AND analysis=? AND measurement=? "
+                "AND image_hash=? AND image_revision=?",
+                (workspace.case_id, version, ALIGNMENT_ANALYSIS, ALIGNMENT_MEASUREMENT, image_hash, image_revision),
+            )
+            con.execute(
+                "INSERT INTO cervical_assessments(case_id,protocol_version,image_hash,image_revision,alignment_code,alignment_class,alignment_notes,updated_at) "
+                "VALUES(?,?,?,?,NULL,?,?,?) "
+                "ON CONFLICT(case_id,protocol_version) DO UPDATE SET image_hash=excluded.image_hash,image_revision=excluded.image_revision,"
+                "alignment_code=NULL,alignment_class=excluded.alignment_class,alignment_notes=excluded.alignment_notes,updated_at=excluded.updated_at",
+                (workspace.case_id, version, image_hash, image_revision, result.get("label", "No concluyente"), notes.strip(), _now()),
+            )
+        return
     interpretation = result["interpretation"]
     if notes.strip():
         interpretation += " Observaciones: " + notes.strip()
     with db.connect() as con:
         con.execute(
-            "INSERT INTO cervical_assessments(case_id,protocol_version,alignment_code,alignment_class,alignment_notes,updated_at) "
-            "VALUES(?,?,?,?,?,?) "
+            "INSERT INTO cervical_assessments(case_id,protocol_version,image_hash,image_revision,alignment_code,alignment_class,alignment_notes,updated_at) "
+            "VALUES(?,?,?,?,?,?,?,?) "
             "ON CONFLICT(case_id,protocol_version) DO UPDATE SET "
-            "alignment_code=excluded.alignment_code,alignment_class=excluded.alignment_class," 
+            "image_hash=excluded.image_hash,image_revision=excluded.image_revision,"
+            "alignment_code=excluded.alignment_code,alignment_class=excluded.alignment_class,"
             "alignment_notes=excluded.alignment_notes,updated_at=excluded.updated_at",
-            (workspace.case_id, version, int(result["code"]), result["label"], notes.strip(), _now()),
+            (workspace.case_id, version, image_hash, image_revision, int(result["code"]), result["label"], notes.strip(), _now()),
         )
-        con.execute(
-            "DELETE FROM results WHERE case_id=? AND protocol_version=? AND analysis=? AND measurement=?",
+        next_version = con.execute(
+            "SELECT COALESCE(MAX(version),0)+1 FROM results "
+            "WHERE case_id=? AND protocol_version=? AND analysis=? AND measurement=?",
             (workspace.case_id, version, ALIGNMENT_ANALYSIS, ALIGNMENT_MEASUREMENT),
-        )
+        ).fetchone()[0]
         con.execute(
-            "INSERT INTO results(case_id,protocol_version,analysis,measurement,value,unit,reference_text,interpretation,version,created_at) "
-            "VALUES(?,?,?,?,?,?,?,?,1,?)",
+            "INSERT INTO results(case_id,protocol_version,analysis,measurement,value,unit,reference_text,interpretation,image_hash,image_revision,version,created_at) "
+            "VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
             (
                 workspace.case_id,
                 version,
@@ -121,6 +138,9 @@ def _save_alignment(workspace, result: dict, notes: str = "") -> None:
                 "categoría",
                 ALIGNMENT_REFERENCE + " Código: 1=Lordosis normal; 2=Rectificación; 3=Cifosis; 4=Hiperlordosis.",
                 interpretation,
+                image_hash,
+                image_revision,
+                int(next_version),
                 _now(),
             ),
         )

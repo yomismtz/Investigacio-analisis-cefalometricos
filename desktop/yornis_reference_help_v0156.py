@@ -3,7 +3,10 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
 
-import yornis_reference_help_v0154 as base
+# Load the extended catalog: 13 core tables plus 4 additional reference modules.
+# Reference spreads are labeled explicitly because not every ± value is an original SD.
+# Table notes retain age, sex, magnification, cohort, and method limitations.
+import yornis_reference_help_v0154_all as base
 import yornis_theme
 import yornis_quality_ui_v0156 as quality
 
@@ -60,7 +63,7 @@ def open_reference_help(root, initial: str | None = None) -> None:
     ttk.Label(left_head, text="Referencias cefalométricas", style="Title.TLabel").pack(anchor="w")
     ttk.Label(
         left_head,
-        text="17 tablas · referencias históricas, de muestra y por edad/sexo cuando existe evidencia compatible",
+        text=f"{len(TABLES)} tablas · referencias históricas, de muestra y por edad/sexo cuando existe evidencia compatible",
         style="Caption.TLabel",
     ).pack(anchor="w", pady=(3, 0))
     ttk.Button(header, text="Cerrar  Esc", style="Ghost.TButton", command=win.destroy).pack(side="right", padx=(12, 0))
@@ -185,7 +188,7 @@ def open_reference_help(root, initial: str | None = None) -> None:
         for child in table_host.winfo_children():
             child.destroy()
         headers = (
-            table.get("first", "Parámetro"), "Referencia", "DE",
+            table.get("first", "Parámetro"), "Referencia", "DE / rango",
             "Menor a referencia", "Dentro de referencia", "Mayor a referencia",
         )
         header_bg = (t["panel_alt"], t["panel_alt"], t["panel_alt"], "#FFF3BF", "#DDF6E8", "#F8DDE5")

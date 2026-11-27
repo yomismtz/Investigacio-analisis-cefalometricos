@@ -2,14 +2,18 @@ from __future__ import annotations
 
 import yornis_desktop_v01591 as previous
 import yornis_modern_ui_v0160 as modern_ui
+import yornis_viewport_v0165 as viewport_ui
+import yornis_launcher_preferences_v0167 as launcher_preferences
+
+viewport_ui.install()
 
 modern_ui.install()
 
-APP_VERSION = "0.16.2 Paletas Búho + Colibrí + Sonido Offline"
+APP_VERSION = "0.16.7 Inicio configurable · Tipografía adaptable · Coro de aves"
 
 
 class Launcher(previous.Launcher):
-    """v0.16.2: ten bird palettes, real offline recordings and unchanged clinical workflows."""
+    """v0.16.3: thirteen palettes, original offline recordings and audited clinical workflows."""
 
     def __init__(self):
         super().__init__()
@@ -22,11 +26,16 @@ class Launcher(previous.Launcher):
             width = min(1380, screen_w)
             height = min(900, screen_h)
             self.geometry(f"{width}x{height}")
-            self.minsize(960, 680)
+            self.minsize(760, 600)
             self.resizable(True, True)
         except Exception:
             pass
         modern_ui.apply_modern_styles(self)
+        # Keep the existing startup sound controls in the rebuilt launcher.
+        # The v0.15.9 audio controls are attached by its rebuild hook; restore
+        # them here because the modern launcher rebuild path is inherited.
+        import yornis_startup_audio_v0159 as startup_audio
+        startup_audio.attach_sound_controls(self)
         if hasattr(self, "ver_lbl"):
             self.ver_lbl.configure(text=f"v{APP_VERSION}")
 
@@ -34,6 +43,9 @@ class Launcher(previous.Launcher):
         super().refresh_text()
         if hasattr(self, "ver_lbl"):
             self.ver_lbl.configure(text=f"v{APP_VERSION}")
+
+
+launcher_preferences.install(Launcher)
 
 
 def main():

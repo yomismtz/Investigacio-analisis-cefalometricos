@@ -18,7 +18,7 @@ LEGACY_BIRDS = {
     "Agaporni", "Tucán", "Pavorreal", "Ninfa", "Faisán", "Quetzal",
     "Guacamaya Roja", "Guacamaya Azul",
 }
-NEW_BIRDS = {"Búho", "Colibrí"}
+NEW_BIRDS = {"Búho", "Colibrí", "Flamenco", "Colorín siete colores", "Tángara del paraíso"}
 
 
 class BuhoColibriPaletteTests(unittest.TestCase):
@@ -30,9 +30,9 @@ class BuhoColibriPaletteTests(unittest.TestCase):
         owl = yornis_theme.THEMES["Búho"]
         hummingbird = yornis_theme.THEMES["Colibrí"]
         self.assertEqual((owl["primary"], owl["secondary"], owl["accent"], owl["accent_soft"]),
-                         ("#493052", "#76518A", "#C49A45", "#F3E8D2"))
-        self.assertEqual((hummingbird["primary"], hummingbird["secondary"], hummingbird["accent"], hummingbird["panel_alt"]),
-                         ("#087D64", "#16AFA5", "#A5D94D", "#DDF5E9"))
+                         ("#805137", "#452B25", "#C68A32", "#F3E8D2"))
+        self.assertEqual((hummingbird["primary"], hummingbird["secondary"], hummingbird["accent"], hummingbird["accent_soft"]),
+                         ("#15966D", "#20B9B1", "#2777CF", "#F8F8F0"))
         for theme in (owl, hummingbird):
             self.assertEqual(set(theme), {
                 "description_es", "bg", "panel", "panel_alt", "text", "muted",
@@ -43,30 +43,52 @@ class BuhoColibriPaletteTests(unittest.TestCase):
                 if key != "description_es":
                     self.assertRegex(value, r"^#[0-9A-Fa-f]{6}$")
 
-    def test_both_birds_have_assistant_profiles_and_audio_signatures(self):
+    def test_every_bird_has_eight_distinct_species_colors(self):
+        self.assertEqual(set(yornis_theme.BIRD_COLOR_SWATCHES), set(yornis_theme.theme_names()))
+        for bird, colors in yornis_theme.BIRD_COLOR_SWATCHES.items():
+            self.assertEqual(len(colors), 8, bird)
+            self.assertEqual(len(set(colors)), 8, bird)
+            for color in colors:
+                self.assertRegex(color, r"^#[0-9A-Fa-f]{6}$")
+        for bird in yornis_theme.theme_names():
+            yornis_theme.apply_theme(bird, persist=False)
+            for index, color in enumerate(yornis_theme.BIRD_COLOR_SWATCHES[bird], 1):
+                self.assertEqual(yornis_theme.base.PALETTE[f"bird_color_{index}"], color)
+
+    def test_all_new_birds_have_matching_original_audio_and_assistant_profiles(self):
         self.assertEqual(set(yornis_theme.theme_names()), set(assistant.BIRD_PROFILES))
         self.assertEqual(assistant.BIRD_PROFILES["Búho"]["shape"], "owl")
         self.assertEqual(assistant.BIRD_PROFILES["Colibrí"]["shape"], "hummingbird")
-        self.assertEqual(set(yornis_theme.theme_names()), set(signatures._SIGNATURES))
-        self.assertEqual(set(yornis_theme.theme_names()), set(startup_audio._THEME_FINALE))
-        self.assertNotEqual(signatures.synthesize_signature("Búho", 35),
-                            signatures.synthesize_signature("Colibrí", 35))
-
-    def test_offline_audio_variants_exist_for_both_new_birds(self):
+        self.assertEqual(signatures.BIRD_AUDIO_FILES["Búho"], "buho real.mp3")
+        self.assertEqual(signatures.BIRD_AUDIO_FILES["Colibrí"], "colibri.mp3")
+        self.assertEqual(signatures.BIRD_AUDIO_FILES["Flamenco"], "Flamingo Bird Sound 🦩#shorts (mp3cut.net).mp3")
+        self.assertEqual(signatures.BIRD_AUDIO_FILES["Colorín siete colores"], "sonido colorin.mp3")
+        self.assertEqual(signatures.BIRD_AUDIO_FILES["Tángara del paraíso"], "Paradise Tanager (Tangara chilensis) #birds #birdsounds #birdsong (mp3cut.net).mp3")
         for bird in NEW_BIRDS:
-            for folder in ("bird_audio", "bird_startup_audio"):
-                for volume in (20, 35, 50, 70, 90):
-                    path = DESKTOP / "assets" / folder / f"{bird}_{volume}.wav"
+            self.assertTrue(signatures.source_audio_path(bird).is_file())
+            self.assertTrue(assistant._bird_asset_path(bird).is_file(), f"Missing icon for {bird}")
+            self.assertTrue(yornis_theme.brand_logo_path(bird).is_file(), f"Missing YOM Dental logo for {bird}")
+            for volume in signatures.VOLUME_LEVELS:
+                for path in (
+                    signatures.bundled_signature_path(bird, volume),
+                    startup_audio.bundled_wav_path(bird, volume),
+                ):
                     self.assertTrue(path.is_file(), f"Missing {path}")
                     with wave.open(str(path), "rb") as wav:
                         self.assertEqual((wav.getnchannels(), wav.getsampwidth()), (1, 2))
                         self.assertGreater(wav.getnframes(), 1000)
 
-    def test_two_original_vector_mascots_are_available(self):
+    def test_every_palette_has_a_matching_yom_dental_logo(self):
+        self.assertEqual(set(yornis_theme.BRAND_LOGO_FILES), set(yornis_theme.theme_names()))
+        for bird in yornis_theme.theme_names():
+            logo = yornis_theme.brand_logo_path(bird)
+            self.assertIsNotNone(logo)
+            self.assertTrue(logo.is_file(), f"Missing YOM Dental palette logo for {bird}")
+
+    def test_all_new_bird_icons_are_available(self):
         for bird in NEW_BIRDS:
-            svg = DESKTOP / "assets" / "birds" / f"{bird}.svg"
-            self.assertTrue(svg.is_file(), f"Missing {svg}")
-            self.assertIn("<svg", svg.read_text(encoding="utf-8"))
+            icon = assistant._bird_asset_path(bird)
+            self.assertTrue(icon.is_file(), f"Missing icon for {bird}")
 
 
 if __name__ == "__main__":

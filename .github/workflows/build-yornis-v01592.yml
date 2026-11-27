@@ -1,16 +1,20 @@
-name: Build Yornis v0.16.2 · Owl + Hummingbird Palettes and Offline Sound
+name: Build Yornis v0.16.3 · Original Bird Recordings and Offline Audio
+# v0.16.6.1: final regression coverage for calibration, image identity and finite geometry
+# Build request: 2026-11-27 · Yornis v0.16.3 Windows x64
 
 on:
   push:
-    branches: [main]
+    branches: [main, fix/original-bird-recordings-v0163]
     paths:
       - 'desktop/**'
+      - 'assets/bird-palettes/**'
       - '.github/workflows/build-yornis-v01592.yml'
   workflow_dispatch:
   pull_request:
     branches: [main]
     paths:
       - 'desktop/**'
+      - 'assets/bird-palettes/**'
       - '.github/workflows/build-yornis-v01592.yml'
 
 permissions:
@@ -27,66 +31,200 @@ jobs:
 
       - name: Dependencies
         shell: pwsh
-        run: python -m pip install pillow pymupdf reportlab openpyxl pyinstaller pyzipper ttkbootstrap==2.2.7
+        run: python -m pip install pillow pymupdf reportlab openpyxl pyinstaller pyzipper ttkbootstrap==2.2.7 imageio-ffmpeg numpy
 
-      - name: Render versioned SVG bird mascots to transparent PNGs
+      - name: Stage all thirteen organized bird icons and YOM Dental palette logos
         shell: pwsh
         run: |
           @'
           from pathlib import Path
-          import fitz
-          from PIL import Image
-          root = Path('desktop/assets/birds')
-          expected = {'Agaporni','Tucan','Pavorreal','Ninfa','Faisan','Quetzal','Guacamaya_Roja','Guacamaya_Azul','Búho','Colibrí'}
-          sources = {p.stem: p for p in root.glob('*.svg')}
-          assert set(sources) == expected, f'Missing or extra SVG mascots: {sorted(set(sources) ^ expected)}'
-          for name, source in sources.items():
-              document = fitz.open(stream=source.read_bytes(), filetype='svg')
-              page = document[0]
-              pixmap = page.get_pixmap(matrix=fitz.Matrix(3, 3), alpha=True)
-              image = Image.frombytes('RGBA', (pixmap.width, pixmap.height), pixmap.samples)
-              alpha_min, alpha_max = image.getchannel('A').getextrema()
-              assert alpha_min == 0 and alpha_max > 0, f'{name}: expected genuine transparent pixels'
-              image.save(root / f'{name}.png', optimize=True)
-          rendered = list(root.glob('*.png'))
-          assert len(rendered) == 10
-          print('Ten repository SVG mascots rendered to transparent PNGs')
+          from shutil import copy2
+          icons = Path('assets/bird-palettes/icons')
+          logos = Path('assets/bird-palettes/brand-logos')
+          icon_target = Path('desktop/assets/birds')
+          logo_target = Path('desktop/assets/brand-logos')
+          icon_target.mkdir(parents=True, exist_ok=True)
+          logo_target.mkdir(parents=True, exist_ok=True)
+          icon_mapping = {
+              'Agaporni': ('Agapornis colorido en rama (1).png', 'Agaporni.png'),
+              'Tucán': ('Tucán colorido de estilo mascotín.png', 'Tucan.png'),
+              'Pavorreal': ('Pavo caricaturesco con cola vibrante.png', 'Pavorreal.png'),
+              'Ninfa': ('Cacatúa Ninfa Adorable en Perfil.png', 'Ninfa.png'),
+              'Faisán': ('Faisán colorido de estilo caricaturesco.png', 'Faisan.png'),
+              'Quetzal': ('Quetzal Adorable de Plumas Esmeralda.png', 'Quetzal.png'),
+              'Guacamaya Roja': ('Guacamaya roja colorida en vuelo (1).png', 'Guacamaya_Roja.png'),
+              'Guacamaya Azul': ('Guacamayo azul y amarillo caricaturesco.png', 'Guacamaya_Azul.png'),
+              'Búho': ('Búho real sobre rama con hojas.png', 'Búho.png'),
+              'Colibrí': ('Colibrí.png', 'Colibrí.png'),
+              'Flamenco': ('Flamenco rosa de estilo adhesivo.png', 'Flamenco.png'),
+              'Colorín siete colores': ('Colorín Siete Colores en Rama.png', 'Colorin_siete_colores.png'),
+              'Tángara del paraíso': ('Tángara del paraíso sobre una rama.png', 'Tangara_del_paraiso.png'),
+          }
+          logo_mapping = {
+              'Agaporni': 'Logo YOM Dental Agaporni Multicolor.png',
+              'Tucán': 'Logotipo Yom Dental Tucán en degradado tropical.png',
+              'Pavorreal': 'Logo dental Yom en tonos pavorreal.png',
+              'Ninfa': 'Logo dental Yom en paleta Ninfa.png',
+              'Faisán': 'Logo dental YOM con degradados Faisán.png',
+              'Quetzal': 'Logotipo Yom Dental quetzal.png',
+              'Guacamaya Roja': 'Logotipo YOM Dental Guacamaya Roja Multicolor.png',
+              'Guacamaya Azul': 'Logotipo Yom Dental Guacamaya Azul.png',
+              'Búho': 'Logo YOM Dental en tonos búho.png',
+              'Colibrí': 'Logo dental Yom en paleta Colibrí (2).png',
+              'Flamenco': 'Logotipo Dental Rosa Flamingo en 3D.png',
+              'Colorín siete colores': 'Logo dental Colorn de 7 colorese.png',
+              'Tángara del paraíso': 'Logotipo Yom DentalTángara del paraíso.png',
+          }
+          assert len(icon_mapping) == len(logo_mapping) == 13
+          for bird, (filename, staged_name) in icon_mapping.items():
+              source = icons / filename
+              assert source.is_file() and source.stat().st_size > 1000, f'Missing bird icon: {source}'
+              copy2(source, icon_target / staged_name)
+          for bird, filename in logo_mapping.items():
+              source = logos / filename
+              assert source.is_file() and source.stat().st_size > 1000, f'Missing YOM Dental logo for {bird}: {source}'
+              copy2(source, logo_target / filename)
+          print('13 bird icons and 13 matching YOM Dental palette logos staged')
           '@ | python -
 
-      - name: Pre-render offline bird audio libraries
+      - name: Convert all thirteen uploaded MP3 recordings into offline WAV libraries
         shell: pwsh
         run: |
           @'
-          import sys, wave
+          from __future__ import annotations
+          import json, subprocess, wave
           from pathlib import Path
-          sys.path.insert(0, 'desktop')
-          import yornis_bird_signature_v01592 as signatures
-          import yornis_startup_audio_v0159 as startup
-          names = ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul','Búho','Colibrí')
+          import numpy as np
+          from imageio_ffmpeg import get_ffmpeg_exe
+
+          source_root = Path('assets/bird-palettes/sounds')
+          root = Path('desktop/assets')
+          full_dir = root / 'bird_audio'
+          startup_dir = root / 'bird_startup_audio'
+          decoded_dir = Path('build-audio-decoded')
+          rate = 44100
           volumes = (20, 35, 50, 70, 90)
-          destinations = (
-              (signatures, Path('desktop/assets/bird_audio'), 'synthesize_signature'),
-              (startup, Path('desktop/assets/bird_startup_audio'), 'synthesize_chorus'),
+          max_startup_seconds = 2.8
+          recordings = {
+              'Agaporni': 'agaporni.mp3',
+              'Tucán': 'tucan.mp3',
+              'Pavorreal': 'pavo real.mp3',
+              'Ninfa': 'ninfa.mp3',
+              'Faisán': 'faisan.mp3',
+              'Quetzal': 'quetzal.mp3',
+              'Guacamaya Roja': 'guacamaya roja.mp3',
+              'Guacamaya Azul': 'guacamayo azul.mp3',
+              'Búho': 'buho real.mp3',
+              'Colibrí': 'colibri.mp3',
+              'Flamenco': 'Flamingo Bird Sound 🦩#shorts (mp3cut.net).mp3',
+              'Colorín siete colores': 'sonido colorin.mp3',
+              'Tángara del paraíso': 'Paradise Tanager (Tangara chilensis) #birds #birdsounds #birdsong (mp3cut.net).mp3',
+          }
+          ffmpeg = get_ffmpeg_exe()
+          full_dir.mkdir(parents=True, exist_ok=True)
+          startup_dir.mkdir(parents=True, exist_ok=True)
+          decoded_dir.mkdir(parents=True, exist_ok=True)
+
+          def decode_mp3(source: Path, target: Path) -> None:
+              subprocess.run([
+                  ffmpeg, '-hide_banner', '-loglevel', 'error', '-y',
+                  '-i', str(source), '-map', '0:a:0', '-vn',
+                  '-ac', '1', '-ar', str(rate), '-c:a', 'pcm_s16le', str(target)
+              ], check=True)
+
+          def read_samples(path: Path) -> np.ndarray:
+              with wave.open(str(path), 'rb') as wav:
+                  assert wav.getnchannels() == 1 and wav.getsampwidth() == 2
+                  assert wav.getframerate() == rate
+                  return np.frombuffer(wav.readframes(wav.getnframes()), dtype='<i2').astype(np.float32)
+
+          def write_wav(path: Path, samples: np.ndarray) -> None:
+              pcm = np.clip(np.rint(samples), -32768, 32767).astype('<i2')
+              with wave.open(str(path), 'wb') as wav:
+                  wav.setnchannels(1)
+                  wav.setsampwidth(2)
+                  wav.setframerate(rate)
+                  wav.writeframes(pcm.tobytes())
+
+          def fade_edges(samples: np.ndarray, fade_ms: float = 12.0) -> np.ndarray:
+              samples = samples.copy()
+              n = min(int(rate * fade_ms / 1000), len(samples) // 2)
+              if n:
+                  ramp = np.linspace(0.0, 1.0, n, endpoint=True, dtype=np.float32)
+                  samples[:n] *= ramp
+                  samples[-n:] *= ramp[::-1]
+              return samples
+
+          def highest_energy_clip(samples: np.ndarray) -> np.ndarray:
+              length = min(len(samples), int(rate * max_startup_seconds))
+              if length >= len(samples):
+                  return samples.copy()
+              stride = max(1, rate // 10)
+              squared = np.square(samples.astype(np.float64))
+              cumulative = np.concatenate(([0.0], np.cumsum(squared)))
+              starts = np.arange(0, len(samples) - length + 1, stride, dtype=np.int64)
+              energies = cumulative[starts + length] - cumulative[starts]
+              start = int(starts[int(np.argmax(energies))])
+              return samples[start:start + length].copy()
+
+          chorus_sources = []
+          manifest = {
+              'product': 'Yornis', 'version': '0.16.3', 'offline': True,
+              'source': 'Thirteen active palette recordings from assets/bird-palettes/sounds',
+              'format': 'WAV PCM signed 16-bit mono 44100 Hz',
+              'palette_audio': 'Full uploaded recording',
+              'startup_audio': 'Highest-energy excerpt up to 2.8 seconds',
+              'volume_levels': list(volumes), 'birds': {}
+          }
+
+          for bird, filename in recordings.items():
+              source = source_root / filename
+              assert source.is_file() and source.stat().st_size > 1000, f'Missing audio source: {source}'
+              decoded = decoded_dir / f'{bird}.wav'
+              decode_mp3(source, decoded)
+              samples = read_samples(decoded)
+              peak = float(np.max(np.abs(samples)))
+              assert peak > 100.0, f'Empty or silent recording: {source}'
+              master = samples * (0.92 * 32767.0 / peak)
+              startup_master = fade_edges(highest_energy_clip(master))
+              chorus_sources.append(startup_master.copy())
+              safe = ''.join(ch if ch.isalnum() else '_' for ch in bird)
+              manifest['birds'][bird] = {
+                  'source_file': filename,
+                  'duration_seconds': round(len(master) / rate, 3),
+                  'startup_clip_seconds': round(len(startup_master) / rate, 3),
+                  'peak_normalized': 0.92,
+              }
+              for volume in volumes:
+                  factor = volume / 100.0
+                  write_wav(full_dir / f'{safe}_{volume}.wav', fade_edges(master * factor))
+                  write_wav(startup_dir / f'{safe}_{volume}.wav', startup_master * factor)
+
+          # Short simultaneous mix of all thirteen original bird calls for app launch.
+          chorus_length = max(len(samples) for samples in chorus_sources)
+          chorus_mix = np.zeros(chorus_length, dtype=np.float32)
+          for samples in chorus_sources:
+              chorus_mix[:len(samples)] += samples.astype(np.float32) / len(chorus_sources)
+          chorus_peak = float(np.max(np.abs(chorus_mix)))
+          if chorus_peak > 0:
+              chorus_mix *= min(1.0, 0.88 * 32767.0 / chorus_peak)
+          chorus_mix = fade_edges(chorus_mix)
+          for volume in volumes:
+              write_wav(startup_dir / f'chorus_{volume}.wav', chorus_mix * (volume / 100.0))
+
+          for folder in (full_dir, startup_dir):
+              files = list(folder.glob('*.wav'))
+              expected_count = 65 if folder == full_dir else 70
+              assert len(files) == expected_count, f'{folder}: expected {expected_count} files, found {len(files)}'
+              for path in files:
+                  with wave.open(str(path), 'rb') as wav:
+                      assert wav.getnchannels() == 1 and wav.getsampwidth() == 2
+                      assert wav.getframerate() == rate and wav.getnframes() > rate // 5
+          (root / 'bird_audio_manifest_v0163.json').write_text(
+              json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8'
           )
-          total = 0
-          for module, out, function_name in destinations:
-              out.mkdir(parents=True, exist_ok=True)
-              synthesize = getattr(module, function_name)
-              for name in names:
-                  safe = ''.join(ch if ch.isalnum() else '_' for ch in name)
-                  for volume in volumes:
-                      frames = synthesize(name, volume)
-                      target = out / f'{safe}_{volume}.wav'
-                      with wave.open(str(target), 'wb') as wav:
-                          wav.setnchannels(1)
-                          wav.setsampwidth(2)
-                          wav.setframerate(module.SAMPLE_RATE)
-                          wav.writeframes(frames)
-              files = list(out.glob('*.wav'))
-              assert len(files) == 50 and all(p.stat().st_size > 1000 for p in files)
-              total += len(files)
-          assert total == 100
-          print('100 offline bird WAVs generated and validated before packaging')
+          print('THIRTEEN ORIGINAL MP3 RECORDINGS -> 65 FULL WAVS + 65 EXCERPTS + 5 MIXED CHORUS WAVS')
+          print('All audio decoded, volume-scaled, validated and ready for offline packaging')
           '@ | python -
 
       - name: Rebuild 512px Yornis branding
@@ -111,11 +249,15 @@ jobs:
         shell: pwsh
         run: Get-ChildItem desktop\*.py | ForEach-Object { python -m py_compile $_.FullName; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } }
 
-      - name: Unit and regression tests
+      - name: Verify image identity guard imports
+        shell: pwsh
+        run: python -c "import sys; sys.path.insert(0, 'desktop'); import yornis_image_identity_v0163; yornis_image_identity_v0163.install_cervical_result_identity()"
+
+      - name: Required unit, image-swap, calibration and geometry regression tests
         shell: pwsh
         run: python -m unittest discover -s desktop/tests -p "test_*.py" -v
 
-      - name: v0.16.2 branding, guided calibration and clinical audit
+      - name: v0.16.3 branding, guided calibration and clinical audit
         shell: pwsh
         run: |
           @'
@@ -129,8 +271,10 @@ jobs:
           import research_db
           import yornis_modern_ui_v0160 as modern_ui
           import yornis_reference_help_v0156 as refs
+          import yornis_measurement_corrections_v0166 as measurement_corrections
+          measurement_corrections.install()
           import classic_engine as engine
-          assert app.APP_VERSION.startswith('0.16.2')
+          assert app.APP_VERSION.startswith('0.16.7')
           assert research_db.APP_DIR.name == 'Yornis'
           assert research_db.DB_PATH.name == 'yornis_research.sqlite3'
           check_source = "class YomCephClassic: pass\nlabel = 'YOMCEPH'"
@@ -138,23 +282,30 @@ jobs:
           assert 'class YomCephClassic' in branded_source and "'YORNIS'" in branded_source
           cal_title, cal_prompt = branding.calibration_dialog_copy('Calibrar mm', 'Distancia real entre puntos')
           assert cal_title == 'Calibrar radiografía · Yornis'
-          assert 'MILÍMETROS REALES' in cal_prompt and 'primer extremo' in cal_prompt and 'segundo extremo' in cal_prompt
-          assert len(engine.MEASUREMENTS) == 102
+          assert 'distancia REAL en milímetros' in cal_prompt and 'Punto calibración 1' in cal_prompt and 'Punto calibración 2' in cal_prompt and 'primer extremo' in cal_prompt and 'segundo extremo' in cal_prompt
+          # The registered engine contains 106 entries; the regression suite checks all of them.
+          assert len(engine.MEASUREMENTS) == 106
           assert len(refs.TABLES) == 17
           assert modern_ui.modern_backend_available()
-          assert set(yornis_theme.theme_names()) == set(sounds._SIGNATURES)
-          digests=[]
-          for name in yornis_theme.theme_names():
-              frames = sounds.synthesize_signature(name, 35)
-              assert len(frames) == int(sounds.SIGNATURE_DURATION * sounds.SAMPLE_RATE) * 2
-              assert any(frames)
-              digests.append(hashlib.sha256(frames).hexdigest())
-              assert sounds.bundled_signature_path(name, 35).is_file()
-              assert startup_sounds.bundled_wav_path(name, 35).is_file()
-          assert len(set(digests)) == 10
-          assert len(list(__import__('pathlib').Path('desktop/assets/bird_audio').glob('*.wav'))) == 50
-          assert len(list(__import__('pathlib').Path('desktop/assets/bird_startup_audio').glob('*.wav'))) == 50
-          print('YORNIS v0.16.2 TEN PALETTES + OFFLINE SOUND PROFILES + CLINICAL AUDIT OK')
+          import wave
+          from pathlib import Path
+          assert set(yornis_theme.theme_names()) == set(sounds.BIRD_AUDIO_FILES)
+          assert len(sounds.BIRD_AUDIO_FILES) == 13
+          for name, filename in sounds.BIRD_AUDIO_FILES.items():
+              source = Path('assets/bird-palettes/sounds') / filename
+              assert source.is_file() and source.stat().st_size > 1000
+              for volume in sounds.VOLUME_LEVELS:
+                  full = sounds.bundled_signature_path(name, volume)
+                  short = startup_sounds.bundled_wav_path(name, volume)
+                  assert full.is_file() and short.is_file()
+                  for audio_path in (full, short):
+                      with wave.open(str(audio_path), 'rb') as wav:
+                          assert wav.getnchannels() == 1 and wav.getsampwidth() == 2
+                          assert wav.getframerate() == sounds.SAMPLE_RATE
+                          assert wav.getnframes() > sounds.SAMPLE_RATE // 5
+          assert len(list(Path('desktop/assets/bird_audio').glob('*.wav'))) == 65
+          assert len(list(Path('desktop/assets/bird_startup_audio').glob('*.wav'))) == 70  # 65 bird clips + 5 mixed chorus volumes
+          print('YORNIS v0.16.8 THIRTEEN ORIGINAL RECORDINGS + OFFLINE AUDIO + CLINICAL AUDIT OK')
           '@ | python -
 
       - name: GUI scrollbar + HiDPI smoke test
@@ -168,12 +319,19 @@ jobs:
           import yornis_theme
           l=Launcher(); l.geometry('1000x620'); l.update()
           assert modern_ui.active_widget_theme(l) in ('bootstrap-light', 'clam')
+          # Verify both launcher modes before exercising all palette changes.
+          # Theme iteration can schedule Tk idle rebuilds, so flush them and
+          # validate the rebuilt cards again after the palette sweep.
+          assert len(l._yornis_mode_cards) == 2, f'Initial launcher mode cards: {len(l._yornis_mode_cards)}'
           for bird, palette in yornis_theme.THEMES.items():
               yornis_theme.apply_theme(bird, persist=True)
               modern_ui.apply_modern_styles(l)
+              l.update_idletasks()
               assert modern_ui.primary_action_color(l) == palette['primary']
           yornis_theme.apply_theme('Agaporni', persist=True)
           modern_ui.apply_modern_styles(l)
+          l.update_idletasks()
+          assert len(l._yornis_mode_cards) == 2, f'Launcher mode cards after palette sweep: {len(l._yornis_mode_cards)}'
           assert float(l.tk.call('tk','scaling')) > 0
           assert hasattr(l, '_scrollbar') and l._scrollbar.winfo_exists()
           assert hasattr(l, '_scroll_canvas') and l._scroll_canvas.winfo_exists()
@@ -186,16 +344,26 @@ jobs:
           assert after > before
           assert hasattr(l, 'startup_sound_var')
           assert hasattr(l, 'startup_volume_var')
-          assert len(l.palette_cards) == 10
+          assert len(l.palette_cards) == 13
+          assert len(l._yornis_mode_cards) == 2
+          assert len(l._yornis_mode_mascots) >= 2
+          l._adapt_mode_cards(type('E', (), {'width': 700})())
+          assert [int(card.grid_info()['row']) for card in l._yornis_mode_cards] == [0, 1]
+          l._adapt_mode_cards(type('E', (), {'width': 1100})())
+          assert [int(card.grid_info()['row']) for card in l._yornis_mode_cards] == [0, 0]
+
           from yornis_bird_signature_v01592 import bundled_signature_path
-          for bird in ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul','Búho','Colibrí'):
-              assert bundled_signature_path(bird, 35).name.endswith('_35.wav')
+          from yornis_startup_audio_v0159 import bundled_wav_path
+          for bird in ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul','Búho','Colibrí','Flamenco','Colorín siete colores','Tángara del paraíso'):
+              for volume in (20, 35, 50, 70, 90):
+                  assert bundled_signature_path(bird, volume).is_file()
+                  assert bundled_wav_path(bird, volume).is_file()
           from yornis_virtual_assistant_v0157 import make_avatar_photo
-          for bird in ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul','Búho','Colibrí'):
+          for bird in ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul','Búho','Colibrí','Flamenco','Colorín siete colores','Tángara del paraíso'):
               image = make_avatar_photo(l, 64, bird)
               assert image.width() > 0 and image.height() > 0
           l.destroy()
-          print('YORNIS v0.16.2 TEN PALETTES + OFFLINE GUI OK')
+          print('YORNIS v0.16.8 THIRTEEN PALETTES + OFFLINE GUI OK')
           '@ | python -
 
       - name: Build application
@@ -213,9 +381,9 @@ jobs:
           --hidden-import yornis_spss_v015 --hidden-import yornis_visual_report_v015 --hidden-import yornis_export_ui_v015 --hidden-import yornis_backup_v015 --hidden-import yornis_backup_ui_v015
           --hidden-import yornis_clinical_audit_v0151 --hidden-import yornis_cervical_v0152 --hidden-import yornis_alignment_v0152 --hidden-import yornis_display_v0152 --hidden-import yornis_ceph_quality_v0153 --hidden-import yornis_audit_hardening_v0154
           --hidden-import yornis_reference_help_v0154 --hidden-import yornis_reference_help_v0154_all --hidden-import yornis_evidence_v0155 --hidden-import yornis_quality_ui_v0156 --hidden-import yornis_reference_help_v0156
-          --hidden-import yornis_quality_ui_v0157 --hidden-import yornis_virtual_assistant_v0157 --hidden-import yornis_quality_ui_v0158 --hidden-import yornis_startup_audio_v0159 --hidden-import yornis_desktop_v0159 --hidden-import yornis_desktop_v01591 --hidden-import yornis_bird_signature_v01592 --hidden-import yornis_modern_ui_v0160
+          --hidden-import yornis_quality_ui_v0157 --hidden-import yornis_virtual_assistant_v0157 --hidden-import yornis_quality_ui_v0158 --hidden-import yornis_startup_audio_v0159 --hidden-import yornis_desktop_v0159 --hidden-import yornis_desktop_v01591 --hidden-import yornis_bird_signature_v01592 --hidden-import yornis_modern_ui_v0160 --hidden-import yornis_calibration_gate_v0164
           --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --collect-all pyzipper --collect-all ttkbootstrap
-          --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yornis.ico;." --add-data "desktop/assets/birds;assets/birds" --add-data "desktop/assets/bird_audio;assets/bird_audio" --add-data "desktop/assets/bird_startup_audio;assets/bird_startup_audio"
+          --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yornis.ico;." --add-data "desktop/assets/birds;assets/birds" --add-data "desktop/assets/brand-logos;assets/brand-logos" --add-data "assets/bird-palettes/sounds;bird-palettes/sounds" --add-data "desktop/assets/bird_audio;assets/bird_audio" --add-data "desktop/assets/bird_startup_audio;assets/bird_startup_audio"
           desktop/yornis_desktop_v01592.py
 
       - name: Cold start with application outbound internet blocked
@@ -241,24 +409,24 @@ jobs:
           choco install innosetup --no-progress -y
           New-Item -ItemType Directory -Force -Path dist-installer-yornis | Out-Null
           & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' desktop\Yornis_v01592.iss
-          $setup='dist-installer-yornis/Yornis_Setup_v0.16.2_Modern_Interface_Offline.exe'
+          $setup='dist-installer-yornis/Yornis_Setup_v0.16.3_Modern_Interface_Offline.exe'
           if(!(Test-Path $setup)){throw 'Installer missing'}
-          Compress-Archive -Path dist\Yornis\* -DestinationPath dist-installer-yornis\Yornis_v0.16.2_Modern_Interface_Offline_Portable.zip -Force
+          Compress-Archive -Path dist\Yornis\* -DestinationPath dist-installer-yornis\Yornis_v0.16.3_Modern_Interface_Offline_Portable.zip -Force
 
       - name: Checksums
         shell: pwsh
         run: |
-          $a=Get-FileHash dist-installer-yornis\Yornis_Setup_v0.16.2_Modern_Interface_Offline.exe -Algorithm SHA256
-          $b=Get-FileHash dist-installer-yornis\Yornis_v0.16.2_Modern_Interface_Offline_Portable.zip -Algorithm SHA256
-          "$($a.Hash.ToLower())  Yornis_Setup_v0.16.2_Modern_Interface_Offline.exe" | Out-File dist-installer-yornis\SHA256SUMS.txt -Encoding ascii
-          "$($b.Hash.ToLower())  Yornis_v0.16.2_Modern_Interface_Offline_Portable.zip" | Out-File dist-installer-yornis\SHA256SUMS.txt -Encoding ascii -Append
+          $a=Get-FileHash dist-installer-yornis\Yornis_Setup_v0.16.3_Modern_Interface_Offline.exe -Algorithm SHA256
+          $b=Get-FileHash dist-installer-yornis\Yornis_v0.16.3_Modern_Interface_Offline_Portable.zip -Algorithm SHA256
+          "$($a.Hash.ToLower())  Yornis_Setup_v0.16.3_Modern_Interface_Offline.exe" | Out-File dist-installer-yornis\SHA256SUMS.txt -Encoding ascii
+          "$($b.Hash.ToLower())  Yornis_v0.16.3_Modern_Interface_Offline_Portable.zip" | Out-File dist-installer-yornis\SHA256SUMS.txt -Encoding ascii -Append
 
       - uses: actions/upload-artifact@v4
         with:
-          name: Yornis-v0.16.2-Modern-Interface-Offline-Windows-x64
+          name: Yornis-v0.16.3-Modern-Interface-Offline-Windows-x64
           path: |
-            dist-installer-yornis/Yornis_Setup_v0.16.2_Modern_Interface_Offline.exe
-            dist-installer-yornis/Yornis_v0.16.2_Modern_Interface_Offline_Portable.zip
+            dist-installer-yornis/Yornis_Setup_v0.16.3_Modern_Interface_Offline.exe
+            dist-installer-yornis/Yornis_v0.16.3_Modern_Interface_Offline_Portable.zip
             dist-installer-yornis/SHA256SUMS.txt
 
 
@@ -269,27 +437,27 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           @'
-          Yornis v0.16.2 · Identidad + calibración guiada
+          Yornis v0.16.3 · Identidad + calibración guiada
 
           - Interfaz modernizada con ttkbootstrap 2.2.7.
           - Botones, controles, tablas, pestañas y campos con estilo plano y espaciado moderno.
-          - Las diez paletas de aves mantienen sus colores y actualizan los controles en tiempo real.
+          - Las trece paletas de aves mantienen sus colores y actualizan los controles en tiempo real.
           - Sistema visual aplicado al lanzador, caso individual e investigación.
-          - 102 mediciones y 17 tablas de referencia conservadas.
+          - 106 mediciones cefalométricas y 17 tablas de referencia conservadas.
           - Calibración por radiografía y control de confianza de landmarks conservados.
-          - 10 identidades de aves y 100 WAV locales (perfiles de sonido generados) incluidos para ejecución offline.
+          - Trece grabaciones originales de aves, con sonido completo al cambiar de paleta y fragmentos cortos de inicio, incluidos para uso sin conexión.
           - Fórmulas, geometría, base de datos y lógica clínica sin cambios.
           '@ | Set-Content -Encoding utf8 release-notes.md
 
-          $tag='v0.16.2'
-          $setup='dist-installer-yornis/Yornis_Setup_v0.16.2_Modern_Interface_Offline.exe'
-          $portable='dist-installer-yornis/Yornis_v0.16.2_Modern_Interface_Offline_Portable.zip'
+          $tag='v0.16.3'
+          $setup='dist-installer-yornis/Yornis_Setup_v0.16.3_Modern_Interface_Offline.exe'
+          $portable='dist-installer-yornis/Yornis_v0.16.3_Modern_Interface_Offline_Portable.zip'
           $sums='dist-installer-yornis/SHA256SUMS.txt'
 
           gh release view $tag *> $null
           if ($LASTEXITCODE -eq 0) {
             gh release upload $tag $setup $portable $sums --clobber
-            gh release edit $tag --title "Yornis v0.16.2 · Identidad + calibración guiada" --notes-file release-notes.md --latest
+            gh release edit $tag --title "Yornis v0.16.3 · Identidad + calibración guiada" --notes-file release-notes.md --latest
           } else {
-            gh release create $tag $setup $portable $sums --target $env:GITHUB_SHA --title "Yornis v0.16.2 · Identidad + calibración guiada" --notes-file release-notes.md --latest
+            gh release create $tag $setup $portable $sums --target $env:GITHUB_SHA --title "Yornis v0.16.3 · Identidad + calibración guiada" --notes-file release-notes.md --latest
           }

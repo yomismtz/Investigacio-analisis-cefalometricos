@@ -11,3 +11,14 @@ from _yornis_audit154_part06 import PART as P6
 _payload = P0 + P1 + P2 + P3 + P4 + P5 + P6
 assert hashlib.sha256(_payload.encode('ascii')).hexdigest() == '0b0829d63af132860d5937ca1a5315d3daec7a7748a67ae5951616542bf4bdcc', 'v0.15.4 payload checksum mismatch'
 exec(compile(zlib.decompress(base64.b64decode(_payload, validate=True)), '<yornis_audit_hardening_v0154>', 'exec'))
+
+# Keep the dedicated case-report renderer as the single PDF implementation.
+# The hardening layer replaces several legacy handlers; it must not replace
+# the visual PDF renderer with its reduced compatibility export.
+_install_global_hardening = install_global
+
+def install_global():
+    import yornis_visual_report_v015 as _visual_report
+    _case_pdf_renderer = _visual_report.export_case_pdf
+    _install_global_hardening()
+    _visual_report.export_case_pdf = _case_pdf_renderer

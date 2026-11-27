@@ -2,6 +2,9 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 from research_db import MAX_CASES, ImportResult, ResearchDB, now_iso, sha256_file
+
+# Capture the canonical database method before compatibility layers are installed.
+_CORE_ATTACH_IMAGE = ResearchDB.attach_image
 _INSTALLED=False
 
 def add_case(db,study_id,study_code=None,sex='',age=None,image_path='',examiner='',copy_image=True):
@@ -21,16 +24,8 @@ def add_case(db,study_id,study_code=None,sex='',age=None,image_path='',examiner=
     db.audit(study_id,'case_added',case_id=cid,case_number=n,code=code,source_filename=original,stored_filename=Path(stored).name if stored else '',anonymized=bool(copy_image));return cid
 
 def attach_image(db,case_id,image_path,copy_image=True):
-    row=db.case(case_id)
-    if not row:raise KeyError(case_id)
-    src=Path(image_path);digest=sha256_file(src)
-    with db.connect() as con:same=[r[0] for r in con.execute('SELECT id FROM cases WHERE study_id=? AND file_hash=?',(row['study_id'],digest)).fetchall() if r[0]!=case_id]
-    if same:raise ValueError('La misma radiografía ya está registrada en otro caso')
-    target=src
-    if copy_image:
-        target=db._study_folder(row['study_id'])/f"YC_{int(row['case_number']):04d}{src.suffix.lower() or '.img'}";shutil.copy2(src,target)
-    with db.connect() as con:con.execute('UPDATE cases SET image_path=?,original_filename=?,file_hash=?,updated_at=? WHERE id=?',(str(target),src.name,digest,now_iso(),case_id))
-    db.audit(row['study_id'],'image_attached',case_id=case_id,source_filename=src.name,stored_filename=Path(target).name,sha256=digest,anonymized=bool(copy_image))
+    """Compatibility entry point; delegate to the canonical database method."""
+    return _CORE_ATTACH_IMAGE(db,case_id,image_path,copy_image)
 
 def import_progress(db,study_id,paths,metadata=None,copy_images=True,callback=None,cancel_event=None):
     result=ImportResult();metadata=metadata or {};allowed={'.png','.jpg','.jpeg','.bmp','.tif','.tiff','.pdf'};paths=[str(p) for p in paths if Path(p).suffix.lower() in allowed]
@@ -50,4 +45,4 @@ def import_progress(db,study_id,paths,metadata=None,copy_images=True,callback=No
 def install():
     global _INSTALLED
     if _INSTALLED:return
-    ResearchDB.add_case=add_case;ResearchDB.attach_image=attach_image;ResearchDB.import_files_progress=import_progress;_INSTALLED=True
+    ResearchDB.add_case=add_case;ResearchDB.import_files_progress=import_progress;_INSTALLED=True

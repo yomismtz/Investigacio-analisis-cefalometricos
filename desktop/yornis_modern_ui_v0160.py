@@ -61,6 +61,10 @@ def apply_modern_styles(root) -> bool:
         return False
 
     t = _tokens()
+    primary_fg = yornis_theme.readable_foreground(t["primary"])
+    secondary_fg = yornis_theme.readable_foreground(t["secondary"])
+    primary_hover_fg = yornis_theme.readable_foreground(t["primary_dark"])
+    secondary_hover_fg = yornis_theme.readable_foreground(t["secondary_dark"])
     try:
         # ttkbootstrap attaches to the existing Tk interpreter; the application
         # keeps its current Tk/Toplevel architecture and does not create a new root.
@@ -128,19 +132,19 @@ def apply_modern_styles(root) -> bool:
     _safe_configure(
         style, "Primary.TButton",
         font=_FONT_MEDIUM, padding=(18, 12), background=t["primary"],
-        foreground="#FFFFFF", borderwidth=0, focusthickness=2, focuscolor=t["accent"],
+        foreground=primary_fg, borderwidth=0, focusthickness=2, focuscolor=t["accent"],
     )
     _safe_map(
         style, "Primary.TButton",
         background=[("pressed", t["primary_dark"]), ("active", t["primary_dark"]), ("disabled", t["primary_soft"])],
-        foreground=[("disabled", t["muted"]), ("!disabled", "#FFFFFF")],
+        foreground=[("disabled", t["muted"]), ("!disabled", primary_hover_fg)],
     )
     _safe_configure(
         style, "Secondary.TButton",
         font=_FONT_MEDIUM, padding=(17, 11), background=t["secondary"],
         foreground="#FFFFFF", borderwidth=0,
     )
-    _safe_map(style, "Secondary.TButton", background=[("pressed", t["secondary_dark"]), ("active", t["secondary_dark"])], foreground=[("!disabled", "#FFFFFF")])
+    _safe_map(style, "Secondary.TButton", background=[("pressed", t["secondary_dark"]), ("active", t["secondary_dark"])], foreground=[("!disabled", secondary_hover_fg)])
     _safe_configure(
         style, "Ghost.TButton",
         font=_FONT_MEDIUM, padding=(14, 9), background=t["panel"],
@@ -152,7 +156,7 @@ def apply_modern_styles(root) -> bool:
         font=_FONT_MEDIUM, padding=(14, 9), background=t["accent"],
         foreground=t["primary_dark"], borderwidth=0,
     )
-    _safe_map(style, "Assistant.TButton", background=[("pressed", t["secondary_dark"]), ("active", t["secondary"])], foreground=[("pressed", "#FFFFFF"), ("active", "#FFFFFF")])
+    _safe_map(style, "Assistant.TButton", background=[("pressed", t["secondary_dark"]), ("active", t["secondary"])], foreground=[("pressed", secondary_hover_fg), ("active", secondary_hover_fg)])
 
     _safe_configure(style, "IndividualCard.TFrame", background=t["panel"], relief="solid", borderwidth=1, bordercolor=t["border"])
     _safe_configure(style, "IndividualCardSelected.TFrame", background=t["panel"], relief="solid", borderwidth=2, bordercolor=t["primary"])
@@ -160,8 +164,8 @@ def apply_modern_styles(root) -> bool:
     _safe_configure(style, "IndividualBody.TLabel", background=t["panel"], foreground=t["muted"], font=("Segoe UI", 9))
     _safe_configure(style, "IndividualCount.TLabel", background=t["primary_soft"], foreground=t["primary_dark"], font=("Segoe UI Semibold", 9), padding=(10, 5))
     _safe_configure(style, "IndividualStep.TLabel", background=t["accent_soft"], foreground=t["secondary_dark"], font=("Segoe UI Semibold", 9), padding=(10, 5))
-    _safe_configure(style, "IndividualPrimary.TButton", font=_FONT_MEDIUM, padding=(16, 10), background=t["primary"], foreground="#FFFFFF", borderwidth=0)
-    _safe_map(style, "IndividualPrimary.TButton", background=[("pressed", t["primary_dark"]), ("active", t["primary_dark"])], foreground=[("!disabled", "#FFFFFF")])
+    _safe_configure(style, "IndividualPrimary.TButton", font=_FONT_MEDIUM, padding=(16, 10), background=t["primary"], foreground=primary_fg, borderwidth=0)
+    _safe_map(style, "IndividualPrimary.TButton", background=[("pressed", t["primary_dark"]), ("active", t["primary_dark"])], foreground=[("!disabled", primary_hover_fg)])
     _safe_configure(style, "IndividualGhost.TButton", font=_FONT_MEDIUM, padding=(13, 9), background=t["panel_alt"], foreground=t["primary_dark"], borderwidth=0)
     _safe_map(style, "IndividualGhost.TButton", background=[("pressed", t["primary_soft"]), ("active", t["primary_soft"])])
 
@@ -171,13 +175,13 @@ def apply_modern_styles(root) -> bool:
     _safe_configure(style, "TRadiobutton", padding=(7, 6), background=t["bg"], foreground=t["text"], font=_FONT)
     _safe_configure(style, "TNotebook", background=t["bg"], borderwidth=0, tabmargins=(0, 3, 0, 0))
     _safe_configure(style, "TNotebook.Tab", font=_FONT_MEDIUM, padding=(18, 11), background=t["panel_alt"], foreground=t["muted"], borderwidth=0)
-    _safe_map(style, "TNotebook.Tab", background=[("selected", t["primary"]), ("active", t["primary_soft"])], foreground=[("selected", "#FFFFFF"), ("active", t["primary_dark"])])
+    _safe_map(style, "TNotebook.Tab", background=[("selected", t["primary"]), ("active", t["primary_soft"])], foreground=[("selected", primary_fg), ("active", t["primary_dark"])])
     _safe_configure(style, "TLabelframe", background=t["panel"], borderwidth=1, relief="solid", bordercolor=t["border"], padding=(4, 4))
     _safe_configure(style, "TLabelframe.Label", background=t["panel"], foreground=t["primary_dark"], font=_FONT_MEDIUM)
 
     _safe_configure(style, "Treeview", rowheight=38, font=_FONT, background=t["panel"], fieldbackground=t["panel"], foreground=t["text"], borderwidth=0)
     _safe_configure(style, "Treeview.Heading", font=_FONT_MEDIUM, background=t["panel_alt"], foreground=t["primary_dark"], padding=(11, 10), borderwidth=0)
-    _safe_map(style, "Treeview", background=[("selected", t["primary"])], foreground=[("selected", "#FFFFFF")])
+    _safe_map(style, "Treeview", background=[("selected", t["primary"])], foreground=[("selected", primary_fg)])
     _safe_configure(style, "Vertical.TScrollbar", width=10, background=t["panel_alt"], troughcolor=t["bg"], borderwidth=0, arrowcolor=t["muted"])
     _safe_configure(style, "Horizontal.TScrollbar", width=10, background=t["panel_alt"], troughcolor=t["bg"], borderwidth=0, arrowcolor=t["muted"])
     _safe_configure(style, "Horizontal.TProgressbar", background=t["secondary"], troughcolor=t["panel_alt"], borderwidth=0, thickness=10)

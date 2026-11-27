@@ -111,22 +111,14 @@ def export_excel(db, study_id: int, protocol: dict, path: str) -> str:
 
 
 def export_case_pdf(db, case_id: int, protocol: dict, path: str) -> str:
-    from reportlab.lib import colors
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib.styles import getSampleStyleSheet
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-    case = db.case(case_id)
-    study = db.study(case["study_id"])
-    version = protocol.get("version", db.latest_protocol(case["study_id"])["version"])
-    rows = db.latest_results(case_id, version)
-    styles = getSampleStyleSheet(); doc = SimpleDocTemplate(path, pagesize=A4)
-    story = [Paragraph("Yornis Desktop — Informe de caso", styles["Title"]), Spacer(1, 8)]
-    story.append(Paragraph(f"Estudio: {study['title']} · Caso: {case['study_code']} · Estado: {case['status']}", styles["BodyText"]))
-    story.append(Paragraph("Uso educativo e investigación. No es un dispositivo médico ni sustituye el diagnóstico profesional.", styles["Italic"]))
-    data = [["Análisis", "Medición", "Valor", "Unidad", "Referencia"]]
-    for r in rows: data.append([r["analysis"], r["measurement"], "" if r["value"] is None else f"{r['value']:.3f}", r["unit"], r["reference_text"]])
-    t = Table(data, repeatRows=1, colWidths=[90, 145, 60, 45, 175]); t.setStyle(TableStyle([("BACKGROUND", (0,0), (-1,0), colors.HexColor("#6D35A4")), ("TEXTCOLOR", (0,0), (-1,0), colors.white), ("GRID", (0,0), (-1,-1), .25, colors.HexColor("#CDB7EE")), ("VALIGN", (0,0), (-1,-1), "TOP"), ("FONTSIZE", (0,0), (-1,-1), 7)])); story += [Spacer(1, 10), t]
-    doc.build(story); db.audit(case["study_id"], "export_case_pdf", case_id=case_id, target=path); return path
+    """Use the unified visual case report for every case-level PDF export.
+
+    Keeping one renderer prevents the basic and visual export buttons from
+    producing materially different reports or diverging in pagination/QC.
+    """
+    from yornis_visual_report_v015 import export_case_pdf as export_visual_case_pdf
+
+    return export_visual_case_pdf(db, case_id, path)
 
 
 def export_study_pdf(db, study_id: int, protocol: dict, path: str) -> str:

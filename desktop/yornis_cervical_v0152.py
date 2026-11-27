@@ -16,8 +16,8 @@ CVM_ANALYSIS = "CVM C2–C4"
 CVM_MEASUREMENT = "Estadio CVM Baccetti"
 
 LORDOSIS_POINTS = ("C1 tub post", "C1 tub ant", "C7 inf post", "C7 inf ant")
-LORDOSIS_REFERENCE = "Media 40°; rango de referencia 35–45°. Interpretar con la técnica y posición radiográfica."
-CVM_REFERENCE = "Baccetti–Franchi–McNamara: CS1–CS6 por morfología de C2–C4; no equivale a una edad cronológica exacta."
+LORDOSIS_REFERENCE = "Sin norma directa validada para esta construcción C1–C7. No se aplica un umbral universal; registrar ángulo firmado, puntos y método."
+CVM_REFERENCE = "Baccetti–Franchi–McNamara: CS1–CS6 por morfología de C2–C4. Los intervalos temporales son aproximaciones de cohortes y no predicen con exactitud el pico individual ni equivalen a edad cronológica."
 
 _ENGINE_PATCHED = False
 _RESEARCH_INSTALLED = False
@@ -70,22 +70,12 @@ def cervical_lordosis_angle(points: dict[str, tuple[float, float]], side: str = 
 def posture_classification(angle: float) -> tuple[str, str]:
     if angle < 0:
         return (
-            "Cifosis / inversión de la curva",
-            "El signo indica inversión respecto a la orientación lordótica esperada. Confirmar técnica, postura y trazado.",
-        )
-    if angle < 35:
-        return (
-            "Lordosis disminuida / compatible con rectificación",
-            "Valor por debajo del rango de referencia 35–45°. La posición durante la radiografía puede reducir la lordosis aparente.",
-        )
-    if angle <= 45:
-        return (
-            "Lordosis dentro del rango de referencia",
-            "Rango de referencia usado por Yornis: 35–45°, media aproximada 40°.",
+            "Ángulo negativo según la convención del trazado",
+            "El signo refleja la orientación de las líneas C1 y C7 en esta proyección. Revisar puntos, lateralidad y adquisición; no diagnostica cifosis.",
         )
     return (
-        "Hiperlordosis",
-        "Valor por encima del rango de referencia de 45°. Interpretar con el resto de la evaluación cervical.",
+        "Medición descriptiva de curvatura C1–C7",
+        "No se aplica un umbral universal: comparar solo con estudios que usen los mismos puntos terminales, método y convención de signo. La postura durante la adquisición puede modificar el ángulo.",
     )
 
 
@@ -105,17 +95,17 @@ def classify_cvm(c2_concavity: str, c3_concavity: str, c4_concavity: str, c3_sha
     shapes = {c3_shape, c4_shape}
 
     if conc == (False, False, False) and shapes == {"trapezoidal"}:
-        return {"stage": 1, "phase": "Prepuberal", "timing": "El pico de crecimiento mandibular no se espera antes de ~2 años.", "reason": "Bordes inferiores planos; C3 y C4 trapezoidales."}
+        return {"stage": 1, "phase": "Prepuberal", "timing": "En la cohorte original, el pico suele ocurrir al menos ~2 años después de CS1; no es una predicción individual exacta.", "reason": "Bordes inferiores planos; C3 y C4 trapezoidales."}
     if conc == (True, False, False) and shapes == {"trapezoidal"}:
-        return {"stage": 2, "phase": "Prepuberal", "timing": "El pico de crecimiento mandibular suele aproximarse dentro de ~1 año.", "reason": "Concavidad en C2; C3 y C4 trapezoidales."}
+        return {"stage": 2, "phase": "Prepuberal", "timing": "En la cohorte original, el pico suele ocurrir dentro del año siguiente a CS2; no es una predicción individual exacta.", "reason": "Concavidad en C2; C3 y C4 trapezoidales."}
     if conc == (True, True, False) and shapes.issubset({"trapezoidal", "horizontal"}):
-        return {"stage": 3, "phase": "Circumpuberal", "timing": "El pico de crecimiento mandibular ocurre en el intervalo CS3–CS4.", "reason": "Concavidad en C2 y C3; C3/C4 trapezoidales u horizontales."}
+        return {"stage": 3, "phase": "Circumpuberal", "timing": "En el método original, el pico se sitúa alrededor del intervalo CS3–CS4; la variación individual puede ser amplia.", "reason": "Concavidad en C2 y C3; C3/C4 trapezoidales u horizontales."}
     if conc == (True, True, True) and shapes == {"horizontal"}:
-        return {"stage": 4, "phase": "Circumpuberal", "timing": "El pico de crecimiento mandibular ocurrió aproximadamente 1–2 años antes.", "reason": "Concavidad en C2–C4; C3 y C4 rectangulares horizontales."}
+        return {"stage": 4, "phase": "Circumpuberal", "timing": "En la cohorte original, el pico suele haber ocurrido aproximadamente 1–2 años antes de CS4; no fecha el pico individual.", "reason": "Concavidad en C2–C4; C3 y C4 rectangulares horizontales."}
     if conc == (True, True, True) and "cuadrada" in shapes and shapes.issubset({"horizontal", "cuadrada"}):
-        return {"stage": 5, "phase": "Postpuberal", "timing": "El pico de crecimiento mandibular terminó al menos ~1 año antes.", "reason": "Concavidad en C2–C4; al menos C3 o C4 cuadrada."}
+        return {"stage": 5, "phase": "Postpuberal", "timing": "En la cohorte original, el pico suele haber ocurrido al menos ~1 año antes de CS5; no fecha el pico individual.", "reason": "Concavidad en C2–C4; al menos C3 o C4 cuadrada."}
     if conc == (True, True, True) and "vertical" in shapes and shapes.issubset({"cuadrada", "vertical"}):
-        return {"stage": 6, "phase": "Postpuberal", "timing": "El estadio se registra al menos ~2 años después del pico de crecimiento.", "reason": "Concavidad en C2–C4; al menos C3 o C4 rectangular vertical."}
+        return {"stage": 6, "phase": "Postpuberal", "timing": "En la cohorte original, CS6 suele corresponder a ≥2 años después del pico; no fecha el pico individual.", "reason": "Concavidad en C2–C4; al menos C3 o C4 rectangular vertical."}
 
     return {
         "stage": None,
@@ -137,8 +127,8 @@ def _clone_measurement() -> object:
         "kind": "yornis_cervical_lordosis",
         "norm_text": LORDOSIS_REFERENCE,
         "reference": LORDOSIS_REFERENCE,
-        "lo": 35.0,
-        "hi": 45.0,
+        "lo": None,
+        "hi": None,
     }
     for key, value in attrs.items():
         try:
@@ -209,6 +199,8 @@ def _ensure_table(db) -> None:
                 id INTEGER PRIMARY KEY,
                 case_id INTEGER NOT NULL REFERENCES cases(id) ON DELETE CASCADE,
                 protocol_version INTEGER NOT NULL DEFAULT 0,
+                image_hash TEXT DEFAULT '',
+                image_revision INTEGER NOT NULL DEFAULT 1,
                 lordosis_angle REAL,
                 posture_class TEXT DEFAULT '',
                 cvm_stage INTEGER,
@@ -219,6 +211,34 @@ def _ensure_table(db) -> None:
             );
             """
         )
+        cols = {row[1] for row in con.execute("PRAGMA table_info(cervical_assessments)").fetchall()}
+        if "image_hash" not in cols:
+            con.execute("ALTER TABLE cervical_assessments ADD COLUMN image_hash TEXT DEFAULT ''")
+        if "image_revision" not in cols:
+            con.execute("ALTER TABLE cervical_assessments ADD COLUMN image_revision INTEGER NOT NULL DEFAULT 1")
+
+
+def _image_identity(db, case_id: int) -> tuple[str, int]:
+    case = db.case(case_id)
+    if not case:
+        return "", 1
+    # cases.file_hash is authoritative: attach_image computes and persists
+    # this SHA256 atomically with the image revision. The on-disk resolver is
+    # only a consistency check and may fail for legacy/offline adapters.
+    try:
+        image_hash = str(case["file_hash"] or "")
+    except Exception:
+        image_hash = ""
+    if not image_hash:
+        try:
+            image_hash = str(db._active_image_hash(case) or "")
+        except Exception:
+            image_hash = ""
+    try:
+        revision = max(1, int(case["image_revision"] or 1))
+    except Exception:
+        revision = 1
+    return image_hash, revision
 
 
 def _case_protocol_version(workspace) -> int:
@@ -234,17 +254,29 @@ def _save_cvm(workspace, result: dict, features: dict) -> None:
     db = workspace.db
     _ensure_table(db)
     version = _case_protocol_version(workspace)
+    image_hash, image_revision = _image_identity(db, workspace.case_id)
     with db.connect() as con:
         con.execute(
-            "INSERT INTO cervical_assessments(case_id,protocol_version,cvm_stage,cvm_phase,features_json,updated_at) VALUES(?,?,?,?,?,?) "
-            "ON CONFLICT(case_id,protocol_version) DO UPDATE SET cvm_stage=excluded.cvm_stage,cvm_phase=excluded.cvm_phase,features_json=excluded.features_json,updated_at=excluded.updated_at",
-            (workspace.case_id, version, result.get("stage"), result.get("phase", ""), json.dumps(features, ensure_ascii=False), _now()),
+            "INSERT INTO cervical_assessments(case_id,protocol_version,image_hash,image_revision,cvm_stage,cvm_phase,features_json,updated_at) VALUES(?,?,?,?,?,?,?,?) "
+            "ON CONFLICT(case_id,protocol_version) DO UPDATE SET image_hash=excluded.image_hash,image_revision=excluded.image_revision,cvm_stage=excluded.cvm_stage,cvm_phase=excluded.cvm_phase,features_json=excluded.features_json,updated_at=excluded.updated_at",
+            (workspace.case_id, version, image_hash, image_revision, result.get("stage"), result.get("phase", ""), json.dumps(features, ensure_ascii=False), _now()),
         )
-        con.execute("DELETE FROM results WHERE case_id=? AND protocol_version=? AND analysis=? AND measurement=?", (workspace.case_id, version, CVM_ANALYSIS, CVM_MEASUREMENT))
         if result.get("stage"):
+            next_version = con.execute(
+                "SELECT COALESCE(MAX(version),0)+1 FROM results "
+                "WHERE case_id=? AND protocol_version=? AND analysis=? AND measurement=?",
+                (workspace.case_id, version, CVM_ANALYSIS, CVM_MEASUREMENT),
+            ).fetchone()[0]
             con.execute(
-                "INSERT INTO results(case_id,protocol_version,analysis,measurement,value,unit,reference_text,interpretation,version,created_at) VALUES(?,?,?,?,?,?,?,?,1,?)",
-                (workspace.case_id, version, CVM_ANALYSIS, CVM_MEASUREMENT, float(result["stage"]), "CS", CVM_REFERENCE, f"{result['phase']}. {result['timing']}", _now()),
+                "INSERT INTO results(case_id,protocol_version,analysis,measurement,value,unit,reference_text,interpretation,image_hash,image_revision,version,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+                (workspace.case_id, version, CVM_ANALYSIS, CVM_MEASUREMENT, float(result["stage"]), "CS", CVM_REFERENCE, f"{result['phase']}. {result['timing']}", image_hash, image_revision, int(next_version), _now()),
+            )
+        else:
+            con.execute(
+                "UPDATE results SET image_hash='historical:incomplete-cvm-review',image_revision=-ABS(COALESCE(image_revision,1)) "
+                "WHERE case_id=? AND protocol_version=? AND analysis=? AND measurement=? "
+                "AND image_hash=? AND image_revision=?",
+                (workspace.case_id, version, CVM_ANALYSIS, CVM_MEASUREMENT, image_hash, image_revision),
             )
     try:
         row = db.case(workspace.case_id)
@@ -260,12 +292,13 @@ def _save_posture(workspace, angle: float) -> None:
     db = workspace.db
     _ensure_table(db)
     version = _case_protocol_version(workspace)
+    image_hash, image_revision = _image_identity(db, workspace.case_id)
     label, note = posture_classification(angle)
     with db.connect() as con:
         con.execute(
-            "INSERT INTO cervical_assessments(case_id,protocol_version,lordosis_angle,posture_class,updated_at) VALUES(?,?,?,?,?) "
-            "ON CONFLICT(case_id,protocol_version) DO UPDATE SET lordosis_angle=excluded.lordosis_angle,posture_class=excluded.posture_class,updated_at=excluded.updated_at",
-            (workspace.case_id, version, float(angle), label, _now()),
+            "INSERT INTO cervical_assessments(case_id,protocol_version,image_hash,image_revision,lordosis_angle,posture_class,updated_at) VALUES(?,?,?,?,?,?,?) "
+            "ON CONFLICT(case_id,protocol_version) DO UPDATE SET image_hash=excluded.image_hash,image_revision=excluded.image_revision,lordosis_angle=excluded.lordosis_angle,posture_class=excluded.posture_class,updated_at=excluded.updated_at",
+            (workspace.case_id, version, image_hash, image_revision, float(angle), label, _now()),
         )
     try:
         row = db.case(workspace.case_id)

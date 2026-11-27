@@ -4,6 +4,8 @@ import math
 from dataclasses import asdict, dataclass
 from typing import Any
 
+import yornis_measurement_corrections_v0166 as measurement_corrections
+measurement_corrections.install()
 import classic_engine as engine
 
 EXCLUSION_REASONS_ES = [
@@ -147,18 +149,30 @@ def protocol_config(title: str, variable_keys: list[str], include_criteria: list
 # Norm/reference layer deliberately independent from geometry. The engine value
 # is preserved even when no reference is available for age/sex/population.
 REFERENCE_OVERRIDES: dict[str, dict[str, str]] = {
-    "Steiner::SNA": {"default": "82° ±2°"},
-    "Steiner::SNB": {"default": "80° ±2°"},
-    "Steiner::ANB": {"default": "2° ±2°"},
+    "Steiner::SNA": {"default": "82° (media de Steiner; ±2° es banda posterior, no DE original)"},
+    "Steiner::SNB": {"default": "80° (media de Steiner; ±2° es banda posterior, no DE original)"},
+    "Steiner::ANB": {"default": "2° (media de Steiner; ±2° es banda posterior, no DE original)"},
     "Tweed::FMA": {"default": "25° ±4°"},
-    "Tweed::FMIA": {"default": "65° ±5°"},
-    "Tweed::IMPA": {"default": "90° ±5°"},
+    "Tweed::FMIA": {"default": "Objetivo condicional: ≈68° si FMA 21°–29°; ≈65° si FMA ≥30°; si FMA ≤20°, valorar IMPA y no aplicar FMIA fijo."},
+    "Tweed::IMPA": {"default": "90° ±5°; con FMA ≤20°, Tweed recomendó no exceder aproximadamente 94°."},
     "Wits::AO-BO": {"default": "Interpretar con sexo, población y convención de signo del protocolo"},
     "Sassouni::Arquitectura 4 planos": {"default": "Arquitectura/convergencia; no usar un umbral universal inventado"},
 }
 
 
 def reference_for(variable: Variable, sex: str = "", age: float | None = None, population: str = "") -> str:
+    # Keep these clinical caveats local to the lookup as well as in the
+    # override catalogue, so a compatibility layer cannot silently fall back
+    # to an unqualified legacy engine reference.
+    steiner_notes = {
+        "SNA": "82° (media de Steiner; ±2° es banda posterior, no DE original)",
+        "SNB": "80° (media de Steiner; ±2° es banda posterior, no DE original)",
+        "ANB": "2° (media de Steiner; ±2° es banda posterior, no DE original)",
+    }
+    # The canonical measurement key/name is stable across the legacy catalog
+    # adapters, while the display analysis label may be decorated or localized.
+    if variable.name in steiner_notes:
+        return steiner_notes[variable.name]
     override = REFERENCE_OVERRIDES.get(variable.key, {})
     if override.get("default"):
         return override["default"]
@@ -167,12 +181,27 @@ def reference_for(variable: Variable, sex: str = "", age: float | None = None, p
 
 def _is_linear(v: Variable) -> bool:
     u = v.unit.lower().replace(" ", "")
-    return u in {"mm", "cm"} or "distance" in v.kind.lower() or "lineal" in v.kind.lower()
+    kind = v.kind.lower()
+    return u in {"mm", "cm"} or any(term in kind for term in ("distance", "lineal", "linear", "length"))
+
+
+def requires_calibration(variable_keys: list[str]) -> bool:
+    """Return whether the selected protocol contains at least one linear variable."""
+    return any(_is_linear(variable) for variable in selected_variables(variable_keys))
+
+def is_valid_mm_per_px(value: float | None) -> bool:
+    """Accept only finite, strictly positive radiograph scales."""
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError):
+        return False
+    return math.isfinite(number) and number > 0
 
 
 def compute_selected(variable_keys: list[str], points: dict[str, tuple[float, float]], mm_per_px: float | None, side: str = "right", sex: str = "", age: float | None = None, population: str = "") -> list[dict]:
     results: list[dict] = []
-    scale = mm_per_px or 1.0
+    valid_scale = is_valid_mm_per_px(mm_per_px)
+    scale = float(mm_per_px) if valid_scale else 1.0
     measure_objs = _measurements()
     by_key: dict[str, Any] = {}
     for m in measure_objs:
@@ -183,13 +212,15 @@ def compute_selected(variable_keys: list[str], points: dict[str, tuple[float, fl
         if not all(p in points for p in v.points):
             results.append({"analysis": v.analysis, "measurement": v.name, "value": None, "unit": v.unit, "reference": reference_for(v, sex, age, population), "interpretation": "Faltan landmarks", "missing": [p for p in v.points if p not in points]})
             continue
-        if _is_linear(v) and not mm_per_px:
+        if _is_linear(v) and not valid_scale:
             results.append({"analysis": v.analysis, "measurement": v.name, "value": None, "unit": v.unit or "mm", "reference": reference_for(v, sex, age, population), "interpretation": "Requiere calibración", "missing": []})
             continue
         try:
             obj = by_key[v.key]
-            value = engine.compute(obj, points, scale, side)
-            results.append({"analysis": v.analysis, "measurement": v.name, "value": float(value), "unit": v.unit, "reference": reference_for(v, sex, age, population), "interpretation": "Valor geométrico calculado; interpretar con la norma seleccionada", "missing": []})
+            value = float(engine.compute(obj, points, scale, side))
+            if not math.isfinite(value):
+                raise ValueError("El resultado geométrico no es finito")
+            results.append({"analysis": v.analysis, "measurement": v.name, "value": value, "unit": v.unit, "reference": reference_for(v, sex, age, population), "interpretation": "Valor geométrico calculado; interpretar con la norma seleccionada", "missing": []})
         except Exception as exc:
             results.append({"analysis": v.analysis, "measurement": v.name, "value": None, "unit": v.unit, "reference": reference_for(v, sex, age, population), "interpretation": f"No calculable: {exc}", "missing": []})
     return results
@@ -202,7 +233,7 @@ def trace_qc(variable_keys: list[str], points: dict[str, tuple[float, float]], m
     if missing:
         issues.append({"level": "review", "code": "missing_landmarks", "message": f"Faltan {len(missing)} landmarks: " + ", ".join(missing[:12]) + ("…" if len(missing) > 12 else "")})
     variables = selected_variables(variable_keys)
-    if any(_is_linear(v) for v in variables) and not mm_per_px:
+    if any(_is_linear(v) for v in variables) and not is_valid_mm_per_px(mm_per_px):
         issues.append({"level": "review", "code": "missing_calibration", "message": "El protocolo contiene variables lineales y no hay calibración mm/píxel."})
     placed = [(k, points[k]) for k in required if k in points]
     for i, (a, pa) in enumerate(placed):

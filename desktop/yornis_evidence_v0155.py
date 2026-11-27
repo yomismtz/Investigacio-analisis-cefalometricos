@@ -17,7 +17,8 @@ C1_C7_REFERENCE = (
     "Been et al., Spine J 2017, DOI 10.1016/j.spinee.2017.02.007: 6–19 años 50.7±10.5° "
     "(niños 49.7±10.4°, niñas 52.7±10.9°); 20–50 años 45.6±10.4° "
     "(hombres 47.4±10.7°, mujeres 43.7±10.1°). Son referencias de muestra, no límites de normalidad. "
-    "No se encontró una referencia compatible año por año para 4–30 años; no interpolar ni extrapolar."
+    "No se encontró una referencia compatible año por año para 4–30 años; no interpolar ni extrapolar. "
+    "No se aplica un umbral universal: comparar sólo con el mismo método, niveles y convención de signo."
 )
 
 AIRWAY_SOURCE = (
@@ -142,7 +143,7 @@ def _patch_c1_c7() -> None:
     ]
     table["note"] = (
         "La geometría de Yornis se aproxima al C1–C7 de Been et al. Se retiró el antiguo corte universal 35–45°. "
-        "Estudios pediátricos que usan C2–C7 o C3–C7 demuestran cambios con crecimiento, pero no se mezclan con C1–C7."
+        "No se aplica un umbral universal; los estudios pediátricos que usan C2–C7 o C3–C7 no se mezclan con C1–C7."
     )
 
 
@@ -179,6 +180,7 @@ def _patch_airway_help() -> None:
     ])
     table["rows"] = rows
     table["note"] = (
+        "Las dimensiones de vía aérea se calculan dentro del análisis McNamara; esta tabla complementaria organiza referencias por edad y sexo. "
         "En la muestra de 480 niños, la vía superior de McNamara aumentó con la edad; la inferior no mostró cambio significativo. "
         "No hubo diferencias significativas por sexo para estas dos variables. Se conservan 17±4 mm y 12±3 mm sólo como referencias históricas de trazabilidad, no como normas pediátricas. "
         "La cefalometría 2D no diagnostica obstrucción ni apnea."

@@ -1,6 +1,8 @@
 from __future__ import annotations
 import base64
 import zlib
+import yornis_measurement_corrections_v0166 as _yornis_measurement_corrections
+_yornis_measurement_corrections.install()
 import yornis_branding_v0161 as _yornis_branding
 from _classic_ui_part00 import PART as P0
 from _classic_ui_part01 import PART as P1
