@@ -186,16 +186,18 @@ def install_individual(classic_class) -> None:
 
             result = original_start(self, *args, **kwargs)
 
-            # The legacy dialog returns with its calibration-mode flag enabled
-            # only when the user accepted a positive real-world distance and
-            # the engine is waiting for the two image clicks. Both the modern
-            # calibration_mode and classic calib_mode names are supported.
-            accepted = (
-                _calibration_mode_enabled(self)
-                and _positive_finite(getattr(self, "calibration_real_mm", None))
-            )
+            # Older classic builds do not consistently preserve the mode flag
+            # after the distance dialog. A positive accepted distance is the
+            # authoritative signal; normalize both legacy and current flags so
+            # the image canvas receives the two calibration clicks.
+            if not _positive_finite(getattr(self, "calibration_real_mm", None)) and _positive_finite(result):
+                self.calibration_real_mm = float(result)
+            accepted = _positive_finite(getattr(self, "calibration_real_mm", None))
             if accepted:
+                self.calibration_mode = True
+                self.calib_mode = True
                 self.mm_per_px = None
+                self.calibration_points = []
                 _set_classic_canvas_state(self, "normal")
             else:
                 self.mm_per_px = previous_scale
