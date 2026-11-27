@@ -232,7 +232,7 @@ jobs:
           assert cal_title == 'Calibrar radiografía · Yornis'
           assert 'MILÍMETROS REALES' in cal_prompt and 'primer extremo' in cal_prompt and 'segundo extremo' in cal_prompt
           # The registered engine contains 106 entries; the regression suite checks all of them.
-assert len(engine.MEASUREMENTS) == 106
+          assert len(engine.MEASUREMENTS) == 106
           assert len(refs.TABLES) == 17
           assert modern_ui.modern_backend_available()
           import wave
@@ -377,7 +377,7 @@ assert len(engine.MEASUREMENTS) == 106
           - Botones, controles, tablas, pestañas y campos con estilo plano y espaciado moderno.
           - Las diez paletas de aves mantienen sus colores y actualizan los controles en tiempo real.
           - Sistema visual aplicado al lanzador, caso individual e investigación.
-          - 103 mediciones cefalométricas y 17 tablas de referencia conservadas.
+          - 106 mediciones cefalométricas y 17 tablas de referencia conservadas.
           - Calibración por radiografía y control de confianza de landmarks conservados.
           - Diez grabaciones originales de aves, con sonido completo al cambiar de paleta y fragmentos cortos de inicio, incluidos para uso sin conexión.
           - Fórmulas, geometría, base de datos y lógica clínica sin cambios.
