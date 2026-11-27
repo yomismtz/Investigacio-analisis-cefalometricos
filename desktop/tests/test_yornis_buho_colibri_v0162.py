@@ -18,7 +18,7 @@ LEGACY_BIRDS = {
     "Agaporni", "Tucán", "Pavorreal", "Ninfa", "Faisán", "Quetzal",
     "Guacamaya Roja", "Guacamaya Azul",
 }
-NEW_BIRDS = {"Búho", "Colibrí"}
+NEW_BIRDS = {"Búho", "Colibrí", "Flamenco", "Colorín siete colores", "Tángara del paraíso"}
 
 
 class BuhoColibriPaletteTests(unittest.TestCase):
@@ -61,8 +61,13 @@ class BuhoColibriPaletteTests(unittest.TestCase):
         self.assertEqual(assistant.BIRD_PROFILES["Colibrí"]["shape"], "hummingbird")
         self.assertEqual(signatures.BIRD_AUDIO_FILES["Búho"], "buho real.mp3")
         self.assertEqual(signatures.BIRD_AUDIO_FILES["Colibrí"], "colibri.mp3")
+        self.assertEqual(signatures.BIRD_AUDIO_FILES["Flamenco"], "Flamingo Bird Sound 🦩#shorts (mp3cut.net).mp3")
+        self.assertEqual(signatures.BIRD_AUDIO_FILES["Colorín siete colores"], "sonido colorin.mp3")
+        self.assertEqual(signatures.BIRD_AUDIO_FILES["Tángara del paraíso"], "Paradise Tanager (Tangara chilensis) #birds #birdsounds #birdsong (mp3cut.net).mp3")
         for bird in NEW_BIRDS:
             self.assertTrue(signatures.source_audio_path(bird).is_file())
+            self.assertTrue(assistant._bird_asset_path(bird).is_file(), f"Missing icon for {bird}")
+            self.assertTrue(yornis_theme.brand_logo_path(bird).is_file(), f"Missing YOM Dental logo for {bird}")
             for volume in signatures.VOLUME_LEVELS:
                 for path in (
                     signatures.bundled_signature_path(bird, volume),
