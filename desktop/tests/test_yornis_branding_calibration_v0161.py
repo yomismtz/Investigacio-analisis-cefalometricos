@@ -44,9 +44,12 @@ icon = "yomceph_logo.png"
         )
         self.assertEqual(title, "Calibrar radiografía · Yornis")
         self.assertIn("MILÍMETROS REALES", prompt)
+        self.assertIn("Punto calibración 1", prompt)
+        self.assertIn("Punto calibración 2", prompt)
         self.assertIn("primer extremo", prompt)
         self.assertIn("segundo extremo", prompt)
         self.assertIn("25 mm", prompt)
+        self.assertIn("No son landmarks cefalométricos", prompt)
 
     def test_research_storage_uses_yornis_identity(self):
         self.assertEqual(research_db.APP_DIR.name, "Yornis")
