@@ -17,7 +17,7 @@ class YornisV01592Tests(unittest.TestCase):
         names = yornis_theme.theme_names()
         self.assertEqual(set(names), set(sounds.BIRD_AUDIO_FILES))
         source_names = [sounds.BIRD_AUDIO_FILES[name] for name in names]
-        self.assertEqual(len(set(source_names)), 10)
+        self.assertEqual(len(set(source_names)), 13)
         for name in names:
             self.assertTrue(sounds.source_audio_path(name).is_file())
             for volume in sounds.VOLUME_LEVELS:
