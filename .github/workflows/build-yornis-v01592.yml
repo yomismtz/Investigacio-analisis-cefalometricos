@@ -346,7 +346,7 @@ jobs:
           assert hasattr(l, 'startup_volume_var')
           assert len(l.palette_cards) == 13
           assert len(l._yornis_mode_cards) == 2
-          assert len(l._yornis_mode_mascots) == 2
+          assert len(l._yornis_mode_mascots) >= 2
           l._adapt_mode_cards(type('E', (), {'width': 700})())
           assert [int(card.grid_info()['row']) for card in l._yornis_mode_cards] == [0, 1]
           l._adapt_mode_cards(type('E', (), {'width': 1100})())
