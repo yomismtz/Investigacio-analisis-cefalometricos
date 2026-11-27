@@ -68,13 +68,15 @@ class Launcher(previous.Launcher):
         logo_box.pack(side="left", padx=(0, 16))
         self.logo_photo = None
         try:
-            p = previous.previous.previous.legacy.base.resource_path("yornis_logo.png")
-            im = Image.open(p).convert("RGBA")
-            im.thumbnail((78, 78), Image.Resampling.LANCZOS)
-            self.logo_photo = ImageTk.PhotoImage(im)
-            tk.Label(logo_box, image=self.logo_photo, bg=t["panel"], padx=10, pady=10).pack()
+            logo_path = yornis_theme.brand_logo_path(theme_name)
+            if logo_path is None or not logo_path.is_file():
+                raise FileNotFoundError(f"YOM Dental logo missing for {theme_name}")
+            logo_image = Image.open(logo_path).convert("RGBA")
+            logo_image.thumbnail((150, 76), Image.Resampling.LANCZOS)
+            self.logo_photo = ImageTk.PhotoImage(logo_image)
+            tk.Label(logo_box, image=self.logo_photo, bg=t["panel"], padx=8, pady=8).pack()
         except Exception:
-            tk.Label(logo_box, text="Y", bg=t["panel"], fg=t["primary"], font=("Segoe UI Semibold", 30), padx=18, pady=14).pack()
+            tk.Label(logo_box, text="YOM", bg=t["panel"], fg=t["primary"], font=("Segoe UI Semibold", 24), padx=14, pady=12).pack()
 
         brand = ttk.Frame(topbar)
         brand.pack(side="left", fill="x", expand=True)
@@ -122,7 +124,7 @@ class Launcher(previous.Launcher):
         stat_data = [
             ("102", "mediciones"),
             ("17", "tablas de referencia"),
-            ("8", "paletas + asistentes"),
+            ("13", "paletas + asistentes"),
             ("HiDPI", "interfaz optimizada"),
         ]
         for idx, (big, small) in enumerate(stat_data):
@@ -206,7 +208,22 @@ class Launcher(previous.Launcher):
         footer.pack(fill="x", pady=(14, 0))
         self.note = ttk.Label(footer, text="", wraplength=820, justify="left", style="Caption.TLabel")
         self.note.pack(side="left", fill="x", expand=True)
-        ttk.Label(footer, text="FINAL POLISH · 0.15.8", style="AccentPill.TLabel").pack(side="right", padx=(12, 0))
+        credits = tk.Frame(footer, bg=t["panel"], highlightthickness=1, highlightbackground=t["border"])
+        credits.pack(side="right", padx=(12, 8), pady=2)
+        self.credit_logo_photo = None
+        try:
+            credit_path = yornis_theme.brand_logo_path(theme_name)
+            if credit_path is None or not credit_path.is_file():
+                raise FileNotFoundError(f"YOM Dental credit logo missing for {theme_name}")
+            credit_image = Image.open(credit_path).convert("RGBA")
+            credit_image.thumbnail((82, 38), Image.Resampling.LANCZOS)
+            self.credit_logo_photo = ImageTk.PhotoImage(credit_image)
+            tk.Label(credits, image=self.credit_logo_photo, bg=t["panel"], padx=5, pady=3).pack(side="left")
+        except Exception:
+            pass
+        tk.Label(credits, text="Créditos · YOM Dental", bg=t["panel"], fg=t["text"],
+                 font=("Segoe UI Semibold", 8), padx=7, pady=5).pack(side="left")
+        ttk.Label(footer, text="FINAL POLISH · 0.16.8", style="AccentPill.TLabel").pack(side="right", padx=(12, 0))
         self.refresh_text()
         self.after_idle(self._update_launcher_scrollregion)
 
