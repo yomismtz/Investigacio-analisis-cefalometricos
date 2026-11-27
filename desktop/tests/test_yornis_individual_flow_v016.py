@@ -155,6 +155,39 @@ class IndividualSelectorFlowTests(unittest.TestCase):
         finally:
             root.destroy()
 
+    def test_accepted_distance_activates_legacy_canvas_even_without_mode_flag(self):
+        import tkinter as tk
+        import yornis_calibration_gate_v0164 as gate
+
+        class LegacyFlagClassic:
+            def __init__(self, root):
+                self.canvas = tk.Canvas(root, width=20, height=20)
+                self.canvas.pack()
+                self.individual_measurements = {"Steiner": ["U1–NA (mm)"]}
+                self.calibration_points = []
+                self.calibration_real_mm = None
+                self.mm_per_px = None
+
+            def winfo_children(self):
+                return [self.canvas]
+
+            def start_calibration(self):
+                # Simulates an older engine that records the accepted distance
+                # but does not expose either calibration-mode flag.
+                self.calibration_real_mm = 25.0
+
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            gate.install_individual(LegacyFlagClassic)
+            app = LegacyFlagClassic(root)
+            app.start_calibration()
+            self.assertTrue(app.calibration_mode)
+            self.assertTrue(app.calib_mode)
+            self.assertEqual(str(app.canvas.cget("state")), "normal")
+        finally:
+            root.destroy()
+
     def test_angular_only_individual_case_skips_mm_calibration(self):
         import tkinter as tk
         import yornis_calibration_gate_v0164 as gate
