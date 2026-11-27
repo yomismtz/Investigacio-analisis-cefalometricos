@@ -359,8 +359,10 @@ def install_database() -> None:
         case = self.case(case_id)
         if not case:
             return []
-        image_hash = self._active_image_hash(case)
         stored_hash = str(case["file_hash"] or "")
+        # file_hash is authoritative when a legacy adapter cannot derive an
+        # active hash from the case row (e.g. upgraded databases).
+        image_hash = str(self._active_image_hash(case) or stored_hash)
         image_revision = int(case["image_revision"] or 1)
         has_current_image = bool(image_hash and stored_hash and image_hash == stored_hash)
 
