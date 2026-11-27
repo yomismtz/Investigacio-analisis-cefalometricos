@@ -7,6 +7,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import yornis_reference_help_v0154_all as refs
+import yornis_evidence_v0155 as evidence
+
+evidence.install()
 
 
 class ReferenceHelpTests(unittest.TestCase):
