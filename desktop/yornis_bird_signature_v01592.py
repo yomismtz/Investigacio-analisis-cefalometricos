@@ -10,7 +10,7 @@ AUDIO_VERSION = "0.16.3-original-recordings"
 SAMPLE_RATE = 44100
 VOLUME_LEVELS = (20, 35, 50, 70, 90)
 
-# Exact user-uploaded source recordings stored in desktop/assets.
+# Exact user-uploaded source recordings stored in assets/bird-palettes/sounds.
 # The build converts them to offline PCM WAV variants for Windows playback.
 BIRD_AUDIO_FILES = {
     "Agaporni": "agaporni.mp3",
@@ -23,6 +23,9 @@ BIRD_AUDIO_FILES = {
     "Guacamaya Azul": "guacamayo azul.mp3",
     "Búho": "buho real.mp3",
     "Colibrí": "colibri.mp3",
+    "Flamenco": "Flamingo Bird Sound 🦩#shorts (mp3cut.net).mp3",
+    "Colorín siete colores": "sonido colorin.mp3",
+    "Tángara del paraíso": "Paradise Tanager (Tangara chilensis) #birds #birdsounds #birdsong (mp3cut.net).mp3",
 }
 
 
