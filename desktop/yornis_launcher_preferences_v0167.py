@@ -267,6 +267,23 @@ def install(launcher_class) -> bool:
 
     original_init = launcher_class.__init__
     original_rebuild = launcher_class._rebuild_quality_launcher
+    try:
+        import yornis_modern_ui_v0160 as modern_ui
+        original_modern_apply = modern_ui.apply_modern_styles
+
+        def apply_saved_typography(root):
+            pref = _prefs()
+            family, size = pref["font_family"], pref["font_size"]
+            modern_ui._FONT = (family, size)
+            modern_ui._FONT_MEDIUM = (family, size)
+            modern_ui._FONT_TITLE = (family, size + 12)
+            result = original_modern_apply(root)
+            _apply_typography(root, family, size)
+            return result
+
+        modern_ui.apply_modern_styles = apply_saved_typography
+    except Exception:
+        pass
 
     def init(self, *args, **kwargs):
         # v0.15.9 used this hook for a single selected-bird startup call. Replace
