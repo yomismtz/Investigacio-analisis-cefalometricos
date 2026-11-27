@@ -3,13 +3,12 @@ from __future__ import annotations
 import yornis_desktop_v01591 as previous
 import yornis_modern_ui_v0160 as modern_ui
 import yornis_viewport_v0165 as viewport_ui
-import yornis_launcher_preferences_v0167 as launcher_preferences
 
 viewport_ui.install()
 
 modern_ui.install()
 
-APP_VERSION = "0.16.7 Inicio configurable · Tipografía adaptable · Coro de aves"
+APP_VERSION = "0.16.3 Grabaciones originales de aves · Sonido offline"
 
 
 class Launcher(previous.Launcher):
@@ -43,9 +42,6 @@ class Launcher(previous.Launcher):
         super().refresh_text()
         if hasattr(self, "ver_lbl"):
             self.ver_lbl.configure(text=f"v{APP_VERSION}")
-
-
-launcher_preferences.install(Launcher)
 
 
 def main():
