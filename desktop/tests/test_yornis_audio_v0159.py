@@ -15,7 +15,7 @@ import yornis_startup_audio_v0159 as startup_audio
 
 
 class OriginalBirdAudioTests(unittest.TestCase):
-    def test_all_ten_palettes_map_to_the_uploaded_mp3_recordings(self):
+    def test_all_thirteen_palettes_map_to_the_uploaded_mp3_recordings(self):
         self.assertEqual(set(signatures.BIRD_AUDIO_FILES), set(yornis_theme.theme_names()))
         for bird, filename in signatures.BIRD_AUDIO_FILES.items():
             source = signatures.source_audio_path(bird)
