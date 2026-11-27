@@ -161,6 +161,17 @@ REFERENCE_OVERRIDES: dict[str, dict[str, str]] = {
 
 
 def reference_for(variable: Variable, sex: str = "", age: float | None = None, population: str = "") -> str:
+    # Keep these clinical caveats local to the lookup as well as in the
+    # override catalogue, so a compatibility layer cannot silently fall back
+    # to an unqualified legacy engine reference.
+    if variable.analysis == "Steiner":
+        steiner_notes = {
+            "SNA": "82° (media de Steiner; ±2° es banda posterior, no DE original)",
+            "SNB": "80° (media de Steiner; ±2° es banda posterior, no DE original)",
+            "ANB": "2° (media de Steiner; ±2° es banda posterior, no DE original)",
+        }
+        if variable.name in steiner_notes:
+            return steiner_notes[variable.name]
     override = REFERENCE_OVERRIDES.get(variable.key, {})
     if override.get("default"):
         return override["default"]
