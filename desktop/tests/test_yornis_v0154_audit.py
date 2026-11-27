@@ -56,7 +56,8 @@ class AuditHardeningTests(unittest.TestCase):
         cfg = {"selected_variables": list(keys), "population": "cohorte de prueba"}
         return self.db.save_protocol(self.study, cfg)
 
-    def test_calculation_engine_contains_103_numeric_measurements(self):
+    # 103 core clinical measurements plus three separately registered cervical/support entries.
+    def test_calculation_engine_contains_106_registered_measurements(self):
         self.assertEqual(len(engine.MEASUREMENTS), 106)
 
     def test_reference_catalog_count_and_fma_norm_are_consistent(self):
