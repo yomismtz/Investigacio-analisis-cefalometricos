@@ -125,6 +125,17 @@ def install() -> None:
     original_compute = engine.compute
 
     def compute(measurement, points, mm_per_px, face_direction="right"):
+        # Never silently interpret raw pixels as millimetres. The research
+        # protocol and individual calibration gate both validate the scale,
+        # but enforce the unit contract here as the final engine boundary too.
+        unit = str(getattr(measurement, "unit", "") or "").strip().lower()
+        if unit in {"mm", "cm"}:
+            try:
+                scale = float(mm_per_px)
+            except (TypeError, ValueError, OverflowError) as exc:
+                raise ValueError("Esta medición lineal requiere una calibración mm/píxel válida.") from exc
+            if not math.isfinite(scale) or scale <= 0:
+                raise ValueError("Esta medición lineal requiere una calibración mm/píxel válida.")
         if measurement.analysis == "Downs" and measurement.name == "L1/plano oclusal":
             return original_compute(measurement, points, mm_per_px, face_direction) - 90.0
         if measurement.kind == "signed_ab_plane":
