@@ -9,6 +9,41 @@ import yomceph_theme as base
 SETTINGS_PATH = Path(os.getenv('APPDATA', str(Path.home()))) / 'YomCeph' / 'yornis_settings.json'
 DEFAULT_THEME = 'Agaporni'
 
+# Eight characteristic plumage colors for each bird. These are kept separately
+# from semantic UI colors so every palette retains its exact species identity.
+BIRD_COLOR_SWATCHES = {
+    "Agaporni": ("#328B50", "#347DB8", "#F5D94B", "#F8F5E9", "#F29B70", "#36BDB7", "#B59BCF", "#713D70"),
+    "Tucán": ("#171717", "#F4D52F", "#F28A24", "#F7F4EA", "#D94B2B", "#D9A43B", "#929292", "#365B43"),
+    "Pavorreal": ("#175A9B", "#087B55", "#16A9A5", "#124B59", "#D6AD37", "#A66B36", "#684A91", "#164536"),
+    "Ninfa": ("#C5C5C2", "#65676B", "#F4D64E", "#FAF9F4", "#E98143", "#E9DCC2", "#D99BA4", "#9B918A"),
+    "Faisán": ("#B66A3C", "#8C2937", "#D5A63D", "#F1E2C8", "#69713B", "#315B79", "#67402D", "#292326"),
+    "Quetzal": ("#087D50", "#36A96A", "#16B5A8", "#F7F4E8", "#C63B43", "#E7C94D", "#277DB0", "#064B3B"),
+    "Guacamaya Roja": ("#D52E35", "#8F2029", "#F4D22E", "#F8F5EC", "#EE8425", "#1766B2", "#32834D", "#242020"),
+    "Guacamaya Azul": ("#1555A0", "#55A6D9", "#F2C544", "#F8F7F0", "#4C9B50", "#28AFAF", "#718A9C", "#202329"),
+    "Búho": ("#805137", "#452B25", "#C68A32", "#F0E2C9", "#C6A77F", "#D4BD99", "#89847E", "#F7F3E9"),
+    "Colibrí": ("#15966D", "#20B9B1", "#2777CF", "#F8F8F0", "#7950A8", "#C34B91", "#08734F", "#164537"),
+}
+
+# Apply the eight bird colors to the existing semantic theme slots while
+# retaining neutral surfaces and readable text contrast.
+def _apply_bird_color_sets() -> None:
+    for bird, colors in BIRD_COLOR_SWATCHES.items():
+        theme = THEMES[bird]
+        theme.update({
+            "primary": colors[0],
+            "primary_dark": colors[7],
+            "primary_soft": colors[3],
+            "secondary": colors[1],
+            "secondary_dark": colors[7],
+            "accent": colors[2],
+            "accent_soft": colors[3],
+            "tertiary": colors[4],
+            "warning": colors[5],
+            "danger": colors[7],
+        })
+
+_apply_bird_color_sets()
+
 THEMES = {
     'Agaporni': {
         'description_es': 'Púrpura, ciruela y violeta con turquesa, menta, lavanda y lila.',
@@ -117,6 +152,7 @@ def apply_theme(name: str, persist: bool = True) -> dict:
     # Mutate existing dictionaries in-place: modules that imported them keep the same references.
     p = base.PALETTE
     p.update({
+        **{f'bird_color_{index + 1}': color for index, color in enumerate(BIRD_COLOR_SWATCHES[name])},
         'violet_950': t['primary_dark'], 'plum_900': t['primary_dark'], 'purple_800': t['primary'],
         'violet_700': t['primary'], 'violet_600': t['tertiary'], 'lilac_500': t['tertiary'],
         'lavender_400': t['primary_soft'], 'lavender_300': t['primary_soft'], 'lavender_200': t['panel_alt'],
