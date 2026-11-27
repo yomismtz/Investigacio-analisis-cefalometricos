@@ -13,7 +13,7 @@ APP_VERSION = "0.16.7 Inicio configurable · Tipografía adaptable · Coro de av
 
 
 class Launcher(previous.Launcher):
-    """v0.16.3: ten palettes, original offline recordings and audited clinical workflows."""
+    """v0.16.3: thirteen palettes, original offline recordings and audited clinical workflows."""
 
     def __init__(self):
         super().__init__()
