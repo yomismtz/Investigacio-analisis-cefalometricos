@@ -23,6 +23,8 @@ def apply_styles(root) -> None:
     t = _theme()
     primary_fg = yornis_theme.readable_foreground(t["primary"])
     secondary_fg = yornis_theme.readable_foreground(t["secondary"])
+    primary_hover_fg = yornis_theme.readable_foreground(t["primary_dark"])
+    secondary_hover_fg = yornis_theme.readable_foreground(t["secondary_dark"])
     style = ttk.Style(root)
     try:
         if "clam" in style.theme_names():
@@ -76,7 +78,7 @@ def apply_styles(root) -> None:
     style.configure("Ghost.TButton", font=("Segoe UI Semibold", 10), padding=(13, 9), background=t["panel"], foreground=t["primary_dark"], bordercolor=t["border"])
     style.map("Ghost.TButton", background=[("active", t["panel_alt"]), ("pressed", t["primary_soft"])])
     style.configure("Assistant.TButton", font=("Segoe UI Semibold", 10), padding=(14, 9), background=t["accent"], foreground=t["primary_dark"], bordercolor=t["secondary_dark"])
-    style.map("Assistant.TButton", background=[("active", t["secondary"]), ("pressed", t["secondary_dark"])], foreground=[("active", secondary_fg), ("pressed", yornis_theme.readable_foreground(t["secondary_dark"]))])
+    style.map("Assistant.TButton", background=[("active", t["secondary"]), ("pressed", t["secondary_dark"])], foreground=[("active", secondary_hover_fg), ("pressed", secondary_hover_fg)])
 
     style.configure("TEntry", padding=(10, 8), fieldbackground=t["panel"], foreground=t["text"], bordercolor=t["border"], insertcolor=t["primary_dark"])
     style.configure("TCombobox", padding=(9, 7), fieldbackground=t["panel"], foreground=t["text"], background=t["panel_alt"], bordercolor=t["border"])
