@@ -316,44 +316,83 @@ def install_database() -> None:
         image_hash = self._active_image_hash(case)
         stored_hash = str(case["file_hash"] or "")
         image_revision = int(case["image_revision"] or 1)
-        rows = current_latest(self, case_id, protocol_version) or []
+        has_current_image = bool(image_hash and stored_hash and image_hash == stored_hash)
 
-        # CVM and C2-C4 alignment are explicitly entered categorical outcomes,
-        # not automatic landmark calculations. Keep them visible for image-less
-        # cases, but bind them to the current image/revision whenever one exists.
-        manual_analyses = {
+        # CVM and C2-C4 alignment are manually assessed outcomes. They do not
+        # require an automatic landmark trace, but they must remain scoped to
+        # the active image/revision. For image-less manual assessments, only
+        # rows without an image identity are eligible.
+        manual_analyses = (
             "CVM C2–C4",
             "Postura vertebral vertical C2–C4",
-        }
-        has_current_image = bool(image_hash and stored_hash and image_hash == stored_hash)
-        if not has_current_image:
-            return [
-                row for row in rows
-                if str(row["analysis"] or "") in manual_analyses
-                and not str(row["image_hash"] or "")
-            ]
-
+        )
         with self.connect() as con:
-            current_trace = con.execute(
-                "SELECT 1 FROM landmarks l JOIN cases c ON c.id=l.case_id "
-                "WHERE l.case_id=? AND l.protocol_version=? AND l.image_hash=? "
-                "AND l.image_hash=c.file_hash AND l.image_revision=c.image_revision LIMIT 1",
-                (case_id, protocol_version, image_hash),
-            ).fetchone() is not None
+            if has_current_image:
+                manual_rows = con.execute(
+                    """
+                    SELECT r.* FROM results r
+                    WHERE r.case_id=? AND r.protocol_version=?
+                      AND r.analysis IN (?,?)
+                      AND r.image_hash=? AND r.image_revision=?
+                      AND r.version=(
+                        SELECT MAX(r2.version) FROM results r2
+                        WHERE r2.case_id=r.case_id
+                          AND r2.protocol_version=r.protocol_version
+                          AND r2.analysis=r.analysis
+                          AND r2.measurement=r.measurement
+                          AND r2.image_hash=r.image_hash
+                          AND r2.image_revision=r.image_revision
+                      )
+                    ORDER BY r.analysis,r.measurement
+                    """,
+                    (case_id, protocol_version, *manual_analyses, image_hash, image_revision),
+                ).fetchall()
+            else:
+                manual_rows = con.execute(
+                    """
+                    SELECT r.* FROM results r
+                    WHERE r.case_id=? AND r.protocol_version=?
+                      AND r.analysis IN (?,?)
+                      AND COALESCE(r.image_hash,'')=''
+                      AND COALESCE(r.image_revision,1)>0
+                      AND r.version=(
+                        SELECT MAX(r2.version) FROM results r2
+                        WHERE r2.case_id=r.case_id
+                          AND r2.protocol_version=r.protocol_version
+                          AND r2.analysis=r.analysis
+                          AND r2.measurement=r.measurement
+                          AND COALESCE(r2.image_hash,'')=''
+                          AND COALESCE(r2.image_revision,1)>0
+                      )
+                    ORDER BY r.analysis,r.measurement
+                    """,
+                    (case_id, protocol_version, *manual_analyses),
+                ).fetchall()
 
-        current = []
+        if not has_current_image:
+            return list(manual_rows)
+
+        # Keep automatically computed outcomes only when the image and a
+        # matching current trace are both present; add image-bound manual
+        # outcomes independently because they are not landmark calculations.
+        rows = current_latest(self, case_id, protocol_version) or []
+        combined = {}
         for row in rows:
             try:
-                same_image = (
-                    str(row["image_hash"] or "") == image_hash
-                    and int(row["image_revision"] or 0) == image_revision
-                )
-                is_manual = str(row["analysis"] or "") in manual_analyses
-                if same_image and (is_manual or current_trace):
-                    current.append(row)
+                key = (str(row["analysis"]), str(row["measurement"]), int(row["version"]))
+                combined[key] = row
             except (KeyError, IndexError, TypeError, ValueError):
                 continue
-        return current
+        for row in manual_rows:
+            try:
+                key = (str(row["analysis"]), str(row["measurement"]), int(row["version"]))
+                combined[key] = row
+            except (KeyError, IndexError, TypeError, ValueError):
+                continue
+        return sorted(
+            combined.values(),
+            key=lambda row: (str(row["analysis"]), str(row["measurement"])),
+        )
 
     latest_results_for_current_image._yornis_latest_results_image_guard_v0166 = True
     ResearchDB.latest_results = latest_results_for_current_image
