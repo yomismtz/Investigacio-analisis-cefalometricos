@@ -197,6 +197,10 @@ jobs:
         shell: pwsh
         run: Get-ChildItem desktop\*.py | ForEach-Object { python -m py_compile $_.FullName; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } }
 
+      - name: Verify image identity guard imports
+        shell: pwsh
+        run: python -c "import sys; sys.path.insert(0, 'desktop'); import yornis_image_identity_v0163; yornis_image_identity_v0163.install_cervical_result_identity()"
+
       - name: Required unit, image-swap, calibration and geometry regression tests
         shell: pwsh
         run: python -m unittest discover -s desktop/tests -p "test_*.py" -v
@@ -372,7 +376,7 @@ jobs:
           - Botones, controles, tablas, pestañas y campos con estilo plano y espaciado moderno.
           - Las diez paletas de aves mantienen sus colores y actualizan los controles en tiempo real.
           - Sistema visual aplicado al lanzador, caso individual e investigación.
-          - 102 mediciones y 17 tablas de referencia conservadas.
+          - 103 mediciones cefalométricas y 17 tablas de referencia conservadas.
           - Calibración por radiografía y control de confianza de landmarks conservados.
           - Diez grabaciones originales de aves, con sonido completo al cambiar de paleta y fragmentos cortos de inicio, incluidos para uso sin conexión.
           - Fórmulas, geometría, base de datos y lógica clínica sin cambios.
