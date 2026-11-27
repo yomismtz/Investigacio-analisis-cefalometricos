@@ -223,7 +223,7 @@ class Launcher(previous.Launcher):
             pass
         tk.Label(credits, text="Créditos · YOM Dental", bg=t["panel"], fg=t["text"],
                  font=("Segoe UI Semibold", 8), padx=7, pady=5).pack(side="left")
-        ttk.Label(footer, text="FINAL POLISH · 0.16.8", style="AccentPill.TLabel").pack(side="right", padx=(12, 0))
+        ttk.Label(footer, text="13 PALETAS · YOM DENTAL", style="AccentPill.TLabel").pack(side="right", padx=(12, 0))
         self.refresh_text()
         self.after_idle(self._update_launcher_scrollregion)
 
