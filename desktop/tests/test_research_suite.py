@@ -71,7 +71,9 @@ class ResearchSuiteTests(unittest.TestCase):
         cat = analysis_catalog(); a = next(iter(cat)); v = cat[a][0]
         cfg = {"selected_variables": [v.key], "required_landmarks": list(v.points)}
         version = self.db.save_protocol(self.study, cfg)
-        cid = self.db.add_case(self.study, "001")
+        image = Path(self.tmp.name) / "001.png"
+        image.write_bytes(b"synthetic lateral radiograph")
+        cid = self.db.add_case(self.study, "001", image_path=str(image), copy_image=False)
         points = {p: (float(i * 10 + 1), float(i * 7 + 2)) for i, p in enumerate(v.points)}
         self.db.save_trace(cid, version, points, [{"analysis": v.analysis, "measurement": v.name, "value": 1.0, "unit": v.unit, "reference": "", "interpretation": ""}], [v.name], 0.1)
         self.assertEqual(self.db.case(cid)["status"], "complete")
