@@ -45,6 +45,10 @@ class LauncherLayoutHotfixTests(unittest.TestCase):
                         texts.append(str(text))
             self.assertTrue(any("Referencias" in t for t in texts))
             self.assertTrue(any("Asistente" in t and "Ctrl+K" in t for t in texts))
+            self.assertTrue(hasattr(launcher, "_yornis_mode_cards"))
+            self.assertTrue(hasattr(launcher, "_adapt_mode_cards"))
+            self.assertTrue(hasattr(launcher, "_adapt_palette_cards"))
+            self.assertIsNotNone(getattr(launcher, "logo_photo", None))
         finally:
             launcher.destroy()
 
