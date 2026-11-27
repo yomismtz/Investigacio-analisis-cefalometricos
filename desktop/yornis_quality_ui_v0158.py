@@ -21,6 +21,8 @@ def apply_styles(root) -> None:
     """
     base.apply_styles(root)
     t = _theme()
+    primary_fg = yornis_theme.readable_foreground(t["primary"])
+    secondary_fg = yornis_theme.readable_foreground(t["secondary"])
     style = ttk.Style(root)
     try:
         if "clam" in style.theme_names():
@@ -60,21 +62,21 @@ def apply_styles(root) -> None:
     style.configure("IndividualBody.TLabel", background=t["panel"], foreground=t["muted"], font=("Segoe UI", 9))
     style.configure("IndividualCount.TLabel", background=t["primary_soft"], foreground=t["primary_dark"], font=("Segoe UI Semibold", 9), padding=(10, 5))
     style.configure("IndividualStep.TLabel", background=t["accent_soft"], foreground=t["secondary_dark"], font=("Segoe UI Semibold", 9), padding=(10, 5))
-    style.configure("IndividualPrimary.TButton", font=("Segoe UI Semibold", 10), padding=(15, 9), background=t["primary"], foreground="#FFFFFF", bordercolor=t["primary_dark"])
-    style.map("IndividualPrimary.TButton", background=[("active", t["primary_dark"]), ("pressed", t["primary_dark"])], foreground=[("!disabled", "#FFFFFF")])
+    style.configure("IndividualPrimary.TButton", font=("Segoe UI Semibold", 10), padding=(15, 9), background=t["primary"], foreground=primary_fg, bordercolor=t["primary_dark"])
+    style.map("IndividualPrimary.TButton", background=[("active", t["primary_dark"]), ("pressed", t["primary_dark"])], foreground=[("!disabled", primary_fg)])
     style.configure("IndividualGhost.TButton", font=("Segoe UI Semibold", 9), padding=(12, 8), background=t["panel_alt"], foreground=t["primary_dark"], bordercolor=t["border"])
     style.map("IndividualGhost.TButton", background=[("active", t["primary_soft"]), ("pressed", t["primary_soft"])])
 
     style.configure("TButton", font=("Segoe UI Semibold", 10), padding=(14, 9), background=t["panel_alt"], foreground=t["text"], bordercolor=t["border"], focusthickness=2, focuscolor=t["primary_soft"])
     style.map("TButton", background=[("active", t["primary_soft"]), ("pressed", t["primary_soft"])], foreground=[("active", t["primary_dark"])])
     style.configure("Primary.TButton", font=("Segoe UI Semibold", 10), padding=(17, 11), background=t["primary"], foreground="#FFFFFF", bordercolor=t["primary_dark"], focusthickness=2, focuscolor=t["accent"])
-    style.map("Primary.TButton", background=[("active", t["primary_dark"]), ("pressed", t["primary_dark"]), ("disabled", t["primary_soft"])], foreground=[("disabled", t["muted"]), ("!disabled", "#FFFFFF")])
-    style.configure("Secondary.TButton", font=("Segoe UI Semibold", 10), padding=(16, 10), background=t["secondary"], foreground="#FFFFFF", bordercolor=t["secondary_dark"])
+    style.map("Primary.TButton", background=[("active", t["primary_dark"]), ("pressed", t["primary_dark"]), ("disabled", t["primary_soft"])], foreground=[("disabled", t["muted"]), ("!disabled", secondary_fg)])
+    style.configure("Secondary.TButton", font=("Segoe UI Semibold", 10), padding=(16, 10), background=t["secondary"], foreground=secondary_fg, bordercolor=t["secondary_dark"])
     style.map("Secondary.TButton", background=[("active", t["secondary_dark"]), ("pressed", t["secondary_dark"])], foreground=[("!disabled", "#FFFFFF")])
     style.configure("Ghost.TButton", font=("Segoe UI Semibold", 10), padding=(13, 9), background=t["panel"], foreground=t["primary_dark"], bordercolor=t["border"])
     style.map("Ghost.TButton", background=[("active", t["panel_alt"]), ("pressed", t["primary_soft"])])
     style.configure("Assistant.TButton", font=("Segoe UI Semibold", 10), padding=(14, 9), background=t["accent"], foreground=t["primary_dark"], bordercolor=t["secondary_dark"])
-    style.map("Assistant.TButton", background=[("active", t["secondary"]), ("pressed", t["secondary_dark"])], foreground=[("active", "#FFFFFF"), ("pressed", "#FFFFFF")])
+    style.map("Assistant.TButton", background=[("active", t["secondary"]), ("pressed", t["secondary_dark"])], foreground=[("active", secondary_fg), ("pressed", yornis_theme.readable_foreground(t["secondary_dark"]))])
 
     style.configure("TEntry", padding=(10, 8), fieldbackground=t["panel"], foreground=t["text"], bordercolor=t["border"], insertcolor=t["primary_dark"])
     style.configure("TCombobox", padding=(9, 7), fieldbackground=t["panel"], foreground=t["text"], background=t["panel_alt"], bordercolor=t["border"])
@@ -82,7 +84,7 @@ def apply_styles(root) -> None:
     style.configure("TRadiobutton", padding=(6, 5), background=t["bg"], foreground=t["text"], font=("Segoe UI", 10))
     style.configure("TNotebook", background=t["bg"], borderwidth=0, tabmargins=(0, 2, 0, 0))
     style.configure("TNotebook.Tab", font=("Segoe UI Semibold", 10), padding=(17, 10), background=t["panel_alt"], foreground=t["muted"], borderwidth=0)
-    style.map("TNotebook.Tab", background=[("selected", t["primary"]), ("active", t["primary_soft"])], foreground=[("selected", "#FFFFFF"), ("active", t["primary_dark"])])
+    style.map("TNotebook.Tab", background=[("selected", t["primary"]), ("active", t["primary_soft"])], foreground=[("selected", primary_fg), ("active", t["primary_dark"])])
     style.configure("TLabelframe", background=t["panel"], borderwidth=1, relief="solid", bordercolor=t["border"], padding=(2, 2))
     style.configure("TLabelframe.Label", background=t["panel"], foreground=t["primary_dark"], font=("Segoe UI Semibold", 10))
 
@@ -99,7 +101,7 @@ def _polish_tk_widget(widget) -> None:
     cls = widget.winfo_class()
     try:
         if cls == "Listbox":
-            widget.configure(bg=t["panel"], fg=t["text"], selectbackground=t["primary"], selectforeground="#FFFFFF", activestyle="none", relief="flat", highlightthickness=1, highlightbackground=t["border"], highlightcolor=t["primary"], font=("Segoe UI", 10), bd=0)
+            widget.configure(bg=t["panel"], fg=t["text"], selectbackground=t["primary"], selectforeground=primary_fg, activestyle="none", relief="flat", highlightthickness=1, highlightbackground=t["border"], highlightcolor=t["primary"], font=("Segoe UI", 10), bd=0)
         elif cls in {"Text", "Entry"}:
             widget.configure(bg=t["panel"], fg=t["text"], insertbackground=t["primary_dark"], selectbackground=t["primary_soft"], selectforeground=t["primary_dark"], relief="flat", highlightthickness=1, highlightbackground=t["border"], highlightcolor=t["primary"])
         elif cls == "Canvas":
