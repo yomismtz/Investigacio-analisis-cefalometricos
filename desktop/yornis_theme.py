@@ -71,7 +71,7 @@ THEMES = {
         'description_es': 'Gris perla, crema, amarillo suave, rosa y ciruela.',
         'bg': '#FAF8F5', 'panel': '#FFFFFF', 'panel_alt': '#F1EEE9', 'text': '#353238', 'muted': '#716A70',
         'primary': '#7A587F', 'primary_dark': '#4A344E', 'primary_soft': '#E0D2E4',
-        'secondary': '#D8A82E', 'secondary_dark': '#95731D', 'accent': '#E6A0AD', 'accent_soft': '#FBE9ED',
+        'secondary': '#D8A82E', 'secondary_dark': '#6D5314', 'accent': '#E6A0AD', 'accent_soft': '#FBE9ED',
         'tertiary': '#9FA5A8', 'warning': '#D8A82E', 'danger': '#9A5B69', 'canvas': '#151517', 'border': '#D8D2D2',
     },
     'Faisán': {
@@ -212,7 +212,7 @@ def contrast_ratio(foreground: str, background: str) -> float:
 
 def readable_foreground(background: str) -> str:
     """Choose whichever of near-black or white gives stronger text contrast."""
-    dark, light = "#17202A", "#FFFFFF"
+    dark, light = "#000000", "#FFFFFF"
     return dark if contrast_ratio(dark, background) >= contrast_ratio(light, background) else light
 
 
