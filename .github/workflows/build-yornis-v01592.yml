@@ -33,36 +33,61 @@ jobs:
         shell: pwsh
         run: python -m pip install pillow pymupdf reportlab openpyxl pyinstaller pyzipper ttkbootstrap==2.2.7 imageio-ffmpeg numpy
 
-      - name: Stage the ten organized bird icons for the Windows bundle
+      - name: Stage all thirteen organized bird icons and YOM Dental palette logos
         shell: pwsh
         run: |
           @'
           from pathlib import Path
           from shutil import copy2
-          source = Path('assets/bird-palettes/icons')
-          target = Path('desktop/assets/birds')
-          target.mkdir(parents=True, exist_ok=True)
-          mapping = {
-              'Agaporni': 'Agapornis colorido en rama (1).png',
-              'Tucan': 'Tucán colorido de estilo mascotín.png',
-              'Pavorreal': 'Pavo caricaturesco con cola vibrante.png',
-              'Ninfa': 'Cacatúa Ninfa Adorable en Perfil.png',
-              'Faisan': 'Faisán colorido de estilo caricaturesco.png',
-              'Quetzal': 'Quetzal Adorable de Plumas Esmeralda.png',
-              'Guacamaya_Roja': 'Guacamaya roja colorida en vuelo (1).png',
-              'Guacamaya_Azul': 'Guacamayo azul y amarillo caricaturesco.png',
-              'Búho': 'Búho real sobre rama con hojas.png',
-              'Colibrí': 'Colibrí.png',
+          icons = Path('assets/bird-palettes/icons')
+          logos = Path('assets/bird-palettes/brand-logos')
+          icon_target = Path('desktop/assets/birds')
+          logo_target = Path('desktop/assets/brand-logos')
+          icon_target.mkdir(parents=True, exist_ok=True)
+          logo_target.mkdir(parents=True, exist_ok=True)
+          icon_mapping = {
+              'Agaporni': ('Agapornis colorido en rama (1).png', 'Agaporni.png'),
+              'Tucán': ('Tucán colorido de estilo mascotín.png', 'Tucan.png'),
+              'Pavorreal': ('Pavo caricaturesco con cola vibrante.png', 'Pavorreal.png'),
+              'Ninfa': ('Cacatúa Ninfa Adorable en Perfil.png', 'Ninfa.png'),
+              'Faisán': ('Faisán colorido de estilo caricaturesco.png', 'Faisan.png'),
+              'Quetzal': ('Quetzal Adorable de Plumas Esmeralda.png', 'Quetzal.png'),
+              'Guacamaya Roja': ('Guacamaya roja colorida en vuelo (1).png', 'Guacamaya_Roja.png'),
+              'Guacamaya Azul': ('Guacamayo azul y amarillo caricaturesco.png', 'Guacamaya_Azul.png'),
+              'Búho': ('Búho real sobre rama con hojas.png', 'Búho.png'),
+              'Colibrí': ('Colibrí.png', 'Colibrí.png'),
+              'Flamenco': ('Flamenco rosa de estilo adhesivo.png', 'Flamenco.png'),
+              'Colorín siete colores': ('Colorín Siete Colores en Rama.png', 'Colorin_siete_colores.png'),
+              'Tángara del paraíso': ('Tángara del paraíso sobre una rama.png', 'Tangara_del_paraiso.png'),
           }
-          assert len(mapping) == 10
-          for name, filename in mapping.items():
-              src = source / filename
-              assert src.is_file() and src.stat().st_size > 1000, f'Missing organized icon: {src}'
-              copy2(src, target / f'{name}.png')
-          print('Ten active palette icons staged from assets/bird-palettes/icons')
+          logo_mapping = {
+              'Agaporni': 'Logo YOM Dental Agaporni Multicolor.png',
+              'Tucán': 'Logotipo Yom Dental Tucán en degradado tropical.png',
+              'Pavorreal': 'Logo dental Yom en tonos pavorreal.png',
+              'Ninfa': 'Logo dental Yom en paleta Ninfa.png',
+              'Faisán': 'Logo dental YOM con degradados Faisán.png',
+              'Quetzal': 'Logotipo Yom Dental quetzal.png',
+              'Guacamaya Roja': 'Logotipo YOM Dental Guacamaya Roja Multicolor.png',
+              'Guacamaya Azul': 'Logotipo Yom Dental Guacamaya Azul.png',
+              'Búho': 'Logo YOM Dental en tonos búho.png',
+              'Colibrí': 'Logo dental Yom en paleta Colibrí (2).png',
+              'Flamenco': 'Logotipo Dental Rosa Flamingo en 3D.png',
+              'Colorín siete colores': 'Logo dental Colorn de 7 colorese.png',
+              'Tángara del paraíso': 'Logotipo Yom DentalTángara del paraíso.png',
+          }
+          assert len(icon_mapping) == len(logo_mapping) == 13
+          for bird, (filename, staged_name) in icon_mapping.items():
+              source = icons / filename
+              assert source.is_file() and source.stat().st_size > 1000, f'Missing bird icon: {source}'
+              copy2(source, icon_target / staged_name)
+          for bird, filename in logo_mapping.items():
+              source = logos / filename
+              assert source.is_file() and source.stat().st_size > 1000, f'Missing YOM Dental logo for {bird}: {source}'
+              copy2(source, logo_target / filename)
+          print('13 bird icons and 13 matching YOM Dental palette logos staged')
           '@ | python -
 
-      - name: Convert all ten uploaded MP3 recordings into offline WAV libraries
+      - name: Convert all thirteen uploaded MP3 recordings into offline WAV libraries
         shell: pwsh
         run: |
           @'
@@ -91,6 +116,9 @@ jobs:
               'Guacamaya Azul': 'guacamayo azul.mp3',
               'Búho': 'buho real.mp3',
               'Colibrí': 'colibri.mp3',
+              'Flamenco': 'Flamingo Bird Sound 🦩#shorts (mp3cut.net).mp3',
+              'Colorín siete colores': 'sonido colorin.mp3',
+              'Tángara del paraíso': 'Paradise Tanager (Tangara chilensis) #birds #birdsounds #birdsong (mp3cut.net).mp3',
           }
           ffmpeg = get_ffmpeg_exe()
           full_dir.mkdir(parents=True, exist_ok=True)
@@ -142,7 +170,7 @@ jobs:
           chorus_sources = []
           manifest = {
               'product': 'Yornis', 'version': '0.16.3', 'offline': True,
-              'source': 'Ten active palette recordings from assets/bird-palettes/sounds',
+              'source': 'Thirteen active palette recordings from assets/bird-palettes/sounds',
               'format': 'WAV PCM signed 16-bit mono 44100 Hz',
               'palette_audio': 'Full uploaded recording',
               'startup_audio': 'Highest-energy excerpt up to 2.8 seconds',
@@ -186,7 +214,7 @@ jobs:
 
           for folder in (full_dir, startup_dir):
               files = list(folder.glob('*.wav'))
-              expected_count = 50 if folder == full_dir else 55
+              expected_count = 65 if folder == full_dir else 70
               assert len(files) == expected_count, f'{folder}: expected {expected_count} files, found {len(files)}'
               for path in files:
                   with wave.open(str(path), 'rb') as wav:
@@ -195,7 +223,7 @@ jobs:
           (root / 'bird_audio_manifest_v0163.json').write_text(
               json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8'
           )
-          print('TEN ORIGINAL MP3 RECORDINGS -> 50 FULL WAVS + 50 EXCERPTS + 5 MIXED CHORUS WAVS')
+          print('THIRTEEN ORIGINAL MP3 RECORDINGS -> 65 FULL WAVS + 65 EXCERPTS + 5 MIXED CHORUS WAVS')
           print('All audio decoded, volume-scaled, validated and ready for offline packaging')
           '@ | python -
 
@@ -262,7 +290,7 @@ jobs:
           import wave
           from pathlib import Path
           assert set(yornis_theme.theme_names()) == set(sounds.BIRD_AUDIO_FILES)
-          assert len(sounds.BIRD_AUDIO_FILES) == 10
+          assert len(sounds.BIRD_AUDIO_FILES) == 13
           for name, filename in sounds.BIRD_AUDIO_FILES.items():
               source = Path('assets/bird-palettes/sounds') / filename
               assert source.is_file() and source.stat().st_size > 1000
@@ -275,9 +303,9 @@ jobs:
                           assert wav.getnchannels() == 1 and wav.getsampwidth() == 2
                           assert wav.getframerate() == sounds.SAMPLE_RATE
                           assert wav.getnframes() > sounds.SAMPLE_RATE // 5
-          assert len(list(Path('desktop/assets/bird_audio').glob('*.wav'))) == 50
-          assert len(list(Path('desktop/assets/bird_startup_audio').glob('*.wav'))) == 55  # 50 bird clips + 5 mixed chorus volumes
-          print('YORNIS v0.16.3 TEN ORIGINAL RECORDINGS + OFFLINE AUDIO + CLINICAL AUDIT OK')
+          assert len(list(Path('desktop/assets/bird_audio').glob('*.wav'))) == 65
+          assert len(list(Path('desktop/assets/bird_startup_audio').glob('*.wav'))) == 70  # 50 bird clips + 5 mixed chorus volumes
+          print('YORNIS v0.16.8 THIRTEEN ORIGINAL RECORDINGS + OFFLINE AUDIO + CLINICAL AUDIT OK')
           '@ | python -
 
       - name: GUI scrollbar + HiDPI smoke test
@@ -309,15 +337,15 @@ jobs:
           assert after > before
           assert hasattr(l, 'startup_sound_var')
           assert hasattr(l, 'startup_volume_var')
-          assert len(l.palette_cards) == 10
+          assert len(l.palette_cards) == 13
           from yornis_bird_signature_v01592 import bundled_signature_path
           from yornis_startup_audio_v0159 import bundled_wav_path
-          for bird in ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul','Búho','Colibrí'):
+          for bird in ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul','Búho','Colibrí','Flamenco','Colorín siete colores','Tángara del paraíso'):
               for volume in (20, 35, 50, 70, 90):
                   assert bundled_signature_path(bird, volume).is_file()
                   assert bundled_wav_path(bird, volume).is_file()
           from yornis_virtual_assistant_v0157 import make_avatar_photo
-          for bird in ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul','Búho','Colibrí'):
+          for bird in ('Agaporni','Tucán','Pavorreal','Ninfa','Faisán','Quetzal','Guacamaya Roja','Guacamaya Azul','Búho','Colibrí','Flamenco','Colorín siete colores','Tángara del paraíso'):
               image = make_avatar_photo(l, 64, bird)
               assert image.width() > 0 and image.height() > 0
           l.destroy()
@@ -341,7 +369,7 @@ jobs:
           --hidden-import yornis_reference_help_v0154 --hidden-import yornis_reference_help_v0154_all --hidden-import yornis_evidence_v0155 --hidden-import yornis_quality_ui_v0156 --hidden-import yornis_reference_help_v0156
           --hidden-import yornis_quality_ui_v0157 --hidden-import yornis_virtual_assistant_v0157 --hidden-import yornis_quality_ui_v0158 --hidden-import yornis_startup_audio_v0159 --hidden-import yornis_desktop_v0159 --hidden-import yornis_desktop_v01591 --hidden-import yornis_bird_signature_v01592 --hidden-import yornis_modern_ui_v0160 --hidden-import yornis_calibration_gate_v0164
           --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --collect-all pyzipper --collect-all ttkbootstrap
-          --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yornis.ico;." --add-data "desktop/assets/birds;assets/birds" --add-data "assets/bird-palettes/sounds;bird-palettes/sounds" --add-data "desktop/assets/bird_audio;assets/bird_audio" --add-data "desktop/assets/bird_startup_audio;assets/bird_startup_audio"
+          --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yornis.ico;." --add-data "desktop/assets/birds;assets/birds" --add-data "desktop/assets/brand-logos;assets/brand-logos" --add-data "assets/bird-palettes/sounds;bird-palettes/sounds" --add-data "desktop/assets/bird_audio;assets/bird_audio" --add-data "desktop/assets/bird_startup_audio;assets/bird_startup_audio"
           desktop/yornis_desktop_v01592.py
 
       - name: Cold start with application outbound internet blocked
@@ -399,11 +427,11 @@ jobs:
 
           - Interfaz modernizada con ttkbootstrap 2.2.7.
           - Botones, controles, tablas, pestañas y campos con estilo plano y espaciado moderno.
-          - Las diez paletas de aves mantienen sus colores y actualizan los controles en tiempo real.
+          - Las trece paletas de aves mantienen sus colores y actualizan los controles en tiempo real.
           - Sistema visual aplicado al lanzador, caso individual e investigación.
           - 106 mediciones cefalométricas y 17 tablas de referencia conservadas.
           - Calibración por radiografía y control de confianza de landmarks conservados.
-          - Diez grabaciones originales de aves, con sonido completo al cambiar de paleta y fragmentos cortos de inicio, incluidos para uso sin conexión.
+          - Trece grabaciones originales de aves, con sonido completo al cambiar de paleta y fragmentos cortos de inicio, incluidos para uso sin conexión.
           - Fórmulas, geometría, base de datos y lógica clínica sin cambios.
           '@ | Set-Content -Encoding utf8 release-notes.md
 
