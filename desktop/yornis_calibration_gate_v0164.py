@@ -62,7 +62,7 @@ def _has_valid_scale(app) -> bool:
 
 def _calibration_mode_enabled(app) -> bool:
     """Support both the normalized and legacy classic-mode attribute names."""
-    return bool(getattr(app, "calibration_mode", getattr(app, "calib_mode", False)))
+    return bool(getattr(app, "calibration_mode", False) or getattr(app, "calib_mode", False))
 
 
 def _set_calibration_mode(app, enabled: bool) -> None:
