@@ -319,12 +319,19 @@ jobs:
           import yornis_theme
           l=Launcher(); l.geometry('1000x620'); l.update()
           assert modern_ui.active_widget_theme(l) in ('bootstrap-light', 'clam')
+          # Verify both launcher modes before exercising all palette changes.
+          # Theme iteration can schedule Tk idle rebuilds, so flush them and
+          # validate the rebuilt cards again after the palette sweep.
+          assert len(l._yornis_mode_cards) == 2, f'Initial launcher mode cards: {len(l._yornis_mode_cards)}'
           for bird, palette in yornis_theme.THEMES.items():
               yornis_theme.apply_theme(bird, persist=True)
               modern_ui.apply_modern_styles(l)
+              l.update_idletasks()
               assert modern_ui.primary_action_color(l) == palette['primary']
           yornis_theme.apply_theme('Agaporni', persist=True)
           modern_ui.apply_modern_styles(l)
+          l.update_idletasks()
+          assert len(l._yornis_mode_cards) == 2, f'Launcher mode cards after palette sweep: {len(l._yornis_mode_cards)}'
           assert float(l.tk.call('tk','scaling')) > 0
           assert hasattr(l, '_scrollbar') and l._scrollbar.winfo_exists()
           assert hasattr(l, '_scroll_canvas') and l._scroll_canvas.winfo_exists()
