@@ -25,6 +25,9 @@ BIRD_PROFILES = {
     "Guacamaya Azul": {"tagline": "Te acompaña en búsquedas, tablas y tareas complejas.", "personality": "Analítico y sereno.", "shape": "macaw-blue"},
     "Búho": {"tagline": "Te ayuda a revisar detalles con calma y precisión.", "personality": "Observador, sereno y metódico.", "shape": "owl"},
     "Colibrí": {"tagline": "Te guía con agilidad entre análisis y herramientas.", "personality": "Ágil, claro y dinámico.", "shape": "hummingbird"},
+    "Flamenco": {"tagline": "Te acompaña con equilibrio visual y una identidad serena.", "personality": "Elegante, atento y preciso.", "shape": "flamingo"},
+    "Colorín siete colores": {"tagline": "Aporta diversidad cromática y energía a tu espacio de análisis.", "personality": "Versátil, vivaz y organizado.", "shape": "colorin"},
+    "Tángara del paraíso": {"tagline": "Te guía con una identidad tropical y enfoque detallado.", "personality": "Observador, equilibrado y metódico.", "shape": "tangara"},
 }
 
 GUIDES = [
@@ -41,7 +44,7 @@ GUIDES = [
     {"title": "Excluir un caso sin borrarlo", "keywords": "excluir exclusion caso investigacion auditoria borrar", "steps": ["Usa la acción de exclusión del modo Investigación.", "Registra el motivo de exclusión cuando corresponda.", "El caso permanece auditable; la exclusión no debe equivaler a eliminar datos silenciosamente."]},
     {"title": "Exportar resultados", "keywords": "exportar csv excel xlsx pdf spss json resultados dataset", "steps": ["Revisa que los casos y outcomes estén completos.", "Elige el formato de exportación necesario para tu análisis.", "Para SPSS utiliza la sintaxis generada junto con las variables/etiquetas.", "Para compartir datos, prioriza exportaciones pseudonimizadas y revisa el contenido antes de enviarlo."]},
     {"title": "Respaldar y restaurar", "keywords": "backup respaldo restaurar restore sqlite base datos seguridad", "steps": ["Crea un respaldo desde las herramientas del modo Investigación.", "Guarda la copia en una ubicación distinta al equipo de trabajo cuando sea posible.", "Antes de restaurar, confirma que el archivo corresponde al estudio esperado.", "Yornis valida la integridad del respaldo compatible antes de restaurarlo."]},
-    {"title": "Cambiar la paleta y el asistente", "keywords": "paleta color tema ave asistente agaporni tucan pavorreal ninfa faisan quetzal guacamaya", "steps": ["En el lanzador selecciona una de las diez tarjetas de color.", "La paleta completa cambia y el ave de esa paleta se convierte en tu asistente.", "El asistente conserva las mismas funciones; cambia su identidad visual.", "También puedes cambiar de paleta desde la ventana del asistente."]},
+    {"title": "Cambiar la paleta y el asistente", "keywords": "paleta color tema ave asistente agaporni tucan pavorreal ninfa faisan quetzal guacamaya", "steps": ["En el lanzador selecciona una de las trece tarjetas de color.", "La paleta completa cambia y el ave de esa paleta se convierte en tu asistente.", "El asistente conserva las mismas funciones; cambia su identidad visual.", "También puedes cambiar de paleta desde la ventana del asistente."]},
     {"title": "Buscar dentro de Yornis", "keywords": "buscar buscador interno ayuda tabla medicion analisis comando", "steps": ["Abre «Asistente» desde la esquina superior derecha.", "Escribe un análisis, una medición, una tabla o una tarea.", "El buscador combina guías, las 17 tablas y las mediciones del motor.", "Haz doble clic en una tabla para abrirla directamente en Referencias."]},
 ]
 
@@ -186,25 +189,37 @@ def _draw_avatar(theme_name: str, size: int = 180) -> Image.Image:
     return im.resize((size, size), Image.Resampling.LANCZOS)
 
 
+BUNDLE_ICON_FILES = {
+    "Agaporni": "Agaporni.png", "Tucán": "Tucan.png", "Pavorreal": "Pavorreal.png",
+    "Ninfa": "Ninfa.png", "Faisán": "Faisan.png", "Quetzal": "Quetzal.png",
+    "Guacamaya Roja": "Guacamaya_Roja.png", "Guacamaya Azul": "Guacamaya_Azul.png",
+    "Búho": "Búho.png", "Colibrí": "Colibrí.png", "Flamenco": "Flamenco.png",
+    "Colorín siete colores": "Colorin_siete_colores.png",
+    "Tángara del paraíso": "Tangara_del_paraiso.png",
+}
+SOURCE_ICON_FILES = {
+    "Agaporni": "Agapornis colorido en rama (1).png",
+    "Tucán": "Tucán colorido de estilo mascotín.png",
+    "Pavorreal": "Pavo caricaturesco con cola vibrante.png",
+    "Ninfa": "Cacatúa Ninfa Adorable en Perfil.png",
+    "Faisán": "Faisán colorido de estilo caricaturesco.png",
+    "Quetzal": "Quetzal Adorable de Plumas Esmeralda.png",
+    "Guacamaya Roja": "Guacamaya roja colorida en vuelo (1).png",
+    "Guacamaya Azul": "Guacamayo azul y amarillo caricaturesco.png",
+    "Búho": "Búho real sobre rama con hojas.png",
+    "Colibrí": "Colibrí.png",
+    "Flamenco": "Flamenco rosa de estilo adhesivo.png",
+    "Colorín siete colores": "Colorín Siete Colores en Rama.png",
+    "Tángara del paraíso": "Tángara del paraíso sobre una rama.png",
+}
+
+
 def _bird_asset_path(theme_name: str) -> Path:
-    slug = theme_name.replace(" ", "_").replace("á", "a").replace("é", "e")
     if getattr(sys, "frozen", False) or hasattr(sys, "_MEIPASS"):
         root = Path(getattr(sys, "_MEIPASS"))
-        return root / "assets" / "birds" / f"{slug}.png"
-    filenames = {
-        "Agaporni": "Agapornis colorido en rama (1).png",
-        "Tucán": "Tucán colorido de estilo mascotín.png",
-        "Pavorreal": "Pavo caricaturesco con cola vibrante.png",
-        "Ninfa": "Cacatúa Ninfa Adorable en Perfil.png",
-        "Faisán": "Faisán colorido de estilo caricaturesco.png",
-        "Quetzal": "Quetzal Adorable de Plumas Esmeralda.png",
-        "Guacamaya Roja": "Guacamaya roja colorida en vuelo (1).png",
-        "Guacamaya Azul": "Guacamayo azul y amarillo caricaturesco.png",
-        "Búho": "Búho real sobre rama con hojas.png",
-        "Colibrí": "Colibrí.png",
-    }
+        return root / "assets" / "birds" / BUNDLE_ICON_FILES.get(theme_name, f"{theme_name}.png")
     root = Path(__file__).resolve().parents[1] / "assets" / "bird-palettes" / "icons"
-    return root / filenames.get(theme_name, f"{slug}.png")
+    return root / SOURCE_ICON_FILES.get(theme_name, f"{theme_name}.png")
 
 
 def make_avatar_photo(master, size: int = 180, theme_name: str | None = None):
