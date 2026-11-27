@@ -13,12 +13,12 @@ VSVersionInfo(
     StringFileInfo([
       StringTable('040904B0', [
         StringStruct('CompanyName', 'Yomira Salgado Martínez'),
-        StringStruct('FileDescription', 'Yornis · Modern interface · Offline clinical analysis'),
+        StringStruct('FileDescription', 'YOM Dental · Cefalometría · Modern interface · Offline clinical analysis'),
         StringStruct('FileVersion', '0.16.3'),
-        StringStruct('InternalName', 'Yornis'),
+        StringStruct('InternalName', 'YOM Dental · Cefalometría'),
         StringStruct('LegalCopyright', '© 2026 Yomira Salgado Martínez'),
-        StringStruct('OriginalFilename', 'Yornis.exe'),
-        StringStruct('ProductName', 'Yornis'),
+        StringStruct('OriginalFilename', 'YOM Dental Cefalometria.exe'),
+        StringStruct('ProductName', 'YOM Dental · Cefalometría'),
         StringStruct('ProductVersion', '0.16.3')
       ])
     ]),
