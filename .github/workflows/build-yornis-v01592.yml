@@ -3,7 +3,7 @@ name: Build Yornis v0.16.3 · Original Bird Recordings and Offline Audio
 
 on:
   push:
-    branches: [main]
+    branches: [main, fix/original-bird-recordings-v0163]
     paths:
       - 'desktop/**'
       - '.github/workflows/build-yornis-v01592.yml'
