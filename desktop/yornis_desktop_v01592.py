@@ -26,7 +26,7 @@ class Launcher(previous.Launcher):
             width = min(1380, screen_w)
             height = min(900, screen_h)
             self.geometry(f"{width}x{height}")
-            self.minsize(960, 680)
+            self.minsize(760, 600)
             self.resizable(True, True)
         except Exception:
             pass
