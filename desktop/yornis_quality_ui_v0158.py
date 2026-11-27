@@ -92,7 +92,7 @@ def apply_styles(root) -> None:
 
     style.configure("Treeview", rowheight=34, font=("Segoe UI", 10), background=t["panel"], fieldbackground=t["panel"], foreground=t["text"], bordercolor=t["border"], lightcolor=t["border"], darkcolor=t["border"])
     style.configure("Treeview.Heading", font=("Segoe UI Semibold", 10), background=t["primary_soft"], foreground=t["primary_dark"], padding=(9, 9), bordercolor=t["border"])
-    style.map("Treeview", background=[("selected", t["primary"])], foreground=[("selected", "#FFFFFF")])
+    style.map("Treeview", background=[("selected", t["primary"])], foreground=[("selected", primary_fg)])
     style.configure("Vertical.TScrollbar", background=t["panel_alt"], troughcolor=t["bg"], bordercolor=t["border"], arrowcolor=t["primary_dark"], width=13)
     style.configure("Horizontal.TScrollbar", background=t["panel_alt"], troughcolor=t["bg"], bordercolor=t["border"], arrowcolor=t["primary_dark"], width=13)
     style.configure("Horizontal.TProgressbar", background=t["secondary"], troughcolor=t["panel_alt"], bordercolor=t["border"], thickness=11)
