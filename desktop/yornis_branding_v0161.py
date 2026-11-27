@@ -40,7 +40,7 @@ CALIBRATION_TITLE = "Calibrar radiografía · Yornis"
 CALIBRATION_POINT_LABELS = ("Punto calibración 1", "Punto calibración 2")
 
 CALIBRATION_PROMPT_ES = (
-    "CALIBRACIÓN EN DOS PASOS · PUNTOS ANATÓMICOS DE REFERENCIA\n\n"
+    "CALIBRACIÓN EN DOS PASOS · PUNTOS DE CALIBRACIÓN\n\n"
     "1. Escribe la distancia REAL en milímetros entre dos referencias visibles "
     "de la radiografía (por ejemplo, 25 mm).\n"
     "2. Pulsa Aceptar. Después marca en la radiografía, en este orden:\n"
