@@ -60,6 +60,17 @@ def _has_valid_scale(app) -> bool:
     return _positive_finite(getattr(app, "mm_per_px", None))
 
 
+def _calibration_mode_enabled(app) -> bool:
+    """Support both the normalized and legacy classic-mode attribute names."""
+    return bool(getattr(app, "calibration_mode", getattr(app, "calib_mode", False)))
+
+
+def _set_calibration_mode(app, enabled: bool) -> None:
+    for attribute in ("calibration_mode", "calib_mode"):
+        if hasattr(app, attribute):
+            setattr(app, attribute, bool(enabled))
+
+
 def _requires_calibration(app) -> bool:
     """Require mm/px only when the exact individual selection contains linear measures."""
     mapping = getattr(app, "individual_measurements", None)
@@ -128,18 +139,16 @@ def install_individual(classic_class) -> None:
             self.calibration_real_mm = None
             self.points = {}
             self.mm_per_px = None
-            if hasattr(self, "calibration_mode"):
-                self.calibration_mode = False
+            _set_calibration_mode(self, False)
             _set_classic_canvas_state(self, "disabled")
             self._yornis_loading_image_v0164 = True
             try:
                 result = original_load(self, *args, **kwargs)
             finally:
                 self._yornis_loading_image_v0164 = False
-            # Some legacy loaders toggle calibration_mode themselves. Reassert
+            # Some legacy loaders toggle their calibration-mode flag. Reassert
             # a neutral state before deciding whether this selection needs mm/px.
-            if hasattr(self, "calibration_mode"):
-                self.calibration_mode = False
+            _set_calibration_mode(self, False)
             _set_classic_canvas_state(self, "disabled")
             if _requires_calibration(self):
                 if callable(getattr(self, "start_calibration", None)):
@@ -150,8 +159,7 @@ def install_individual(classic_class) -> None:
             else:
                 # Purely angular selections need no scale; permit guided tracing.
                 self.mm_per_px = None
-                if hasattr(self, "calibration_mode"):
-                    self.calibration_mode = False
+                _set_calibration_mode(self, False)
                 try:
                     self.after_idle(lambda: _set_classic_canvas_state(self, "normal"))
                 except Exception:
@@ -173,18 +181,17 @@ def install_individual(classic_class) -> None:
             previous_real_mm = getattr(self, "calibration_real_mm", None)
             self.calibration_points = []
             self.calibration_real_mm = None
-            if hasattr(self, "calibration_mode"):
-                self.calibration_mode = False
+            _set_calibration_mode(self, False)
             _set_classic_canvas_state(self, "disabled")
 
             result = original_start(self, *args, **kwargs)
 
-            # The legacy dialog returns with calibration_mode=True only when the
-            # user accepted a positive real-world distance and the engine is
-            # waiting for the two image clicks. Only then invalidate the old
-            # scale while the new endpoints are being collected.
+            # The legacy dialog returns with its calibration-mode flag enabled
+            # only when the user accepted a positive real-world distance and
+            # the engine is waiting for the two image clicks. Both the modern
+            # calibration_mode and classic calib_mode names are supported.
             accepted = (
-                bool(getattr(self, "calibration_mode", False))
+                _calibration_mode_enabled(self)
                 and _positive_finite(getattr(self, "calibration_real_mm", None))
             )
             if accepted:
@@ -227,8 +234,7 @@ def install_individual(classic_class) -> None:
             )
             if not ready:
                 self.mm_per_px = None
-                if hasattr(self, "calibration_mode"):
-                    self.calibration_mode = False
+                _set_calibration_mode(self, False)
                 _set_classic_canvas_state(self, "disabled")
                 return None
 
@@ -236,8 +242,7 @@ def install_individual(classic_class) -> None:
             valid = _has_valid_scale(self)
             if not valid:
                 self.mm_per_px = None
-                if hasattr(self, "calibration_mode"):
-                    self.calibration_mode = False
+                _set_calibration_mode(self, False)
             _set_classic_canvas_state(self, "normal" if valid else "disabled")
             return result
         classic_class.finish_calibration = finish_calibration
