@@ -42,8 +42,6 @@ def _apply_bird_color_sets() -> None:
             "danger": colors[7],
         })
 
-_apply_bird_color_sets()
-
 THEMES = {
     'Agaporni': {
         'description_es': 'Púrpura, ciruela y violeta con turquesa, menta, lavanda y lila.',
@@ -116,7 +114,10 @@ THEMES = {
         'tertiary': '#31A8A0', 'warning': '#B28E2D', 'danger': '#A13A56', 'canvas': '#061A17', 'border': '#B9DDD0',
     },
 }
- 
+
+# Apply species swatches only after the semantic theme dictionaries exist.
+_apply_bird_color_sets()
+
 def load_settings() -> dict:
     try:
         return json.loads(SETTINGS_PATH.read_text(encoding='utf-8'))
