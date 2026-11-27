@@ -252,6 +252,21 @@ def install_database() -> None:
         def attach_image_with_calibration_reset(self, case_id, image_path, copy_image=True):
             result = current_attach(self, case_id, image_path, copy_image)
             self.update_case_calibration(case_id, None)
+            # Compatibility attach_image implementations do not all archive
+            # old traces. Enforce image identity here as the final guard, while
+            # avoiding repeated historical prefixes when the core layer already
+            # performed the archive.
+            with self.connect() as con:
+                for table in ("landmarks", "results"):
+                    con.execute(
+                        f"UPDATE {table} SET "
+                        "image_hash=CASE "
+                        "WHEN COALESCE(image_hash,'') LIKE 'historical:%' THEN image_hash "
+                        "ELSE 'historical:' || COALESCE(NULLIF(image_hash,''),'legacy-unidentified') END, "
+                        "image_revision=-ABS(COALESCE(image_revision,1)) "
+                        "WHERE case_id=? AND COALESCE(image_revision,1)>0",
+                        (case_id,),
+                    )
             # The cervical assessment snapshot is case/protocol scoped. Archive
             # its image identity and clear active classifications on image swap;
             # the historical result rows and audit events remain preserved.
