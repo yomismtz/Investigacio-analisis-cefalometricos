@@ -33,7 +33,7 @@ class LauncherLayoutHotfixTests(unittest.TestCase):
             self.assertEqual([int(item["column"]) for item in wide], [0, 1])
 
             launcher._adapt_palette_cards(SimpleNamespace(width=600))
-            self.assertEqual(int(launcher.palette_cards[-1].grid_info()["column"]), 1)
+            self.assertEqual(int(launcher.palette_cards[11].grid_info()["column"]), 1)
             launcher._adapt_palette_cards(SimpleNamespace(width=1200))
             self.assertEqual(int(launcher.palette_cards[-1].grid_info()["column"]), 0)
         finally:
