@@ -223,7 +223,10 @@ def _image_identity(db, case_id: int) -> tuple[str, int]:
     if not case:
         return "", 1
     try:
-        image_hash = str(db._active_image_hash(case) or "")
+        # The case file_hash is the persisted identity of the currently attached image.
+        # Some legacy DB adapters return an empty _active_image_hash even when
+        # file_hash is populated; never save a current assessment as unbound.
+        image_hash = str(db._active_image_hash(case) or case["file_hash"] or "")
     except Exception:
         image_hash = ""
     try:
