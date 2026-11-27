@@ -364,62 +364,57 @@ def install_database() -> None:
         image_revision = int(case["image_revision"] or 1)
         has_current_image = bool(image_hash and stored_hash and image_hash == stored_hash)
 
-        # Manual cervical outcomes are keyed by stable measurement labels.
-        # Join to the active case identity in SQL and restore canonical analysis labels.
+        # Manual cervical outcomes are not landmark-derived. Select rows by
+        # the active image identity first, then resolve the logical outcome by
+        # either its canonical analysis label or its stable measurement label.
+        # This tolerates legacy label adapters without weakening image scoping.
         import yornis_cervical_v0152 as cervical
         import yornis_alignment_v0152 as alignment
         manual_measurements = (cervical.CVM_MEASUREMENT, alignment.ALIGNMENT_MEASUREMENT)
+        manual_analyses = (cervical.CVM_ANALYSIS, alignment.ALIGNMENT_ANALYSIS)
         with self.connect() as con:
             if has_current_image:
-                manual_rows = con.execute(
+                candidate_rows = con.execute(
                     """
                     SELECT r.* FROM results r
                     JOIN cases c ON c.id=r.case_id
                     WHERE r.case_id=? AND r.protocol_version=?
-                      AND r.measurement IN (?,?)
                       AND r.image_hash=c.file_hash
                       AND r.image_revision=c.image_revision
                       AND r.image_hash=? AND r.image_revision=?
-                      AND r.version=(
-                        SELECT MAX(r2.version) FROM results r2
-                        WHERE r2.case_id=r.case_id
-                          AND r2.protocol_version=r.protocol_version
-                          AND r2.measurement=r.measurement
-                          AND r2.image_hash=c.file_hash
-                          AND r2.image_revision=c.image_revision
-                      )
-                    ORDER BY r.measurement
+                    ORDER BY r.version DESC, r.id DESC
                     """,
-                    (case_id, protocol_version, *manual_measurements, stored_hash, image_revision),
+                    (case_id, protocol_version, stored_hash, image_revision),
                 ).fetchall()
             else:
-                manual_rows = con.execute(
+                candidate_rows = con.execute(
                     """
                     SELECT r.* FROM results r
                     WHERE r.case_id=? AND r.protocol_version=?
-                      AND r.measurement IN (?,?)
                       AND COALESCE(r.image_hash,'')=''
                       AND COALESCE(r.image_revision,1)>0
-                      AND r.version=(
-                        SELECT MAX(r2.version) FROM results r2
-                        WHERE r2.case_id=r.case_id
-                          AND r2.protocol_version=r.protocol_version
-                          AND r2.measurement=r.measurement
-                          AND COALESCE(r2.image_hash,'')=''
-                          AND COALESCE(r2.image_revision,1)>0
-                      )
-                    ORDER BY r.measurement
+                    ORDER BY r.version DESC, r.id DESC
                     """,
-                    (case_id, protocol_version, *manual_measurements),
+                    (case_id, protocol_version),
                 ).fetchall()
-        canonical_manual_rows = []
-        for row in manual_rows:
+        latest_manual = {}
+        for row in candidate_rows:
             item = dict(row)
-            if item.get("measurement") == cervical.CVM_MEASUREMENT:
+            analysis = str(item.get("analysis") or "")
+            measurement = str(item.get("measurement") or "")
+            if analysis == cervical.CVM_ANALYSIS or measurement == cervical.CVM_MEASUREMENT:
+                kind = "cvm"
                 item["analysis"] = cervical.CVM_ANALYSIS
-            elif item.get("measurement") == alignment.ALIGNMENT_MEASUREMENT:
+            elif analysis == alignment.ALIGNMENT_ANALYSIS or measurement == alignment.ALIGNMENT_MEASUREMENT:
+                kind = "alignment"
                 item["analysis"] = alignment.ALIGNMENT_ANALYSIS
-            canonical_manual_rows.append(item)
+            else:
+                continue
+            # Rows are newest-first; keep only the newest revision of each
+            # manual outcome for this case, protocol and active radiograph.
+            if kind not in latest_manual:
+                latest_manual[kind] = item
+        canonical_manual_rows = list(latest_manual.values())
 
         if not has_current_image:
             return canonical_manual_rows
