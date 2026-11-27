@@ -52,7 +52,7 @@ jobs:
           from research_db import ResearchDB
           assert e.APP_VERSION=='0.13.2 Classic · Clinical Audit',e.APP_VERSION
           assert len(e.ANALYSES)==16,len(e.ANALYSES)
-          assert len(e.MEASUREMENTS)==99,len(e.MEASUREMENTS)
+          assert len(e.MEASUREMENTS)==103,len(e.MEASUREMENTS)
           assert len(e.POINT_HELP)>=65,len(e.POINT_HELP)
           measure_keys=[f'{m.analysis}::{m.name}' for m in e.MEASUREMENTS]
           assert len(measure_keys)==len(set(measure_keys)),[k for k in measure_keys if measure_keys.count(k)>1]
@@ -111,6 +111,9 @@ jobs:
               assert {'lordosis_angle','cvm_stage','features_json'}.issubset(cols)
           print('CERVICAL CLINICAL AUDIT OK',len(e.ANALYSES),len(e.MEASUREMENTS),len(e.POINT_HELP))
           '@ | python -
+      - name: Linear calibration scale contract tests
+        shell: pwsh
+        run: python -m unittest desktop/tests/test_yornis_linear_scale_contract_v0166.py
       - name: Yornis regression and 1000-case capacity
         shell: pwsh
         run: |
