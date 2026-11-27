@@ -105,7 +105,7 @@ class IndividualSelectorFlowTests(unittest.TestCase):
             def start_calibration(self):
                 self.start_count += 1
                 self.calibration_real_mm = None if getattr(self, "cancel_calibration", False) else 12.0
-                self.calibration_mode = self.calibration_real_mm is not None
+                self.calib_mode = self.calibration_real_mm is not None
 
             def finish_calibration(self):
                 self.mm_per_px = self.next_scale
