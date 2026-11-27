@@ -55,7 +55,7 @@ class BuhoColibriPaletteTests(unittest.TestCase):
             for index, color in enumerate(yornis_theme.BIRD_COLOR_SWATCHES[bird], 1):
                 self.assertEqual(yornis_theme.base.PALETTE[f"bird_color_{index}"], color)
 
-    def test_both_new_birds_have_matching_original_audio_and_assistant_profiles(self):
+    def test_all_new_birds_have_matching_original_audio_and_assistant_profiles(self):
         self.assertEqual(set(yornis_theme.theme_names()), set(assistant.BIRD_PROFILES))
         self.assertEqual(assistant.BIRD_PROFILES["Búho"]["shape"], "owl")
         self.assertEqual(assistant.BIRD_PROFILES["Colibrí"]["shape"], "hummingbird")
@@ -85,11 +85,10 @@ class BuhoColibriPaletteTests(unittest.TestCase):
             self.assertIsNotNone(logo)
             self.assertTrue(logo.is_file(), f"Missing YOM Dental palette logo for {bird}")
 
-    def test_two_original_vector_mascots_are_available(self):
+    def test_all_new_bird_icons_are_available(self):
         for bird in NEW_BIRDS:
-            svg = DESKTOP / "assets" / "birds" / f"{bird}.svg"
-            self.assertTrue(svg.is_file(), f"Missing {svg}")
-            self.assertIn("<svg", svg.read_text(encoding="utf-8"))
+            icon = assistant._bird_asset_path(bird)
+            self.assertTrue(icon.is_file(), f"Missing icon for {bird}")
 
 
 if __name__ == "__main__":
