@@ -17,6 +17,28 @@ class LauncherLayoutHotfixTests(unittest.TestCase):
     def test_version(self):
         self.assertTrue(APP_VERSION.startswith("0.15.9.1"))
 
+    def test_mode_and_palette_cards_reflow_for_narrow_and_wide_windows(self):
+        from types import SimpleNamespace
+
+        launcher = Launcher()
+        try:
+            launcher.withdraw()
+            launcher.update_idletasks()
+            launcher._adapt_mode_cards(SimpleNamespace(width=700))
+            narrow = [card.grid_info() for card in launcher._yornis_mode_cards]
+            self.assertEqual([int(item["row"]) for item in narrow], [0, 1])
+            launcher._adapt_mode_cards(SimpleNamespace(width=1100))
+            wide = [card.grid_info() for card in launcher._yornis_mode_cards]
+            self.assertEqual([int(item["row"]) for item in wide], [0, 0])
+            self.assertEqual([int(item["column"]) for item in wide], [0, 1])
+
+            launcher._adapt_palette_cards(SimpleNamespace(width=600))
+            self.assertEqual(int(launcher.palette_cards[-1].grid_info()["column"]), 1)
+            launcher._adapt_palette_cards(SimpleNamespace(width=1200))
+            self.assertEqual(int(launcher.palette_cards[-1].grid_info()["column"]), 0)
+        finally:
+            launcher.destroy()
+
     def test_floating_duplicates_are_removed(self):
         launcher = Launcher()
         try:
