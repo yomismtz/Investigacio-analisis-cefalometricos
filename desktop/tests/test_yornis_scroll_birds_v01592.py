@@ -18,7 +18,7 @@ class ScrollBirdSoundsV01592Tests(unittest.TestCase):
         names = yornis_theme.theme_names()
         self.assertEqual(set(names), set(sounds.BIRD_AUDIO_FILES))
         sources = [sounds.BIRD_AUDIO_FILES[name] for name in names]
-        self.assertEqual(len(set(sources)), 10)
+        self.assertEqual(len(set(sources)), 13)
         for name in names:
             self.assertTrue(sounds.source_audio_path(name).is_file())
             full = sounds.bundled_signature_path(name, 35)
