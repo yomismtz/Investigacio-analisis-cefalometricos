@@ -169,7 +169,7 @@ jobs:
 
           chorus_sources = []
           manifest = {
-              'product': 'YOM Dental', 'version': '0.16.3', 'offline': True,
+              'product': 'YOM Dental · Cefalometría', 'version': '0.16.8', 'offline': True,
               'source': 'Thirteen active palette recordings from assets/bird-palettes/sounds',
               'format': 'WAV PCM signed 16-bit mono 44100 Hz',
               'palette_audio': 'Full uploaded recording',
@@ -257,7 +257,7 @@ jobs:
         shell: pwsh
         run: python -m unittest discover -s desktop/tests -p "test_*.py" -v
 
-      - name: v0.16.3 branding, guided calibration and clinical audit
+      - name: v0.16.8 YOM Dental branding, guided calibration and clinical audit
         shell: pwsh
         run: |
           @'
@@ -274,8 +274,8 @@ jobs:
           import yornis_measurement_corrections_v0166 as measurement_corrections
           measurement_corrections.install()
           import classic_engine as engine
-          assert app.APP_VERSION.startswith('0.16.7')
-          assert research_db.APP_DIR.name == 'YOM Dental'
+          assert app.APP_VERSION.startswith('0.16.8')
+          assert research_db.APP_DIR.name == 'Yornis'  # Preserve the existing user-data location
           assert research_db.DB_PATH.name == 'yornis_research.sqlite3'
           check_source = "class YomCephClassic: pass\nlabel = 'YOMCEPH'"
           branded_source = branding.rebrand_classic_source(check_source)
@@ -369,7 +369,7 @@ jobs:
       - name: Build application
         shell: pwsh
         run: >-
-          pyinstaller --noconfirm --clean --onedir --windowed --name YOM Dental Cefalometría
+          pyinstaller --noconfirm --clean --onedir --windowed --name 'YOM Dental Cefalometria'
           --icon desktop/assets/yornis.ico
           --manifest desktop/yornis_windows.manifest
           --version-file desktop/yornis_version_info_v01592.txt
@@ -407,7 +407,7 @@ jobs:
         shell: pwsh
         run: |
           choco install innosetup --no-progress -y
-          New-Item -ItemType Directory -Force -Path dist-installer-yornis | Out-Null
+          New-Item -ItemType Directory -Force -Path dist-installer-yom-dental | Out-Null
           & 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe' desktop\YOM Dental_v01592.iss
           $setup='dist-installer-yornis/YOM_Dental_Cefalometria_Setup_v0.16.8.exe'
           if(!(Test-Path $setup)){throw 'Installer missing'}
@@ -449,7 +449,7 @@ jobs:
           - Fórmulas, geometría, base de datos y lógica clínica sin cambios.
           '@ | Set-Content -Encoding utf8 release-notes.md
 
-          $tag='v0.16.3'
+          $tag='v0.16.8'
           $setup='dist-installer-yornis/YOM_Dental_Cefalometria_Setup_v0.16.8.exe'
           $portable='dist-installer-yornis/YOM_Dental_Cefalometria_v0.16.8_Portable.zip'
           $sums='dist-installer-yornis/SHA256SUMS.txt'
