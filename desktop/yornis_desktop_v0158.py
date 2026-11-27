@@ -33,7 +33,6 @@ class Launcher(previous.Launcher):
 
         theme_name = yornis_theme.current_theme_name()
         t = yornis_theme.THEMES[theme_name]
-        profile = assistant.current_profile()
 
         # The launcher is taller than many notebook/desktop viewports. Keep the
         # content in a real scrollable canvas with a permanent vertical bar.
@@ -91,26 +90,13 @@ class Launcher(previous.Launcher):
         ttk.Separator(self.main).pack(fill="x", pady=(18, 18))
 
         hero = ttk.Frame(self.main)
-        hero.pack(fill="x")
+        hero.pack(fill="x", pady=(8, 4))
         hero_copy = ttk.Frame(hero)
-        hero_copy.pack(side="left", fill="both", expand=True, padx=(0, 18))
-        self.hero_title = ttk.Label(hero_copy, text="", style="Hero.TLabel", wraplength=680, justify="left")
-        self.hero_title.pack(anchor="w")
-        self.hero_sub = ttk.Label(hero_copy, text="", style="Caption.TLabel", wraplength=710, justify="left")
-        self.hero_sub.pack(anchor="w", pady=(8, 0))
-
-        assistant_card = ttk.Frame(hero, style="Elevated.TFrame", padding=(16, 14))
-        assistant_card.pack(side="right", fill="y")
-        assistant_top = ttk.Frame(assistant_card, style="Panel.TFrame")
-        assistant_top.pack(fill="x")
-        self.assistant_photo = assistant.make_avatar_photo(self, 94, theme_name)
-        tk.Label(assistant_top, image=self.assistant_photo, bg=t["panel"]).pack(side="left", padx=(0, 12))
-        assistant_text = ttk.Frame(assistant_top, style="Panel.TFrame")
-        assistant_text.pack(side="left", fill="both", expand=True)
-        ttk.Label(assistant_text, text=theme_name, style="CardTitle.TLabel", anchor="center", justify="center").pack(fill="x")
-        ttk.Label(assistant_text, text="Tu asistente virtual", style="Muted.TLabel", anchor="center", justify="center").pack(fill="x", pady=(1, 4))
-        ttk.Label(assistant_text, text=profile["personality"], style="CardBody.TLabel", wraplength=210, justify="center", anchor="center").pack(fill="x")
-        ttk.Label(assistant_card, text=profile["tagline"], style="Muted.TLabel", wraplength=300, justify="center").pack(anchor="w", fill="x", pady=(10, 0))
+        hero_copy.pack(fill="x", expand=True)
+        self.hero_title = ttk.Label(hero_copy, text="", style="Hero.TLabel", wraplength=900, justify="center", anchor="center")
+        self.hero_title.pack(fill="x")
+        self.hero_sub = ttk.Label(hero_copy, text="", style="Caption.TLabel", wraplength=1000, justify="center", anchor="center")
+        self.hero_sub.pack(fill="x", pady=(8, 0))
 
         stats = ttk.Frame(self.main)
         stats.pack(fill="x", pady=(18, 16))
