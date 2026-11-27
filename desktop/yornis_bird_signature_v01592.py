@@ -40,22 +40,20 @@ def _variant_volume(volume: int) -> int:
 
 def asset_root() -> Path:
     """Assets root in source mode and in the PyInstaller bundle."""
-    # PyInstaller --onedir stores --add-data targets relative to the bundle
-    # root. In source mode this module resides in desktop/, beside assets/.
     root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
     return root / "assets"
 
 
 def source_audio_path(theme_name: str) -> Path:
-    """Return the original MP3 path stored in the repository."""
+    """Return the original MP3 path in the repository or frozen bundle."""
     filename = BIRD_AUDIO_FILES.get(theme_name)
     if filename is None:
         raise KeyError(f"Unknown Yornis bird palette: {theme_name}")
     if getattr(sys, "frozen", False) or hasattr(sys, "_MEIPASS"):
         root = Path(getattr(sys, "_MEIPASS"))
-    else:
-        root = Path(__file__).resolve().parents[1]
-    return root / "bird-palettes" / "sounds" / filename
+        return root / "bird-palettes" / "sounds" / filename
+    repository_root = Path(__file__).resolve().parents[1]
+    return repository_root / "assets" / "bird-palettes" / "sounds" / filename
 
 
 def bundled_signature_path(theme_name: str, volume: int | None = None) -> Path:
@@ -89,7 +87,6 @@ def _play(theme_name: str, volume: int) -> None:
             winsound.SND_FILENAME | winsound.SND_ASYNC | winsound.SND_NODEFAULT,
         )
     except Exception:
-        # Audio is optional; a missing device/file must never block Yornis.
         return
 
 
