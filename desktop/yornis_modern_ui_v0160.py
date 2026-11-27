@@ -63,7 +63,8 @@ def apply_modern_styles(root) -> bool:
     t = _tokens()
     primary_fg = yornis_theme.readable_foreground(t["primary"])
     secondary_fg = yornis_theme.readable_foreground(t["secondary"])
-    accent_fg = yornis_theme.readable_foreground(t["accent"])
+    primary_hover_fg = yornis_theme.readable_foreground(t["primary_dark"])
+    secondary_hover_fg = yornis_theme.readable_foreground(t["secondary_dark"])
     try:
         # ttkbootstrap attaches to the existing Tk interpreter; the application
         # keeps its current Tk/Toplevel architecture and does not create a new root.
@@ -143,7 +144,7 @@ def apply_modern_styles(root) -> bool:
         font=_FONT_MEDIUM, padding=(17, 11), background=t["secondary"],
         foreground="#FFFFFF", borderwidth=0,
     )
-    _safe_map(style, "Secondary.TButton", background=[("pressed", t["secondary_dark"]), ("active", t["secondary_dark"])], foreground=[("!disabled", secondary_fg)])
+    _safe_map(style, "Secondary.TButton", background=[("pressed", t["secondary_dark"]), ("active", t["secondary_dark"])], foreground=[("!disabled", secondary_hover_fg)])
     _safe_configure(
         style, "Ghost.TButton",
         font=_FONT_MEDIUM, padding=(14, 9), background=t["panel"],
@@ -155,7 +156,7 @@ def apply_modern_styles(root) -> bool:
         font=_FONT_MEDIUM, padding=(14, 9), background=t["accent"],
         foreground=t["primary_dark"], borderwidth=0,
     )
-    _safe_map(style, "Assistant.TButton", background=[("pressed", t["secondary_dark"]), ("active", t["secondary"])], foreground=[("pressed", yornis_theme.readable_foreground(t["secondary_dark"])), ("active", secondary_fg)])
+    _safe_map(style, "Assistant.TButton", background=[("pressed", t["secondary_dark"]), ("active", t["secondary"])], foreground=[("pressed", secondary_hover_fg), ("active", secondary_hover_fg)])
 
     _safe_configure(style, "IndividualCard.TFrame", background=t["panel"], relief="solid", borderwidth=1, bordercolor=t["border"])
     _safe_configure(style, "IndividualCardSelected.TFrame", background=t["panel"], relief="solid", borderwidth=2, bordercolor=t["primary"])
