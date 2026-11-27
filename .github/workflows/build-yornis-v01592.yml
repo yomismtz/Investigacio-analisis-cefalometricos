@@ -200,7 +200,7 @@ jobs:
                   write_wav(full_dir / f'{safe}_{volume}.wav', fade_edges(master * factor))
                   write_wav(startup_dir / f'{safe}_{volume}.wav', startup_master * factor)
 
-          # Short simultaneous mix of all ten original bird calls for app launch.
+          # Short simultaneous mix of all thirteen original bird calls for app launch.
           chorus_length = max(len(samples) for samples in chorus_sources)
           chorus_mix = np.zeros(chorus_length, dtype=np.float32)
           for samples in chorus_sources:
@@ -304,7 +304,7 @@ jobs:
                           assert wav.getframerate() == sounds.SAMPLE_RATE
                           assert wav.getnframes() > sounds.SAMPLE_RATE // 5
           assert len(list(Path('desktop/assets/bird_audio').glob('*.wav'))) == 65
-          assert len(list(Path('desktop/assets/bird_startup_audio').glob('*.wav'))) == 70  # 50 bird clips + 5 mixed chorus volumes
+          assert len(list(Path('desktop/assets/bird_startup_audio').glob('*.wav'))) == 70  # 65 bird clips + 5 mixed chorus volumes
           print('YORNIS v0.16.8 THIRTEEN ORIGINAL RECORDINGS + OFFLINE AUDIO + CLINICAL AUDIT OK')
           '@ | python -
 
@@ -349,7 +349,7 @@ jobs:
               image = make_avatar_photo(l, 64, bird)
               assert image.width() > 0 and image.height() > 0
           l.destroy()
-          print('YORNIS v0.16.3 TEN PALETTES + OFFLINE GUI OK')
+          print('YORNIS v0.16.8 THIRTEEN PALETTES + OFFLINE GUI OK')
           '@ | python -
 
       - name: Build application
