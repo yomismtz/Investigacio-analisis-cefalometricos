@@ -399,6 +399,14 @@ def install_database() -> None:
         combined = {}
         for row in rows:
             try:
+                # Earlier compatibility wrappers may return the full latest
+                # outcome set without respecting image revisions. Re-check the
+                # active image identity at this final boundary.
+                if (
+                    str(row["image_hash"] or "") != image_hash
+                    or int(row["image_revision"] or 0) != image_revision
+                ):
+                    continue
                 key = (str(row["analysis"]), str(row["measurement"]), int(row["version"]))
                 combined[key] = row
             except (KeyError, IndexError, TypeError, ValueError):
