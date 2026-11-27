@@ -16,7 +16,7 @@ CVM_ANALYSIS = "CVM C2–C4"
 CVM_MEASUREMENT = "Estadio CVM Baccetti"
 
 LORDOSIS_POINTS = ("C1 tub post", "C1 tub ant", "C7 inf post", "C7 inf ant")
-LORDOSIS_REFERENCE = "Sin norma directa validada para esta construcción C1–C7. Registrar ángulo firmado, puntos y método; no aplicar un rango universal."
+LORDOSIS_REFERENCE = "Sin norma directa validada para esta construcción C1–C7. No se aplica un umbral universal; registrar ángulo firmado, puntos y método."
 CVM_REFERENCE = "Baccetti–Franchi–McNamara: CS1–CS6 por morfología de C2–C4. Los intervalos temporales son aproximaciones de cohortes y no predicen con exactitud el pico individual ni equivalen a edad cronológica."
 
 _ENGINE_PATCHED = False
