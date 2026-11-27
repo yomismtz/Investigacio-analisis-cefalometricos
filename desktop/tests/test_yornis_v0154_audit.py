@@ -334,6 +334,22 @@ class AuditHardeningTests(unittest.TestCase):
         al._save_alignment(workspace, al.classify_alignment("Rectificación"))
         refreshed = self.db.latest_results(cid, pv)
         by_analysis = {row["analysis"]: row for row in refreshed}
+        with self.db.connect() as con:
+            diagnostic_rows = [
+                dict(row) for row in con.execute(
+                    "SELECT id,analysis,measurement,value,image_hash,image_revision,version "
+                    "FROM results WHERE case_id=? AND protocol_version=? ORDER BY id",
+                    (cid, pv),
+                ).fetchall()
+            ]
+            diagnostic_case = dict(con.execute(
+                "SELECT file_hash,image_revision,image_path FROM cases WHERE id=?", (cid,)
+            ).fetchone())
+        self.assertIn(
+            cv.CVM_ANALYSIS, by_analysis,
+            f"CVM missing from latest_results; returned={refreshed!r}; "
+            f"stored_rows={diagnostic_rows!r}; case={diagnostic_case!r}",
+        )
         self.assertEqual(by_analysis[cv.CVM_ANALYSIS]["value"], 3.0)
         self.assertEqual(by_analysis[al.ALIGNMENT_ANALYSIS]["value"], 2.0)
         with self.db.connect() as con:
