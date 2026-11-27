@@ -22,7 +22,8 @@ class Launcher(previous.Launcher):
         super().__init__()
         self.title("Yornis · Yom Dental Análisis")
         self.geometry("1120x900")
-        self.minsize(1000, 790)
+        self.minsize(760, 600)
+        self.resizable(True, True)
         quality.apply_window(self, context="launcher")
         assistant.attach_assistant_button(self, compact=True)
 
@@ -65,29 +66,21 @@ class Launcher(previous.Launcher):
         topbar.pack(fill="x")
 
         logo_box = tk.Frame(topbar, bg=t["panel"], highlightthickness=1, highlightbackground=t["border"])
-        logo_box.pack(side="left", padx=(0, 16))
-        self.logo_photo = None
-        try:
-            logo_path = yornis_theme.brand_logo_path(theme_name)
-            if logo_path is None or not logo_path.is_file():
-                raise FileNotFoundError(f"YOM Dental logo missing for {theme_name}")
-            logo_image = Image.open(logo_path).convert("RGBA")
-            logo_image.thumbnail((150, 76), Image.Resampling.LANCZOS)
-            self.logo_photo = ImageTk.PhotoImage(logo_image)
-            tk.Label(logo_box, image=self.logo_photo, bg=t["panel"], padx=8, pady=8).pack()
-        except Exception:
-            tk.Label(logo_box, text="YOM", bg=t["panel"], fg=t["primary"], font=("Segoe UI Semibold", 24), padx=14, pady=12).pack()
+        logo_box.pack(side="top", pady=(0, 10))
+        # Large mascot from the active palette replaces the static brand logo.
+        self.logo_photo = assistant.make_avatar_photo(self, 184, theme_name)
+        tk.Label(logo_box, image=self.logo_photo, bg=t["panel"], padx=8, pady=8).pack()
 
         brand = ttk.Frame(topbar)
-        brand.pack(side="left", fill="x", expand=True)
-        ttk.Label(brand, text="YOM DENTAL ANÁLISIS", style="Eyebrow.TLabel").pack(anchor="w")
-        self.title_lbl = ttk.Label(brand, text="Yornis", style="Title.TLabel")
-        self.title_lbl.pack(anchor="w", pady=(1, 0))
-        self.ver_lbl = ttk.Label(brand, text=f"v{APP_VERSION}", style="Caption.TLabel")
-        self.ver_lbl.pack(anchor="w", pady=(2, 0))
+        brand.pack(side="top", fill="x", expand=True)
+        ttk.Label(brand, text="YOM DENTAL ANÁLISIS", style="Eyebrow.TLabel", anchor="center").pack(fill="x")
+        self.title_lbl = ttk.Label(brand, text="Yornis", style="Title.TLabel", anchor="center")
+        self.title_lbl.pack(fill="x", pady=(1, 0))
+        self.ver_lbl = ttk.Label(brand, text=f"v{APP_VERSION}", style="Caption.TLabel", anchor="center")
+        self.ver_lbl.pack(fill="x", pady=(2, 0))
 
         utilities = ttk.Frame(topbar)
-        utilities.pack(side="right", anchor="ne")
+        utilities.place(relx=1.0, rely=0.0, anchor="ne")
         self.lang = ttk.Combobox(utilities, state="readonly", values=["Español", "English"], width=13)
         self.lang.grid(row=0, column=0, padx=(0, 7), sticky="e")
         self.lang.current(0 if self.language == "es" else 1)
@@ -141,6 +134,7 @@ class Launcher(previous.Launcher):
 
         modes = ttk.Frame(self.main)
         modes.pack(fill="x")
+        self._yornis_mode_cards = []
         mode_specs = [
             ("01", "INDIVIDUAL", "Caso individual", "Carga una telerradiografía, marca landmarks, calcula análisis y consulta referencias sin salir de la app.", "Primary.TButton", lambda: self.finish("individual")),
             ("02", "INVESTIGACIÓN", "Modo investigación", "Protocolos versionados, control de calidad, reproducibilidad, base de casos y exportaciones para análisis.", "Secondary.TButton", lambda: self.finish("research")),
@@ -150,6 +144,12 @@ class Launcher(previous.Launcher):
             card = ttk.Frame(modes, style="Elevated.TFrame", padding=(18, 16))
             card.grid(row=0, column=i, sticky="nsew", padx=(0 if i == 0 else 7, 0 if i == 1 else 7))
             modes.grid_columnconfigure(i, weight=1)
+            self._yornis_mode_cards.append(card)
+            mascot = assistant.make_avatar_photo(self, 38, theme_name)
+            if not hasattr(self, "_yornis_mode_mascots"):
+                self._yornis_mode_mascots = []
+            self._yornis_mode_mascots.append(mascot)
+            tk.Label(card, image=mascot, bg=t["panel"]).pack(anchor="center", pady=(0, 4))
             top = ttk.Frame(card, style="Panel.TFrame")
             top.pack(fill="x")
             top.columnconfigure(0, weight=1)
@@ -165,6 +165,8 @@ class Launcher(previous.Launcher):
             mode_widgets.append((title_lbl, desc_lbl, btn))
         self.ind_title, self.ind_desc, self.ind_btn = mode_widgets[0]
         self.res_title, self.res_desc, self.res_btn = mode_widgets[1]
+        self._yornis_mode_text_widgets = mode_widgets
+        modes.bind("<Configure>", self._adapt_mode_cards, add="+")
 
         palette_header = ttk.Frame(self.main)
         palette_header.pack(fill="x", pady=(18, 6))
@@ -203,6 +205,7 @@ class Launcher(previous.Launcher):
             for widget in (card, top, avatar, title_box, title, subtitle, swatches):
                 widget.bind("<Button-1>", lambda _e, n=name: self._theme_quality(n))
             self.palette_cards.append(card)
+        palette_host.bind("<Configure>", self._adapt_palette_cards, add="+")
 
         footer = ttk.Frame(self.main)
         footer.pack(fill="x", pady=(14, 0))
@@ -226,6 +229,36 @@ class Launcher(previous.Launcher):
         ttk.Label(footer, text="13 PALETAS · YOM DENTAL", style="AccentPill.TLabel").pack(side="right", padx=(12, 0))
         self.refresh_text()
         self.after_idle(self._update_launcher_scrollregion)
+
+    def _adapt_mode_cards(self, event=None):
+        cards = getattr(self, "_yornis_mode_cards", [])
+        if not cards:
+            return
+        width = max(1, getattr(event, "width", 0) or self.winfo_width())
+        columns = 1 if width < 820 else 2
+        for index, card in enumerate(cards):
+            card.grid_configure(row=index if columns == 1 else 0, column=0 if columns == 1 else index,
+                                sticky="ew", padx=(0, 0) if columns == 1 else ((0, 8) if index == 0 else (8, 0)),
+                                pady=(5, 5) if columns == 1 else 0)
+        for column in range(2):
+            cards[0].master.grid_columnconfigure(column, weight=1 if column < columns else 0)
+        try:
+            for _title, desc, _button in getattr(self, "_yornis_mode_text_widgets", []):
+                desc.configure(wraplength=max(240, int(width / columns) - 70))
+        except Exception:
+            pass
+
+    def _adapt_palette_cards(self, event=None):
+        cards = getattr(self, "palette_cards", [])
+        if not cards:
+            return
+        width = max(1, getattr(event, "width", 0) or self.winfo_width())
+        columns = 2 if width < 700 else (3 if width < 1080 else 4)
+        for index, card in enumerate(cards):
+            card.grid_configure(row=index // columns, column=index % columns, sticky="nsew")
+        host = cards[0].master
+        for column in range(4):
+            host.grid_columnconfigure(column, weight=1 if column < columns else 0)
 
     def _update_launcher_scrollregion(self, _event=None):
         canvas = getattr(self, "_scroll_canvas", None)
