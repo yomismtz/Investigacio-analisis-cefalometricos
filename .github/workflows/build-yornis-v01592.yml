@@ -139,6 +139,7 @@ jobs:
               start = int(starts[int(np.argmax(energies))])
               return samples[start:start + length].copy()
 
+          chorus_sources = []
           manifest = {
               'product': 'Yornis', 'version': '0.16.3', 'offline': True,
               'source': 'Ten user-uploaded MP3 recordings in desktop/assets',
@@ -158,6 +159,7 @@ jobs:
               assert peak > 100.0, f'Empty or silent recording: {source}'
               master = samples * (0.92 * 32767.0 / peak)
               startup_master = fade_edges(highest_energy_clip(master))
+              chorus_sources.append(startup_master.copy())
               safe = ''.join(ch if ch.isalnum() else '_' for ch in bird)
               manifest['birds'][bird] = {
                   'source_file': filename,
@@ -170,9 +172,22 @@ jobs:
                   write_wav(full_dir / f'{safe}_{volume}.wav', fade_edges(master * factor))
                   write_wav(startup_dir / f'{safe}_{volume}.wav', startup_master * factor)
 
+          # Short simultaneous mix of all ten original bird calls for app launch.
+          chorus_length = max(len(samples) for samples in chorus_sources)
+          chorus_mix = np.zeros(chorus_length, dtype=np.float32)
+          for samples in chorus_sources:
+              chorus_mix[:len(samples)] += samples.astype(np.float32) / len(chorus_sources)
+          chorus_peak = float(np.max(np.abs(chorus_mix)))
+          if chorus_peak > 0:
+              chorus_mix *= min(1.0, 0.88 * 32767.0 / chorus_peak)
+          chorus_mix = fade_edges(chorus_mix)
+          for volume in volumes:
+              write_wav(startup_dir / f'chorus_{volume}.wav', chorus_mix * (volume / 100.0))
+
           for folder in (full_dir, startup_dir):
               files = list(folder.glob('*.wav'))
-              assert len(files) == 50, f'{folder}: expected 50 files, found {len(files)}'
+              expected_count = 50 if folder == full_dir else 55
+              assert len(files) == expected_count, f'{folder}: expected {expected_count} files, found {len(files)}'
               for path in files:
                   with wave.open(str(path), 'rb') as wav:
                       assert wav.getnchannels() == 1 and wav.getsampwidth() == 2
@@ -180,7 +195,7 @@ jobs:
           (root / 'bird_audio_manifest_v0163.json').write_text(
               json.dumps(manifest, ensure_ascii=False, indent=2), encoding='utf-8'
           )
-          print('TEN ORIGINAL MP3 RECORDINGS -> 50 FULL PALETTE WAVS + 50 SHORT STARTUP WAVS')
+          print('TEN ORIGINAL MP3 RECORDINGS -> 50 FULL WAVS + 50 EXCERPTS + 5 MIXED CHORUS WAVS')
           print('All audio decoded, volume-scaled, validated and ready for offline packaging')
           '@ | python -
 
@@ -231,7 +246,7 @@ jobs:
           import yornis_measurement_corrections_v0166 as measurement_corrections
           measurement_corrections.install()
           import classic_engine as engine
-          assert app.APP_VERSION.startswith('0.16.3')
+          assert app.APP_VERSION.startswith('0.16.7')
           assert research_db.APP_DIR.name == 'Yornis'
           assert research_db.DB_PATH.name == 'yornis_research.sqlite3'
           check_source = "class YomCephClassic: pass\nlabel = 'YOMCEPH'"
