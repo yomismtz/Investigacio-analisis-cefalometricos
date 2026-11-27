@@ -7,6 +7,7 @@ on:
     branches: [main, fix/original-bird-recordings-v0163]
     paths:
       - 'desktop/**'
+      - 'assets/bird-palettes/**'
       - '.github/workflows/build-yornis-v01592.yml'
   workflow_dispatch:
   pull_request:
@@ -31,36 +32,33 @@ jobs:
         shell: pwsh
         run: python -m pip install pillow pymupdf reportlab openpyxl pyinstaller pyzipper ttkbootstrap==2.2.7 imageio-ffmpeg numpy
 
-      - name: Render versioned SVG bird mascots to transparent PNGs
+      - name: Stage the ten organized bird icons for the Windows bundle
         shell: pwsh
         run: |
           @'
           from pathlib import Path
-          import fitz
-          from PIL import Image
-          root = Path('desktop/assets/birds')
-          expected = {'Agaporni','Tucan','Pavorreal','Ninfa','Faisan','Quetzal','Guacamaya_Roja','Guacamaya_Azul','Búho','Colibrí'}
-          sources = {p.stem: p for p in root.glob('*.svg')}
-          assert set(sources) == expected, f'Missing or extra SVG mascots: {sorted(set(sources) ^ expected)}'
-          for name, source in sources.items():
-              target = root / f'{name}.png'
-              # Preserve the real bird photographs uploaded to the repository.
-              # Render the vector mascot only when no photograph is present.
-              if target.is_file():
-                  with Image.open(target) as photo:
-                      assert photo.width > 0 and photo.height > 0, f'{name}: invalid uploaded bird photograph'
-                  print(f'{name}: uploaded photograph retained')
-                  continue
-              document = fitz.open(stream=source.read_bytes(), filetype='svg')
-              page = document[0]
-              pixmap = page.get_pixmap(matrix=fitz.Matrix(3, 3), alpha=True)
-              image = Image.frombytes('RGBA', (pixmap.width, pixmap.height), pixmap.samples)
-              alpha_min, alpha_max = image.getchannel('A').getextrema()
-              assert alpha_min == 0 and alpha_max > 0, f'{name}: expected genuine transparent pixels'
-              image.save(target, optimize=True)
-          rendered = list(root.glob('*.png'))
-          assert expected.issubset({p.stem for p in rendered}), f'Missing rendered bird assets: {sorted(expected - {p.stem for p in rendered})}'
-          print('Ten repository SVG mascots rendered to transparent PNGs')
+          from shutil import copy2
+          source = Path('assets/bird-palettes/icons')
+          target = Path('desktop/assets/birds')
+          target.mkdir(parents=True, exist_ok=True)
+          mapping = {
+              'Agaporni': 'Agapornis colorido en rama (1).png',
+              'Tucan': 'Tucán colorido de estilo mascotín.png',
+              'Pavorreal': 'Pavo caricaturesco con cola vibrante.png',
+              'Ninfa': 'Cacatúa Ninfa Adorable en Perfil.png',
+              'Faisan': 'Faisán colorido de estilo caricaturesco.png',
+              'Quetzal': 'Quetzal Adorable de Plumas Esmeralda.png',
+              'Guacamaya_Roja': 'Guacamaya roja colorida en vuelo (1).png',
+              'Guacamaya_Azul': 'Guacamayo azul y amarillo caricaturesco.png',
+              'Búho': 'Búho real sobre rama con hojas.png',
+              'Colibrí': 'Colibrí.png',
+          }
+          assert len(mapping) == 10
+          for name, filename in mapping.items():
+              src = source / filename
+              assert src.is_file() and src.stat().st_size > 1000, f'Missing organized icon: {src}'
+              copy2(src, target / f'{name}.png')
+          print('Ten active palette icons staged from assets/bird-palettes/icons')
           '@ | python -
 
       - name: Convert all ten uploaded MP3 recordings into offline WAV libraries
@@ -73,6 +71,7 @@ jobs:
           import numpy as np
           from imageio_ffmpeg import get_ffmpeg_exe
 
+          source_root = Path('assets/bird-palettes/sounds')
           root = Path('desktop/assets')
           full_dir = root / 'bird_audio'
           startup_dir = root / 'bird_startup_audio'
@@ -142,7 +141,7 @@ jobs:
           chorus_sources = []
           manifest = {
               'product': 'Yornis', 'version': '0.16.3', 'offline': True,
-              'source': 'Ten user-uploaded MP3 recordings in desktop/assets',
+              'source': 'Ten active palette recordings from assets/bird-palettes/sounds',
               'format': 'WAV PCM signed 16-bit mono 44100 Hz',
               'palette_audio': 'Full uploaded recording',
               'startup_audio': 'Highest-energy excerpt up to 2.8 seconds',
@@ -150,7 +149,7 @@ jobs:
           }
 
           for bird, filename in recordings.items():
-              source = root / filename
+              source = source_root / filename
               assert source.is_file() and source.stat().st_size > 1000, f'Missing audio source: {source}'
               decoded = decoded_dir / f'{bird}.wav'
               decode_mp3(source, decoded)
@@ -264,7 +263,7 @@ jobs:
           assert set(yornis_theme.theme_names()) == set(sounds.BIRD_AUDIO_FILES)
           assert len(sounds.BIRD_AUDIO_FILES) == 10
           for name, filename in sounds.BIRD_AUDIO_FILES.items():
-              source = Path('desktop/assets') / filename
+              source = Path('assets/bird-palettes/sounds') / filename
               assert source.is_file() and source.stat().st_size > 1000
               for volume in sounds.VOLUME_LEVELS:
                   full = sounds.bundled_signature_path(name, volume)
@@ -341,7 +340,7 @@ jobs:
           --hidden-import yornis_reference_help_v0154 --hidden-import yornis_reference_help_v0154_all --hidden-import yornis_evidence_v0155 --hidden-import yornis_quality_ui_v0156 --hidden-import yornis_reference_help_v0156
           --hidden-import yornis_quality_ui_v0157 --hidden-import yornis_virtual_assistant_v0157 --hidden-import yornis_quality_ui_v0158 --hidden-import yornis_startup_audio_v0159 --hidden-import yornis_desktop_v0159 --hidden-import yornis_desktop_v01591 --hidden-import yornis_bird_signature_v01592 --hidden-import yornis_modern_ui_v0160 --hidden-import yornis_calibration_gate_v0164
           --collect-all PIL --collect-all pymupdf --collect-all reportlab --collect-all openpyxl --collect-all pyzipper --collect-all ttkbootstrap
-          --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yornis.ico;." --add-data "desktop/assets/birds;assets/birds" --add-data "desktop/assets/bird_audio;assets/bird_audio" --add-data "desktop/assets/bird_startup_audio;assets/bird_startup_audio"
+          --add-data "desktop/assets/yornis_logo.png;." --add-data "desktop/assets/yornis.ico;." --add-data "desktop/assets/birds;assets/birds" --add-data "assets/bird-palettes/sounds;bird-palettes/sounds" --add-data "desktop/assets/bird_audio;assets/bird_audio" --add-data "desktop/assets/bird_startup_audio;assets/bird_startup_audio"
           desktop/yornis_desktop_v01592.py
 
       - name: Cold start with application outbound internet blocked

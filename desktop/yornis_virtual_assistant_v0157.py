@@ -188,8 +188,23 @@ def _draw_avatar(theme_name: str, size: int = 180) -> Image.Image:
 
 def _bird_asset_path(theme_name: str) -> Path:
     slug = theme_name.replace(" ", "_").replace("á", "a").replace("é", "e")
-    root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
-    return root / "assets" / "birds" / f"{slug}.png"
+    if getattr(sys, "frozen", False) or hasattr(sys, "_MEIPASS"):
+        root = Path(getattr(sys, "_MEIPASS"))
+        return root / "assets" / "birds" / f"{slug}.png"
+    filenames = {
+        "Agaporni": "Agapornis colorido en rama (1).png",
+        "Tucán": "Tucán colorido de estilo mascotín.png",
+        "Pavorreal": "Pavo caricaturesco con cola vibrante.png",
+        "Ninfa": "Cacatúa Ninfa Adorable en Perfil.png",
+        "Faisán": "Faisán colorido de estilo caricaturesco.png",
+        "Quetzal": "Quetzal Adorable de Plumas Esmeralda.png",
+        "Guacamaya Roja": "Guacamaya roja colorida en vuelo (1).png",
+        "Guacamaya Azul": "Guacamayo azul y amarillo caricaturesco.png",
+        "Búho": "Búho real sobre rama con hojas.png",
+        "Colibrí": "Colibrí.png",
+    }
+    root = Path(__file__).resolve().parents[1] / "assets" / "bird-palettes" / "icons"
+    return root / filenames.get(theme_name, f"{slug}.png")
 
 
 def make_avatar_photo(master, size: int = 180, theme_name: str | None = None):

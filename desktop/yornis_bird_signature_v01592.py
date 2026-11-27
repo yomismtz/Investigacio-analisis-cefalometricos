@@ -48,7 +48,11 @@ def source_audio_path(theme_name: str) -> Path:
     filename = BIRD_AUDIO_FILES.get(theme_name)
     if filename is None:
         raise KeyError(f"Unknown Yornis bird palette: {theme_name}")
-    return asset_root() / filename
+    if getattr(sys, "frozen", False) or hasattr(sys, "_MEIPASS"):
+        root = Path(getattr(sys, "_MEIPASS"))
+    else:
+        root = Path(__file__).resolve().parents[1]
+    return root / "bird-palettes" / "sounds" / filename
 
 
 def bundled_signature_path(theme_name: str, volume: int | None = None) -> Path:
