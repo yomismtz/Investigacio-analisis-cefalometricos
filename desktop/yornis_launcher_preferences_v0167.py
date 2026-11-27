@@ -129,7 +129,14 @@ def _install_horizontal_scroll(launcher) -> None:
             bar = ttk.Scrollbar(shell, orient="horizontal", command=canvas.xview)
             bar.pack(side="bottom", fill="x")
             launcher._yornis_hbar_v0167 = bar
-        canvas.configure(xscrollcommand=launcher._yornis_hbar_v0167.set)
+        if not getattr(launcher, "_yornis_vbar_v0167", None):
+            vbar = ttk.Scrollbar(shell, orient="vertical", command=canvas.yview)
+            vbar.pack(side="right", fill="y")
+            launcher._yornis_vbar_v0167 = vbar
+        canvas.configure(
+            xscrollcommand=launcher._yornis_hbar_v0167.set,
+            yscrollcommand=launcher._yornis_vbar_v0167.set,
+        )
         canvas.configure(confine=False)
         original_resize = getattr(launcher, "_yornis_original_resize_v0167", None)
         if original_resize is None:
