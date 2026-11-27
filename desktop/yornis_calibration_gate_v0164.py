@@ -250,8 +250,34 @@ def install_individual(classic_class) -> None:
     classic_class._yornis_calibration_gate_v0164 = True
 
 
+def _install_steiner_reference_guard() -> None:
+    """Preserve Steiner means when legacy compatibility layers wrap references."""
+    try:
+        import research_protocol as rp
+        current = rp.reference_for
+        if getattr(current, "_yornis_steiner_reference_guard_v0168", False):
+            return
+        def reference_for(variable, sex="", age=None, population=""):
+            name = str(getattr(variable, "name", "") or "").strip()
+            key_name = str(getattr(variable, "key", "") or "").rsplit("::", 1)[-1].strip()
+            canonical = name if name in {"SNA", "SNB", "ANB"} else key_name
+            notes = {
+                "SNA": "82° (media de Steiner; ±2° es banda posterior, no DE original)",
+                "SNB": "80° (media de Steiner; ±2° es banda posterior, no DE original)",
+                "ANB": "2° (media de Steiner; ±2° es banda posterior, no DE original)",
+            }
+            if canonical in notes:
+                return notes[canonical]
+            return current(variable, sex, age, population)
+        reference_for._yornis_steiner_reference_guard_v0168 = True
+        rp.reference_for = reference_for
+    except Exception:
+        pass
+
+
 def install_database() -> None:
     """Guard image identity after legacy hardening and calibration wrappers."""
+    _install_steiner_reference_guard()
     current_attach = ResearchDB.attach_image
     if not getattr(current_attach, "_yornis_image_calibration_reset_v0164", False):
         def attach_image_with_calibration_reset(self, case_id, image_path, copy_image=True):
@@ -338,59 +364,65 @@ def install_database() -> None:
         image_revision = int(case["image_revision"] or 1)
         has_current_image = bool(image_hash and stored_hash and image_hash == stored_hash)
 
-        # CVM and C2-C4 alignment are manually assessed outcomes. They do not
-        # require an automatic landmark trace, but they must remain scoped to
-        # the active image/revision. For image-less manual assessments, only
-        # rows without an image identity are eligible.
-        manual_analyses = (
-            "CVM C2–C4",
-            "Postura vertebral vertical C2–C4",
-        )
+        # Manual cervical outcomes are keyed by stable measurement labels.
+        # Join to the active case identity in SQL and restore canonical analysis labels.
+        import yornis_cervical_v0152 as cervical
+        import yornis_alignment_v0152 as alignment
+        manual_measurements = (cervical.CVM_MEASUREMENT, alignment.ALIGNMENT_MEASUREMENT)
         with self.connect() as con:
             if has_current_image:
                 manual_rows = con.execute(
                     """
                     SELECT r.* FROM results r
+                    JOIN cases c ON c.id=r.case_id
                     WHERE r.case_id=? AND r.protocol_version=?
-                      AND r.analysis IN (?,?)
+                      AND r.measurement IN (?,?)
+                      AND r.image_hash=c.file_hash
+                      AND r.image_revision=c.image_revision
                       AND r.image_hash=? AND r.image_revision=?
                       AND r.version=(
                         SELECT MAX(r2.version) FROM results r2
                         WHERE r2.case_id=r.case_id
                           AND r2.protocol_version=r.protocol_version
-                          AND r2.analysis=r.analysis
                           AND r2.measurement=r.measurement
-                          AND r2.image_hash=r.image_hash
-                          AND r2.image_revision=r.image_revision
+                          AND r2.image_hash=c.file_hash
+                          AND r2.image_revision=c.image_revision
                       )
-                    ORDER BY r.analysis,r.measurement
+                    ORDER BY r.measurement
                     """,
-                    (case_id, protocol_version, *manual_analyses, image_hash, image_revision),
+                    (case_id, protocol_version, *manual_measurements, stored_hash, image_revision),
                 ).fetchall()
             else:
                 manual_rows = con.execute(
                     """
                     SELECT r.* FROM results r
                     WHERE r.case_id=? AND r.protocol_version=?
-                      AND r.analysis IN (?,?)
+                      AND r.measurement IN (?,?)
                       AND COALESCE(r.image_hash,'')=''
                       AND COALESCE(r.image_revision,1)>0
                       AND r.version=(
                         SELECT MAX(r2.version) FROM results r2
                         WHERE r2.case_id=r.case_id
                           AND r2.protocol_version=r.protocol_version
-                          AND r2.analysis=r.analysis
                           AND r2.measurement=r.measurement
                           AND COALESCE(r2.image_hash,'')=''
                           AND COALESCE(r2.image_revision,1)>0
                       )
-                    ORDER BY r.analysis,r.measurement
+                    ORDER BY r.measurement
                     """,
-                    (case_id, protocol_version, *manual_analyses),
+                    (case_id, protocol_version, *manual_measurements),
                 ).fetchall()
+        canonical_manual_rows = []
+        for row in manual_rows:
+            item = dict(row)
+            if item.get("measurement") == cervical.CVM_MEASUREMENT:
+                item["analysis"] = cervical.CVM_ANALYSIS
+            elif item.get("measurement") == alignment.ALIGNMENT_MEASUREMENT:
+                item["analysis"] = alignment.ALIGNMENT_ANALYSIS
+            canonical_manual_rows.append(item)
 
         if not has_current_image:
-            return list(manual_rows)
+            return canonical_manual_rows
 
         # Keep automatically computed outcomes only when the image and a
         # matching current trace are both present; add image-bound manual
@@ -411,7 +443,7 @@ def install_database() -> None:
                 combined[key] = row
             except (KeyError, IndexError, TypeError, ValueError):
                 continue
-        for row in manual_rows:
+        for row in canonical_manual_rows:
             try:
                 key = (str(row["analysis"]), str(row["measurement"]), int(row["version"]))
                 combined[key] = row
