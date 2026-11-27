@@ -42,13 +42,21 @@ jobs:
           sources = {p.stem: p for p in root.glob('*.svg')}
           assert set(sources) == expected, f'Missing or extra SVG mascots: {sorted(set(sources) ^ expected)}'
           for name, source in sources.items():
+              target = root / f'{name}.png'
+              # Preserve the real bird photographs uploaded to the repository.
+              # Render the vector mascot only when no photograph is present.
+              if target.is_file():
+                  with Image.open(target) as photo:
+                      assert photo.width > 0 and photo.height > 0, f'{name}: invalid uploaded bird photograph'
+                  print(f'{name}: uploaded photograph retained')
+                  continue
               document = fitz.open(stream=source.read_bytes(), filetype='svg')
               page = document[0]
               pixmap = page.get_pixmap(matrix=fitz.Matrix(3, 3), alpha=True)
               image = Image.frombytes('RGBA', (pixmap.width, pixmap.height), pixmap.samples)
               alpha_min, alpha_max = image.getchannel('A').getextrema()
               assert alpha_min == 0 and alpha_max > 0, f'{name}: expected genuine transparent pixels'
-              image.save(root / f'{name}.png', optimize=True)
+              image.save(target, optimize=True)
           rendered = list(root.glob('*.png'))
           assert len(rendered) == 10
           print('Ten repository SVG mascots rendered to transparent PNGs')
