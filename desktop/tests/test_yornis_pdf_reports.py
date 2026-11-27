@@ -73,7 +73,7 @@ class YornisPDFReportTests(unittest.TestCase):
             output = temp / "case-report.pdf"
             db = _FakeDB(image_path)
 
-            result = export_case_pdf(db, 7, output)
+            result = export_case_pdf(db, 7, str(output))
 
             self.assertEqual(result, str(output))
             self.assertTrue(output.is_file())
