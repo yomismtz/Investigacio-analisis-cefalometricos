@@ -32,7 +32,7 @@ def _save_pref(key: str, value) -> None:
 
 
 def _play_welcome_chorus(root=None, *, force: bool = False) -> None:
-    """Play the pre-mixed chorus of the ten original birds, offline."""
+    """Play the pre-mixed chorus of all thirteen palette birds, offline."""
     enabled, volume = startup_audio.settings()
     if not enabled or volume <= 0:
         return
@@ -294,7 +294,7 @@ def install(launcher_class) -> bool:
 
     def init(self, *args, **kwargs):
         # v0.15.9 used this hook for a single selected-bird startup call. Replace
-        # it with the ten-bird welcome chorus before the inherited constructor runs.
+        # it with the thirteen-bird welcome chorus before the inherited constructor runs.
         startup_audio.play_startup_chorus = _play_welcome_chorus
         original_init(self, *args, **kwargs)
         try:
