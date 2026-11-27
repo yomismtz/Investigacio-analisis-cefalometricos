@@ -1,5 +1,6 @@
 name: Build Yornis v0.16.3 · Original Bird Recordings and Offline Audio
 # v0.16.6.1: final regression coverage for calibration, image identity and finite geometry
+# Build request: 2026-11-27 · Yornis v0.16.3 Windows x64
 
 on:
   push:
