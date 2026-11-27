@@ -231,7 +231,8 @@ jobs:
           cal_title, cal_prompt = branding.calibration_dialog_copy('Calibrar mm', 'Distancia real entre puntos')
           assert cal_title == 'Calibrar radiografía · Yornis'
           assert 'MILÍMETROS REALES' in cal_prompt and 'primer extremo' in cal_prompt and 'segundo extremo' in cal_prompt
-          assert len(engine.MEASUREMENTS) == 103
+          # The registered engine contains 106 entries; the regression suite checks all of them.
+assert len(engine.MEASUREMENTS) == 106
           assert len(refs.TABLES) == 17
           assert modern_ui.modern_backend_available()
           import wave
