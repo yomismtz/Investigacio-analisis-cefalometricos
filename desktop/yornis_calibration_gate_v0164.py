@@ -397,15 +397,40 @@ def install_database() -> None:
                     """,
                     (case_id, protocol_version),
                 ).fetchall()
+        import re
+        import unicodedata
+
+        def canonical_label(value):
+            # Normalize legacy labels with en/em dashes, replacement glyphs,
+            # accents, spacing and punctuation before identifying manual rows.
+            normalized = unicodedata.normalize("NFKD", str(value or ""))
+            normalized = "".join(ch for ch in normalized if not unicodedata.combining(ch))
+            return re.sub(r"[^a-z0-9]+", "", normalized.casefold())
+
+        cvm_analysis_key = canonical_label(cervical.CVM_ANALYSIS)
+        cvm_measurement_key = canonical_label(cervical.CVM_MEASUREMENT)
+        alignment_analysis_key = canonical_label(alignment.ALIGNMENT_ANALYSIS)
+        alignment_measurement_key = canonical_label(alignment.ALIGNMENT_MEASUREMENT)
+
         latest_manual = {}
         for row in candidate_rows:
             item = dict(row)
-            analysis = str(item.get("analysis") or "")
-            measurement = str(item.get("measurement") or "")
-            if analysis == cervical.CVM_ANALYSIS or measurement == cervical.CVM_MEASUREMENT:
+            analysis = canonical_label(item.get("analysis"))
+            measurement = canonical_label(item.get("measurement"))
+            if (
+                analysis == cvm_analysis_key
+                or measurement == cvm_measurement_key
+                or ("cvm" in analysis and "c2" in analysis and "c4" in analysis)
+                or ("baccetti" in measurement and "cvm" in measurement)
+            ):
                 kind = "cvm"
                 item["analysis"] = cervical.CVM_ANALYSIS
-            elif analysis == alignment.ALIGNMENT_ANALYSIS or measurement == alignment.ALIGNMENT_MEASUREMENT:
+            elif (
+                analysis == alignment_analysis_key
+                or measurement == alignment_measurement_key
+                or ("alineacion" in analysis and "c2" in analysis and "c4" in analysis)
+                or ("alineacion" in measurement and "c2" in measurement and "c4" in measurement)
+            ):
                 kind = "alignment"
                 item["analysis"] = alignment.ALIGNMENT_ANALYSIS
             else:
