@@ -43,7 +43,7 @@ icon = "yomceph_logo.png"
             "Distancia real entre puntos",
         )
         self.assertEqual(title, "Calibrar radiografía · Yornis")
-        self.assertIn("MILÍMETROS REALES", prompt)
+        self.assertIn("distancia REAL en milímetros", prompt)
         self.assertIn("Punto calibración 1", prompt)
         self.assertIn("Punto calibración 2", prompt)
         self.assertIn("primer extremo", prompt)
