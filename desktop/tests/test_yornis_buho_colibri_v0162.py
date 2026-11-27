@@ -30,9 +30,9 @@ class BuhoColibriPaletteTests(unittest.TestCase):
         owl = yornis_theme.THEMES["Búho"]
         hummingbird = yornis_theme.THEMES["Colibrí"]
         self.assertEqual((owl["primary"], owl["secondary"], owl["accent"], owl["accent_soft"]),
-                         ("#493052", "#76518A", "#C49A45", "#F3E8D2"))
-        self.assertEqual((hummingbird["primary"], hummingbird["secondary"], hummingbird["accent"], hummingbird["panel_alt"]),
-                         ("#087D64", "#16AFA5", "#A5D94D", "#DDF5E9"))
+                         ("#805137", "#452B25", "#C68A32", "#F0E2C9"))
+        self.assertEqual((hummingbird["primary"], hummingbird["secondary"], hummingbird["accent"], hummingbird["accent_soft"]),
+                         ("#15966D", "#20B9B1", "#2777CF", "#F8F8F0"))
         for theme in (owl, hummingbird):
             self.assertEqual(set(theme), {
                 "description_es", "bg", "panel", "panel_alt", "text", "muted",
@@ -42,6 +42,18 @@ class BuhoColibriPaletteTests(unittest.TestCase):
             for key, value in theme.items():
                 if key != "description_es":
                     self.assertRegex(value, r"^#[0-9A-Fa-f]{6}$")
+
+    def test_every_bird_has_eight_distinct_species_colors(self):
+        self.assertEqual(set(yornis_theme.BIRD_COLOR_SWATCHES), set(yornis_theme.theme_names()))
+        for bird, colors in yornis_theme.BIRD_COLOR_SWATCHES.items():
+            self.assertEqual(len(colors), 8, bird)
+            self.assertEqual(len(set(colors)), 8, bird)
+            for color in colors:
+                self.assertRegex(color, r"^#[0-9A-Fa-f]{6}$")
+        for bird in yornis_theme.theme_names():
+            yornis_theme.apply_theme(bird, persist=False)
+            for index, color in enumerate(yornis_theme.BIRD_COLOR_SWATCHES[bird], 1):
+                self.assertEqual(yornis_theme.base.PALETTE[f"bird_color_{index}"], color)
 
     def test_both_new_birds_have_matching_original_audio_and_assistant_profiles(self):
         self.assertEqual(set(yornis_theme.theme_names()), set(assistant.BIRD_PROFILES))
