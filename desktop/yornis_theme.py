@@ -113,7 +113,7 @@ THEMES = {
         'description_es': 'Verde esmeralda, turquesa, lima y menta.',
         'bg': '#F1FAF7', 'panel': '#FCFFFD', 'panel_alt': '#DDF5E9', 'text': '#14342B', 'muted': '#526D64',
         'primary': '#087D64', 'primary_dark': '#054D40', 'primary_soft': '#BCE8D7',
-        'secondary': '#16AFA5', 'secondary_dark': '#0C7E78', 'accent': '#A5D94D', 'accent_soft': '#E8F6C9',
+        'secondary': '#16AFA5', 'secondary_dark': '#0C7E78', 'accent': '#A5D94D', 'accent_soft': '#F8F8F0',
         'tertiary': '#31A8A0', 'warning': '#B28E2D', 'danger': '#A13A56', 'canvas': '#061A17', 'border': '#B9DDD0',
     },
     'Flamenco': {
