@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 from pathlib import Path
 
 import yomceph_theme as base
@@ -22,6 +23,9 @@ BIRD_COLOR_SWATCHES = {
     "Guacamaya Azul": ("#1555A0", "#55A6D9", "#F2C544", "#F8F7F0", "#4C9B50", "#28AFAF", "#718A9C", "#202329"),
     "Búho": ("#805137", "#452B25", "#C68A32", "#F0E2C9", "#C6A77F", "#D4BD99", "#89847E", "#F7F3E9"),
     "Colibrí": ("#15966D", "#20B9B1", "#2777CF", "#F8F8F0", "#7950A8", "#C34B91", "#08734F", "#164537"),
+    "Flamenco": ("#F28CB5", "#E94F8B", "#F6B7C9", "#F7D9DF", "#E86A55", "#F3A47D", "#35313B", "#FFF7F3"),
+    "Colorín siete colores": ("#2455C5", "#21A9D6", "#28A65A", "#E53945", "#F5D52D", "#F28B35", "#713F91", "#F5F1E6"),
+    "Tángara del paraíso": ("#164FA8", "#087F65", "#24B7B0", "#F0D52C", "#E84A42", "#F28B32", "#252B38", "#F5F3E9"),
 }
 
 # Apply the eight bird colors to the existing semantic theme slots while
@@ -113,10 +117,60 @@ THEMES = {
         'secondary': '#16AFA5', 'secondary_dark': '#0C7E78', 'accent': '#A5D94D', 'accent_soft': '#E8F6C9',
         'tertiary': '#31A8A0', 'warning': '#B28E2D', 'danger': '#A13A56', 'canvas': '#061A17', 'border': '#B9DDD0',
     },
+    'Flamenco': {
+        'description_es': 'Rosa flamenco, coral, salmón, carbón y marfil.',
+        'bg': '#FFF5F8', 'panel': '#FFFCFD', 'panel_alt': '#FCE4EC', 'text': '#3A202C', 'muted': '#765563',
+        'primary': '#E94F8B', 'primary_dark': '#35313B', 'primary_soft': '#F7D9DF',
+        'secondary': '#F28CB5', 'secondary_dark': '#C63C70', 'accent': '#E86A55', 'accent_soft': '#F6B7C9',
+        'tertiary': '#F3A47D', 'warning': '#F3A47D', 'danger': '#35313B', 'canvas': '#1A1015', 'border': '#E8C6D3',
+    },
+    'Colorín siete colores': {
+        'description_es': 'Azul, turquesa, verde, rojo, amarillo, naranja, violeta y crema.',
+        'bg': '#F3F8FF', 'panel': '#FCFDFF', 'panel_alt': '#DFEDFB', 'text': '#172A48', 'muted': '#536783',
+        'primary': '#2455C5', 'primary_dark': '#713F91', 'primary_soft': '#F5F1E6',
+        'secondary': '#21A9D6', 'secondary_dark': '#176F98', 'accent': '#28A65A', 'accent_soft': '#F5F1E6',
+        'tertiary': '#E53945', 'warning': '#F28B35', 'danger': '#713F91', 'canvas': '#0C1628', 'border': '#C4D6EA',
+    },
+    'Tángara del paraíso': {
+        'description_es': 'Azul, esmeralda, turquesa, amarillo, rojo, naranja, carbón y marfil.',
+        'bg': '#F2F8F7', 'panel': '#FCFEFD', 'panel_alt': '#DDEEEB', 'text': '#1D3036', 'muted': '#52686D',
+        'primary': '#164FA8', 'primary_dark': '#252B38', 'primary_soft': '#F5F3E9',
+        'secondary': '#087F65', 'secondary_dark': '#075846', 'accent': '#24B7B0', 'accent_soft': '#F5F3E9',
+        'tertiary': '#E84A42', 'warning': '#F28B32', 'danger': '#252B38', 'canvas': '#0C171B', 'border': '#C2DCD6',
+    },
 }
 
 # Apply species swatches only after the semantic theme dictionaries exist.
 _apply_bird_color_sets()
+
+BRAND_LOGO_FILES = {
+    "Agaporni": "Logo YOM Dental Agaporni Multicolor.png",
+    "Tucán": "Logotipo Yom Dental Tucán en degradado tropical.png",
+    "Pavorreal": "Logo dental Yom en tonos pavorreal.png",
+    "Ninfa": "Logo dental Yom en paleta Ninfa.png",
+    "Faisán": "Logo dental YOM con degradados Faisán.png",
+    "Quetzal": "Logotipo Yom Dental quetzal.png",
+    "Guacamaya Roja": "Logotipo YOM Dental Guacamaya Roja Multicolor.png",
+    "Guacamaya Azul": "Logotipo Yom Dental Guacamaya Azul.png",
+    "Búho": "Logo YOM Dental en tonos búho.png",
+    "Colibrí": "Logo dental Yom en paleta Colibrí (2).png",
+    "Flamenco": "Logotipo Dental Rosa Flamingo en 3D.png",
+    "Colorín siete colores": "Logo dental Colorn de 7 colorese.png",
+    "Tángara del paraíso": "Logotipo Yom DentalTángara del paraíso.png",
+}
+
+
+def brand_logo_path(theme_name: str | None = None) -> Path | None:
+    """Return the YOM Dental logo matching a bird palette in source or frozen mode."""
+    name = theme_name or current_theme_name()
+    filename = BRAND_LOGO_FILES.get(name)
+    if not filename:
+        return None
+    if getattr(sys, "frozen", False) or hasattr(sys, "_MEIPASS"):
+        root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
+        return root / "assets" / "brand-logos" / filename
+    return Path(__file__).resolve().parents[1] / "assets" / "bird-palettes" / "brand-logos" / filename
+
 
 def load_settings() -> dict:
     try:
