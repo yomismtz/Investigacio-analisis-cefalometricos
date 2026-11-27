@@ -276,7 +276,7 @@ jobs:
                           assert wav.getframerate() == sounds.SAMPLE_RATE
                           assert wav.getnframes() > sounds.SAMPLE_RATE // 5
           assert len(list(Path('desktop/assets/bird_audio').glob('*.wav'))) == 50
-          assert len(list(Path('desktop/assets/bird_startup_audio').glob('*.wav'))) == 50
+          assert len(list(Path('desktop/assets/bird_startup_audio').glob('*.wav'))) == 55  # 50 bird clips + 5 mixed chorus volumes
           print('YORNIS v0.16.3 TEN ORIGINAL RECORDINGS + OFFLINE AUDIO + CLINICAL AUDIT OK')
           '@ | python -
 
