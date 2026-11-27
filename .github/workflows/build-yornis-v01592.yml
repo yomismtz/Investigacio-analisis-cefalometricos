@@ -58,7 +58,7 @@ jobs:
               assert alpha_min == 0 and alpha_max > 0, f'{name}: expected genuine transparent pixels'
               image.save(target, optimize=True)
           rendered = list(root.glob('*.png'))
-          assert len(rendered) == 10
+          assert expected.issubset({p.stem for p in rendered}), f'Missing rendered bird assets: {sorted(expected - {p.stem for p in rendered})}'
           print('Ten repository SVG mascots rendered to transparent PNGs')
           '@ | python -
 
