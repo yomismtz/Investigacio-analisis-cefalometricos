@@ -30,7 +30,7 @@ class BuhoColibriPaletteTests(unittest.TestCase):
         owl = yornis_theme.THEMES["Búho"]
         hummingbird = yornis_theme.THEMES["Colibrí"]
         self.assertEqual((owl["primary"], owl["secondary"], owl["accent"], owl["accent_soft"]),
-                         ("#805137", "#452B25", "#C68A32", "#F0E2C9"))
+                         ("#805137", "#452B25", "#C68A32", "#F3E8D2"))
         self.assertEqual((hummingbird["primary"], hummingbird["secondary"], hummingbird["accent"], hummingbird["accent_soft"]),
                          ("#15966D", "#20B9B1", "#2777CF", "#F8F8F0"))
         for theme in (owl, hummingbird):
