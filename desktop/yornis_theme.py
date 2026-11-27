@@ -33,17 +33,16 @@ BIRD_COLOR_SWATCHES = {
 def _apply_bird_color_sets() -> None:
     for bird, colors in BIRD_COLOR_SWATCHES.items():
         theme = THEMES[bird]
+        # Bird swatches are accents, not semantic text/surface tokens. In
+        # particular, colors[7] is often cream and must never become a text
+        # color on a light panel. Keep each palette's dark neutrals and pale
+        # surfaces from THEMES; only map saturated plumage colors to accents.
         theme.update({
             "primary": colors[0],
-            "primary_dark": colors[7],
-            "primary_soft": colors[3],
             "secondary": colors[1],
-            "secondary_dark": colors[7],
             "accent": colors[2],
-            "accent_soft": colors[3],
             "tertiary": colors[4],
             "warning": colors[5],
-            "danger": colors[7],
         })
 
 THEMES = {
@@ -198,6 +197,23 @@ def landmark_radius() -> int:
 
 def set_landmark_radius(radius: int) -> None:
     s = load_settings(); s['landmark_radius'] = max(1, min(6, int(radius))); save_settings(s)
+
+
+
+def contrast_ratio(foreground: str, background: str) -> float:
+    """Return WCAG relative-luminance contrast ratio for two RGB hex colors."""
+    def luminance(color: str) -> float:
+        values = [int(color[i:i + 2], 16) / 255 for i in (1, 3, 5)]
+        linear = [v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4 for v in values]
+        return 0.2126 * linear[0] + 0.7152 * linear[1] + 0.0722 * linear[2]
+    first, second = sorted((luminance(foreground), luminance(background)), reverse=True)
+    return (first + 0.05) / (second + 0.05)
+
+
+def readable_foreground(background: str) -> str:
+    """Choose whichever of near-black or white gives stronger text contrast."""
+    dark, light = "#17202A", "#FFFFFF"
+    return dark if contrast_ratio(dark, background) >= contrast_ratio(light, background) else light
 
 
 def apply_theme(name: str, persist: bool = True) -> dict:
