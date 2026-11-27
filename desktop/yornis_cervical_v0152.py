@@ -222,13 +222,18 @@ def _image_identity(db, case_id: int) -> tuple[str, int]:
     case = db.case(case_id)
     if not case:
         return "", 1
+    # cases.file_hash is authoritative: attach_image computes and persists
+    # this SHA256 atomically with the image revision. The on-disk resolver is
+    # only a consistency check and may fail for legacy/offline adapters.
     try:
-        # The case file_hash is the persisted identity of the currently attached image.
-        # Some legacy DB adapters return an empty _active_image_hash even when
-        # file_hash is populated; never save a current assessment as unbound.
-        image_hash = str(db._active_image_hash(case) or case["file_hash"] or "")
+        image_hash = str(case["file_hash"] or "")
     except Exception:
         image_hash = ""
+    if not image_hash:
+        try:
+            image_hash = str(db._active_image_hash(case) or "")
+        except Exception:
+            image_hash = ""
     try:
         revision = max(1, int(case["image_revision"] or 1))
     except Exception:
