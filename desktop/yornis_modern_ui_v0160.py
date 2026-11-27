@@ -137,7 +137,7 @@ def apply_modern_styles(root) -> bool:
     _safe_map(
         style, "Primary.TButton",
         background=[("pressed", t["primary_dark"]), ("active", t["primary_dark"]), ("disabled", t["primary_soft"])],
-        foreground=[("disabled", t["muted"]), ("!disabled", primary_fg)],
+        foreground=[("disabled", t["muted"]), ("!disabled", primary_hover_fg)],
     )
     _safe_configure(
         style, "Secondary.TButton",
@@ -165,7 +165,7 @@ def apply_modern_styles(root) -> bool:
     _safe_configure(style, "IndividualCount.TLabel", background=t["primary_soft"], foreground=t["primary_dark"], font=("Segoe UI Semibold", 9), padding=(10, 5))
     _safe_configure(style, "IndividualStep.TLabel", background=t["accent_soft"], foreground=t["secondary_dark"], font=("Segoe UI Semibold", 9), padding=(10, 5))
     _safe_configure(style, "IndividualPrimary.TButton", font=_FONT_MEDIUM, padding=(16, 10), background=t["primary"], foreground=primary_fg, borderwidth=0)
-    _safe_map(style, "IndividualPrimary.TButton", background=[("pressed", t["primary_dark"]), ("active", t["primary_dark"])], foreground=[("!disabled", primary_fg)])
+    _safe_map(style, "IndividualPrimary.TButton", background=[("pressed", t["primary_dark"]), ("active", t["primary_dark"])], foreground=[("!disabled", primary_hover_fg)])
     _safe_configure(style, "IndividualGhost.TButton", font=_FONT_MEDIUM, padding=(13, 9), background=t["panel_alt"], foreground=t["primary_dark"], borderwidth=0)
     _safe_map(style, "IndividualGhost.TButton", background=[("pressed", t["primary_soft"]), ("active", t["primary_soft"])])
 
