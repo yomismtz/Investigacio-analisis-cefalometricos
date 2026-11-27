@@ -109,6 +109,14 @@ class ResearchSuiteTests(unittest.TestCase):
         self.assertIsNone(self.db.case(cid)["case_mm_per_px"])
         self.assertEqual(self.db.latest_landmarks(cid, version), {})
         self.assertEqual(self.db.latest_results(cid, version), [])
+        with self.db.connect() as con:
+            archived = con.execute(
+                "SELECT image_hash,image_revision FROM results WHERE case_id=?",
+                (cid,),
+            ).fetchall()
+            self.assertEqual(len(archived), 1)
+            self.assertTrue(str(archived[0]["image_hash"]).startswith("historical:"))
+            self.assertLess(int(archived[0]["image_revision"]), 0)
         # The old image's measurements remain in history, but are no longer
         # considered current for the replacement image.
         with self.db.connect() as con:
