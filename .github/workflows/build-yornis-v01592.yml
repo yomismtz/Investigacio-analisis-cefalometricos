@@ -227,22 +227,21 @@ jobs:
           print('All audio decoded, volume-scaled, validated and ready for offline packaging')
           '@ | python -
 
-      - name: Rebuild 512px YOM Dental branding
+      - name: Apply YOM Dental Cefalometría logo and Windows icon
         shell: pwsh
         run: |
           @'
           from pathlib import Path
           from PIL import Image
-          import base64, hashlib, io
-          parts = sorted(Path('desktop/assets').glob('yornis_logo_chunk_*.b64'))
-          assert len(parts) == 12
-          source = base64.b64decode(''.join(p.read_text(encoding='utf-8').strip() for p in parts), validate=True)
-          assert hashlib.sha256(source).hexdigest() == '076f10e95b384ef8da2caf98006d8c84ea43a3108275553516e0a2657bba68b9'
-          original = Image.open(io.BytesIO(source)).convert('RGBA')
-          canvas = Image.new('RGBA', (512, 512), (255,255,255,255))
-          canvas.alpha_composite(original.resize((420,420), Image.Resampling.LANCZOS), (46,20))
-          canvas.save('desktop/assets/yornis_logo.png')
-          canvas.save('desktop/assets/yornis.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
+          source = Path('desktop/assets/yom_dental_logo.png')
+          assert source.is_file() and source.stat().st_size > 5000, 'Missing transparent YOM Dental logo'
+          logo = Image.open(source).convert('RGBA')
+          assert logo.size == (128, 128), f'Unexpected YOM Dental logo dimensions: {logo.size}'
+          # Preserve the transparent background and use the approved new identity
+          # for the application splash/logo and all Windows icon sizes.
+          logo.resize((512, 512), Image.Resampling.LANCZOS).save('desktop/assets/yornis_logo.png')
+          logo.save('desktop/assets/yornis.ico', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128)])
+          print('YOM Dental Cefalometría transparent logo applied to app branding and Windows icon')
           '@ | python -
 
       - name: Compile all desktop modules
